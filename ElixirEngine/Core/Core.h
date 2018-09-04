@@ -50,6 +50,8 @@ protected:
 	D3D12_RECT scissorRect; // the area to draw in. pixels outside that area will not be drawn onto
 	ID3D12Resource* vertexBuffer; 
 	D3D12_VERTEX_BUFFER_VIEW vertexBufferView;
+	ID3D12Resource* indexBuffer; 
+	D3D12_INDEX_BUFFER_VIEW indexBufferView; 
 
 	int frameIndex; // current rtv
 	int rtvDescriptorSize; // size of the rtv descriptor on the device (all front and back buffers will be the same size)
