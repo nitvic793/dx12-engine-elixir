@@ -1,4 +1,5 @@
 #include "Core.h"
+#include "Vertex.h"
 
 Core* Core::coreInstance = nullptr;
 
@@ -16,9 +17,9 @@ bool Core::InitD3D()
 		return false;
 	}
 
-	IDXGIAdapter1* adapter; 
-	int adapterIndex = 0; 
-	bool adapterFound = false; 
+	IDXGIAdapter1* adapter;
+	int adapterIndex = 0;
+	bool adapterFound = false;
 
 	while (dxgiFactory->EnumAdapters1(adapterIndex, &adapter) != DXGI_ERROR_NOT_FOUND)
 	{
@@ -28,7 +29,7 @@ bool Core::InitD3D()
 		if (desc.Flags & DXGI_ADAPTER_FLAG_SOFTWARE)
 		{
 			// we dont want a software device
-			adapterIndex++; 
+			adapterIndex++;
 			continue;
 		}
 
@@ -59,7 +60,7 @@ bool Core::InitD3D()
 		return false;
 	}
 
-	D3D12_COMMAND_QUEUE_DESC cqDesc = {}; 
+	D3D12_COMMAND_QUEUE_DESC cqDesc = {};
 
 	hr = device->CreateCommandQueue(&cqDesc, IID_PPV_ARGS(&commandQueue));
 	if (FAILED(hr))
@@ -67,28 +68,28 @@ bool Core::InitD3D()
 		return false;
 	}
 
-	DXGI_MODE_DESC backBufferDesc = {}; 
-	backBufferDesc.Width = Width; 
-	backBufferDesc.Height = Height; 
-	backBufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM; 												
+	DXGI_MODE_DESC backBufferDesc = {};
+	backBufferDesc.Width = Width;
+	backBufferDesc.Height = Height;
+	backBufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
 	DXGI_SAMPLE_DESC sampleDesc = {};
 	sampleDesc.Count = 1;
 
 	DXGI_SWAP_CHAIN_DESC swapChainDesc = {};
 	swapChainDesc.BufferCount = frameBufferCount; // number of buffers we have
-	swapChainDesc.BufferDesc = backBufferDesc; 
+	swapChainDesc.BufferDesc = backBufferDesc;
 	swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT; // this says the pipeline will render to this swap chain
 	swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD; // dxgi will discard the buffer (data) after we call present
-	swapChainDesc.OutputWindow = hwnd; 
+	swapChainDesc.OutputWindow = hwnd;
 	swapChainDesc.SampleDesc = sampleDesc; // multi-sampling description
 	swapChainDesc.Windowed = !Fullscreen; // set to true, then if in fullscreen must call SetFullScreenState with true for full screen to get uncapped fps
 
 	IDXGISwapChain* tempSwapChain;
 
 	dxgiFactory->CreateSwapChain(
-		commandQueue, 
-		&swapChainDesc, 
-		&tempSwapChain 
+		commandQueue,
+		&swapChainDesc,
+		&tempSwapChain
 	);
 
 	swapChain = static_cast<IDXGISwapChain3*>(tempSwapChain);
@@ -142,7 +143,7 @@ bool Core::InitD3D()
 	}
 
 	// command lists are created in the recording state, so close it now
-	commandList->Close();
+	//commandList->Close();
 
 	for (int i = 0; i < frameBufferCount; i++)
 	{
@@ -173,6 +174,125 @@ void Core::InitResources()
 	ID3DBlob* signature;
 	D3D12SerializeRootSignature(&rootSignatureDesc, D3D_ROOT_SIGNATURE_VERSION_1, &signature, nullptr);
 	device->CreateRootSignature(0, signature->GetBufferPointer(), signature->GetBufferSize(), IID_PPV_ARGS(&rootSignature));
+
+	ID3DBlob* vertexShader;
+	D3DReadFileToBlob(L"DefaultVS.cso", &vertexShader);
+	D3D12_SHADER_BYTECODE vertexShaderBytecode = {};
+	vertexShaderBytecode.BytecodeLength = vertexShader->GetBufferSize();
+	vertexShaderBytecode.pShaderBytecode = vertexShader->GetBufferPointer();
+
+	ID3DBlob* pixelShader;
+	D3DReadFileToBlob(L"DefaultPS.cso", &pixelShader);
+	D3D12_SHADER_BYTECODE pixelShaderBytecode = {};
+	pixelShaderBytecode.BytecodeLength = pixelShader->GetBufferSize();
+	pixelShaderBytecode.pShaderBytecode = pixelShader->GetBufferPointer();
+
+	D3D12_INPUT_ELEMENT_DESC inputLayout[] =
+	{
+		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+		{ "COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
+	};
+
+	D3D12_INPUT_LAYOUT_DESC inputLayoutDesc = {};
+	inputLayoutDesc.NumElements = sizeof(inputLayout) / sizeof(D3D12_INPUT_ELEMENT_DESC);
+	inputLayoutDesc.pInputElementDescs = inputLayout;
+
+	DXGI_SAMPLE_DESC sampleDesc = {};
+	sampleDesc.Count = 1;
+
+	D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = {}; // a structure to define a pso
+	psoDesc.InputLayout = inputLayoutDesc; // the structure describing our input layout
+	psoDesc.pRootSignature = rootSignature; // the root signature that describes the input data this pso needs
+	psoDesc.VS = vertexShaderBytecode; // structure describing where to find the vertex shader bytecode and how large it is
+	psoDesc.PS = pixelShaderBytecode; // same as VS but for pixel shader
+	psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE; // type of topology we are drawing
+	psoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM; // format of the render target
+	psoDesc.SampleDesc = sampleDesc; // must be the same sample description as the swapchain and depth/stencil buffer
+	psoDesc.SampleMask = 0xffffffff; // sample mask has to do with multi-sampling. 0xffffffff means point sampling is done
+	psoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT); // a default rasterizer state.
+	psoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT); // a default blent state.
+	psoDesc.NumRenderTargets = 1; // we are only binding one render target
+
+	device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&pipelineStateObject));
+
+	// Create vertex buffer
+	Vertex vList[] = {
+		{ 0.0f, 0.5f, 0.5f, 1.0f, 0.0f, 0.0f, 1.0f },
+		{ 0.5f, -0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 1.0f },
+		{ -0.5f, -0.5f, 0.5f, 0.0f, 0.0f, 1.0f, 1.0f },
+	};
+
+	int vBufferSize = sizeof(vList);
+
+	device->CreateCommittedResource(
+		&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT), // a default heap
+		D3D12_HEAP_FLAG_NONE, // no flags
+		&CD3DX12_RESOURCE_DESC::Buffer(vBufferSize), // resource description for a buffer
+		D3D12_RESOURCE_STATE_COPY_DEST, // we will start this heap in the copy destination state since we will copy data
+										// from the upload heap to this heap
+		nullptr, // optimized clear value must be null for this type of resource. used for render targets and depth/stencil buffers
+		IID_PPV_ARGS(&vertexBuffer));
+
+	// we can give resource heaps a name so when we debug with the graphics debugger we know what resource we are looking at
+	vertexBuffer->SetName(L"Vertex Buffer Resource Heap");
+
+	// create upload heap
+	// upload heaps are used to upload data to the GPU. CPU can write to it, GPU can read from it
+	// We will upload the vertex buffer using this heap to the default heap
+	ID3D12Resource* vBufferUploadHeap;
+	device->CreateCommittedResource(
+		&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD), // upload heap
+		D3D12_HEAP_FLAG_NONE, // no flags
+		&CD3DX12_RESOURCE_DESC::Buffer(vBufferSize), // resource description for a buffer
+		D3D12_RESOURCE_STATE_GENERIC_READ, // GPU will read from this buffer and copy its contents to the default heap
+		nullptr,
+		IID_PPV_ARGS(&vBufferUploadHeap));
+	vBufferUploadHeap->SetName(L"Vertex Buffer Upload Resource Heap");
+
+	// store vertex buffer in upload heap
+	D3D12_SUBRESOURCE_DATA vertexData = {};
+	vertexData.pData = reinterpret_cast<BYTE*>(vList); // pointer to our vertex array
+	vertexData.RowPitch = vBufferSize; // size of all our triangle vertex data
+	vertexData.SlicePitch = vBufferSize; // also the size of our triangle vertex data
+
+										 // we are now creating a command with the command list to copy the data from
+										 // the upload heap to the default heap
+	UpdateSubresources(commandList, vertexBuffer, vBufferUploadHeap, 0, 0, 1, &vertexData);
+
+	// transition the vertex buffer data from copy destination state to vertex buffer state
+	commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(vertexBuffer, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER));
+
+	// Now we execute the command list to upload the initial assets (triangle data)
+	commandList->Close();
+	ID3D12CommandList* ppCommandLists[] = { commandList };
+	commandQueue->ExecuteCommandLists(1, ppCommandLists);
+
+	// increment the fence value now, otherwise the buffer might not be uploaded by the time we start drawing
+	fenceValue[frameIndex]++;
+	auto hr = commandQueue->Signal(fence[frameIndex], fenceValue[frameIndex]);
+	if (FAILED(hr))
+	{
+		Running = false;
+	}
+
+	// create a vertex buffer view for the triangle. We get the GPU memory address to the vertex pointer using the GetGPUVirtualAddress() method
+	vertexBufferView.BufferLocation = vertexBuffer->GetGPUVirtualAddress();
+	vertexBufferView.StrideInBytes = sizeof(Vertex);
+	vertexBufferView.SizeInBytes = vBufferSize;
+
+	// Fill out the Viewport
+	viewport.TopLeftX = 0;
+	viewport.TopLeftY = 0;
+	viewport.Width = (float)Width;
+	viewport.Height = (float)Height;
+	viewport.MinDepth = 0.0f;
+	viewport.MaxDepth = 1.0f;
+
+	// Fill out a scissor rect
+	scissorRect.left = 0;
+	scissorRect.top = 0;
+	scissorRect.right = Width;
+	scissorRect.bottom = Height;
 }
 
 void Core::Update()
@@ -191,7 +311,7 @@ void Core::UpdatePipeline()
 	{
 		Running = false;
 	}
-	hr = commandList->Reset(commandAllocator[frameIndex], NULL);
+	hr = commandList->Reset(commandAllocator[frameIndex], pipelineStateObject);
 	if (FAILED(hr))
 	{
 		Running = false;
@@ -202,6 +322,15 @@ void Core::UpdatePipeline()
 	commandList->OMSetRenderTargets(1, &rtvHandle, FALSE, nullptr);
 	const float clearColor[] = { 0.0f, 0.2f, 0.4f, 1.0f };
 	commandList->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
+
+	// draw triangle
+	commandList->SetGraphicsRootSignature(rootSignature);
+	commandList->RSSetViewports(1, &viewport);
+	commandList->RSSetScissorRects(1, &scissorRect);
+	commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	commandList->IASetVertexBuffers(0, 1, &vertexBufferView);
+	commandList->DrawInstanced(3, 1, 0, 0);
+
 	commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(renderTargets[frameIndex], D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT));
 
 	hr = commandList->Close();
@@ -246,7 +375,7 @@ void Core::Cleanup()
 	if (swapChain->GetFullscreenState(&fs, NULL))
 		swapChain->SetFullscreenState(false, NULL);
 
-	if(device)device->Release();
+	if (device)device->Release();
 	swapChain->Release();
 	commandQueue->Release();
 	rtvDescriptorHeap->Release();
@@ -258,6 +387,10 @@ void Core::Cleanup()
 		commandAllocator[i]->Release();
 		fence[i]->Release();
 	};
+
+	pipelineStateObject->Release();
+	rootSignature->Release();
+	vertexBuffer->Release();
 }
 
 void Core::WaitForPreviousFrame()
@@ -288,8 +421,10 @@ void Core::WaitForPreviousFrame()
 Core::Core(HINSTANCE hInstance, int ShowWnd, int width, int height, bool fullscreen)
 {
 	coreInstance = this;
+	Running = true;
 	this->InitializeWindow(hInstance, ShowWnd, width, height, fullscreen);
 	this->InitD3D();
+	this->InitResources();
 }
 
 void Core::InitializeWindow(HINSTANCE hInstance, int ShowWnd, int width, int height, bool fullscreen)

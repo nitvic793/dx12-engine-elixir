@@ -17,7 +17,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow)
 		}
 	}
 
-	Core* core = new Core(hInstance, nCmdShow, 1280, 720, true);
+	Core* core = new Core(hInstance, nCmdShow, 1280, 720, false);
 	core->Run([&](Core* core) 
 	{
 		//Game Logic here...
