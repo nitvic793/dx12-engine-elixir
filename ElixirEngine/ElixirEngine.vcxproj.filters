@@ -47,6 +47,9 @@
     <ClInclude Include="Core\Vertex.h">
       <Filter>Header Files\Core</Filter>
     </ClInclude>
+    <ClInclude Include="Core\ConstantBuffer.h">
+      <Filter>Header Files\Core</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Shaders\DefaultVS.hlsl">

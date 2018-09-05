@@ -1,11 +1,7 @@
 #include "../stdafx.h"
+#include "ConstantBuffer.h"
 #include <string>
 #include <functional>
-
-#ifndef FRAMEBUFFERCOUNT
-#define FRAMEBUFFERCOUNT 3
-#endif 
-
 
 class Core
 {
@@ -40,7 +36,7 @@ protected:
 	ID3D12CommandAllocator* commandAllocator[FRAMEBUFFERCOUNT]; 
 	ID3D12GraphicsCommandList* commandList;
 
-	ID3D12Fence* fence[FRAMEBUFFERCOUNT];    // an object that is locked while command list is being executed by the gpu.
+	ID3D12Fence* fence[FRAMEBUFFERCOUNT];  // an object that is locked while command list is being executed by the gpu.
 	HANDLE fenceEvent; // a handle to an event when fence is unlocked by the gpu
 	UINT64 fenceValue[FRAMEBUFFERCOUNT]; // this value is incremented each frame. each fence will have its own value
 
@@ -52,6 +48,15 @@ protected:
 	D3D12_VERTEX_BUFFER_VIEW vertexBufferView;
 	ID3D12Resource* indexBuffer; 
 	D3D12_INDEX_BUFFER_VIEW indexBufferView; 
+	ID3D12Resource* depthStencilBuffer; 
+	ID3D12DescriptorHeap* dsDescriptorHeap; // heap for depth stencil buffer descriptor
+
+	ID3D12DescriptorHeap* mainDescriptorHeap[FRAMEBUFFERCOUNT]; // this heap will store the descripor to our constant buffer
+	ID3D12Resource* constantBufferUploadHeap[FRAMEBUFFERCOUNT]; // this is the memory on the gpu where our constant buffer will be placed.
+
+	ConstantBuffer cbColorMultiplierData; // this is the constant buffer data we will send to the gpu 
+
+	UINT8* cbColorMultiplierGPUAddress[FRAMEBUFFERCOUNT]; // this is a pointer to the memory location we get when we map our constant buffer
 
 	int frameIndex; // current rtv
 	int rtvDescriptorSize; // size of the rtv descriptor on the device (all front and back buffers will be the same size)
