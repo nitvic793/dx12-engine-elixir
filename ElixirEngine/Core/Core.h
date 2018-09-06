@@ -54,9 +54,9 @@ protected:
 	ID3D12DescriptorHeap* mainDescriptorHeap[FRAMEBUFFERCOUNT]; // this heap will store the descripor to our constant buffer
 	ID3D12Resource* constantBufferUploadHeap[FRAMEBUFFERCOUNT]; // this is the memory on the gpu where our constant buffer will be placed.
 
-	ConstantBuffer cbPerObject; // this is the constant buffer data we will send to the gpu 
+	ConstantBuffer cbColorMultiplierData; // this is the constant buffer data we will send to the gpu 
 
-	UINT8* cbGPUAddress[FRAMEBUFFERCOUNT]; // this is a pointer to the memory location we get when we map our constant buffer
+	UINT8* cbColorMultiplierGPUAddress[FRAMEBUFFERCOUNT]; // this is a pointer to the memory location we get when we map our constant buffer
 
 	int frameIndex; // current rtv
 	int rtvDescriptorSize; // size of the rtv descriptor on the device (all front and back buffers will be the same size)
