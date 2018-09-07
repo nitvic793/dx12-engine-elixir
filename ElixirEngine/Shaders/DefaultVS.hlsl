@@ -1,24 +1,24 @@
 struct VertexInput
 {
-	float3 pos : POSITION;
-	float4 color: COLOR;
+	float4 pos : POSITION;
+	float2 uv  : TEXCOORD;
 };
 
 struct VertexOutput
 {
 	float4 pos: SV_POSITION;
-	float4 color: COLOR;
+	float2 uv: TEXCOORD;
 };
 
 cbuffer ConstantBuffer : register(b0)
 {
-	float4 colorMultiplier;
+	float4x4 worldViewProjection;
 };
 
 VertexOutput main(VertexInput input)
 {
 	VertexOutput output;
-	output.pos = float4(input.pos, 1.0f);
-	output.color = input.color * colorMultiplier;
+	output.pos = mul(input.pos, worldViewProjection);
+	output.uv = input.uv;
 	return output;
 }

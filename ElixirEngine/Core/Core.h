@@ -5,7 +5,20 @@
 
 class Core
 {
+	XMFLOAT4X4 cameraProjMat; // this will store our projection matrix
+	XMFLOAT4X4 cameraViewMat; // this will store our view matrix
 
+	XMFLOAT4 cameraPosition; // this is our cameras position vector
+	XMFLOAT4 cameraTarget; // a vector describing the point in space our camera is looking at
+	XMFLOAT4 cameraUp; // the worlds up vector
+
+	XMFLOAT4X4 cube1WorldMat; // our first cubes world matrix (transformation matrix)
+	XMFLOAT4X4 cube1RotMat; // this will keep track of our rotation for the first cube
+	XMFLOAT4 cube1Position; // our first cubes position in space
+
+	XMFLOAT4X4 cube2WorldMat;
+	XMFLOAT4X4 cube2RotMat;
+	XMFLOAT4 cube2PositionOffset;
 public:
 	static Core* coreInstance;
 	Core(HINSTANCE hInstance, int ShowWnd, int width, int height, bool fullscreen);
@@ -51,12 +64,20 @@ protected:
 	ID3D12Resource* depthStencilBuffer; 
 	ID3D12DescriptorHeap* dsDescriptorHeap; // heap for depth stencil buffer descriptor
 
-	ID3D12DescriptorHeap* mainDescriptorHeap[FRAMEBUFFERCOUNT]; // this heap will store the descripor to our constant buffer
+	ID3D12Resource* textureBuffer; // the resource heap containing our texture
+	ID3D12Resource* textureBuffer1; // the resource heap containing our texture
+	ID3D12DescriptorHeap* mainDescriptorHeap;
+	ID3D12Resource* textureBufferUploadHeap;
 	ID3D12Resource* constantBufferUploadHeap[FRAMEBUFFERCOUNT]; // this is the memory on the gpu where our constant buffer will be placed.
 
-	ConstantBuffer cbColorMultiplierData; // this is the constant buffer data we will send to the gpu 
+	ConstantBuffer cbPerObject; // this is the constant buffer data we will send to the gpu 
 
-	UINT8* cbColorMultiplierGPUAddress[FRAMEBUFFERCOUNT]; // this is a pointer to the memory location we get when we map our constant buffer
+	int ConstantBufferPerObjectAlignedSize = (sizeof(ConstantBuffer) + 255) & ~255;
+
+	UINT8* cbvGPUAddress[FRAMEBUFFERCOUNT]; // this is a pointer to the memory location we get when we map our constant buffer
+
+
+	int numCubeIndices; // the number of indices to draw the cube
 
 	int frameIndex; // current rtv
 	int rtvDescriptorSize; // size of the rtv descriptor on the device (all front and back buffers will be the same size)

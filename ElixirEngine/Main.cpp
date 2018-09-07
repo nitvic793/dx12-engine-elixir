@@ -1,8 +1,13 @@
 #include "stdafx.h"
 #include "Core/Core.h"
 
+
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow)
 {
+#if defined(DEBUG) | defined(_DEBUG)
+	// Enable memory leak detection - quick and dirty
+	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+#endif
 	// Ensure "Current Directory" (relative path) is always the .exe's folder
 	{
 		char currentDir[1024] = {};

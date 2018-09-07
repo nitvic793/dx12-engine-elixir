@@ -130,6 +130,7 @@
   <ItemGroup>
     <ClInclude Include="Core\ConstantBuffer.h" />
     <ClInclude Include="Core\Core.h" />
+    <ClInclude Include="Core\ImageHelpers.h" />
     <ClInclude Include="Core\Vertex.h" />
     <ClInclude Include="d3dx12.h" />
     <ClInclude Include="stdafx.h" />

@@ -4,9 +4,7 @@
 using namespace DirectX;
 
 struct Vertex {
-	Vertex(float x, float y, float z, float r, float g, float b, float a) : 
-		pos(x, y, z), 
-		color(r, g, b, z) {}
+	Vertex(float x, float y, float z, float u, float v) : pos(x, y, z), uv(u, v) {}
 	XMFLOAT3 pos;
-	XMFLOAT4 color;
+	XMFLOAT2 uv;
 };
