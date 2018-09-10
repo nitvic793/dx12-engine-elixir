@@ -770,6 +770,7 @@ void Core::Cleanup()
 		constantBufferUploadHeap[i]->Release();
 
 	};
+	
 	mainDescriptorHeap->Release();
 	pipelineStateObject->Release();
 	rootSignature->Release();
