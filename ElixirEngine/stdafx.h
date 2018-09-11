@@ -13,6 +13,8 @@
 #include <string>
 #include <wincodec.h>
 
+
+
 using namespace DirectX;
 
 #ifndef FRAMEBUFFERCOUNT
