@@ -5,6 +5,7 @@
 #include "Mesh.h"
 #include <string>
 #include <functional>
+#include "Light.h"
 
 class Core
 {
@@ -71,7 +72,6 @@ protected:
 	UINT8* cbvGPUAddress[FRAMEBUFFERCOUNT]; // this is a pointer to the memory location we get when we map our constant buffer
 
 
-	int numCubeIndices; // the number of indices to draw the cube
 
 	int frameIndex; // current rtv
 	int rtvDescriptorSize; // size of the rtv descriptor on the device (all front and back buffers will be the same size)

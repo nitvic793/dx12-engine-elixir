@@ -136,6 +136,7 @@
     <ClInclude Include="Core\Core.h" />
     <ClInclude Include="Core\Entity.h" />
     <ClInclude Include="Core\ImageHelpers.h" />
+    <ClInclude Include="Core\Light.h" />
     <ClInclude Include="Core\Mesh.h" />
     <ClInclude Include="Core\Vertex.h" />
     <ClInclude Include="d3dx12.h" />

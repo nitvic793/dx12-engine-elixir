@@ -194,11 +194,11 @@ void Core::InitResources()
 
 	D3D12_STATIC_SAMPLER_DESC sampler = {};
 	sampler.Filter = D3D12_FILTER_ANISOTROPIC;
-	sampler.AddressU = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
-	sampler.AddressV = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
-	sampler.AddressW = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
+	sampler.AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+	sampler.AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+	sampler.AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
 	sampler.MipLODBias = 0;
-	sampler.MaxAnisotropy = 0;
+	sampler.MaxAnisotropy = 16;
 	sampler.ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER;
 	sampler.BorderColor = D3D12_STATIC_BORDER_COLOR_TRANSPARENT_BLACK;
 	sampler.MinLOD = 0.0f;
@@ -332,7 +332,7 @@ void Core::InitResources()
 	// Load the image from file
 	D3D12_RESOURCE_DESC textureDesc;
 	int imageBytesPerRow;
-	int imageSize = LoadImageDataFromFile(&imageData, textureDesc, L"metal.jpg", imageBytesPerRow);
+	int imageSize = LoadImageDataFromFile(&imageData, textureDesc, L"../../Assets/metal.jpg", imageBytesPerRow);
 
 	// make sure we have data
 	if (imageSize <= 0)

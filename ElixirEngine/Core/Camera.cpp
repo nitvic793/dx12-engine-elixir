@@ -46,7 +46,7 @@ void Camera::SetProjectionMatrix(float width, float height)
 Camera::Camera(float width, float height)
 {
 	float aspectRatio = width / height;
-	position = XMFLOAT3(0.f, 0.f, -5.f);
+	position = XMFLOAT3(0.f, 1.f, -5.f);
 	direction = XMFLOAT3(0.f, 0.f, 1.f);
 	rotationX = rotationY = 0.f;
 
