@@ -121,6 +121,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Core\Camera.cpp" />
     <ClCompile Include="Core\Core.cpp" />
     <ClCompile Include="Core\Entity.cpp" />
     <ClCompile Include="Core\Mesh.cpp" />
@@ -130,6 +131,7 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Core\Camera.h" />
     <ClInclude Include="Core\ConstantBuffer.h" />
     <ClInclude Include="Core\Core.h" />
     <ClInclude Include="Core\Entity.h" />

@@ -1,25 +1,13 @@
 #include "../stdafx.h"
 #include "ConstantBuffer.h"
+#include "Camera.h"
+#include "Entity.h"
 #include "Mesh.h"
 #include <string>
 #include <functional>
 
 class Core
 {
-	XMFLOAT4X4 cameraProjMat; // this will store our projection matrix
-	XMFLOAT4X4 cameraViewMat; // this will store our view matrix
-
-	XMFLOAT4 cameraPosition; // this is our cameras position vector
-	XMFLOAT4 cameraTarget; // a vector describing the point in space our camera is looking at
-	XMFLOAT4 cameraUp; // the worlds up vector
-
-	XMFLOAT4X4 cube1WorldMat; // our first cubes world matrix (transformation matrix)
-	XMFLOAT4X4 cube1RotMat; // this will keep track of our rotation for the first cube
-	XMFLOAT4 cube1Position; // our first cubes position in space
-
-	XMFLOAT4X4 cube2WorldMat;
-	XMFLOAT4X4 cube2RotMat;
-	XMFLOAT4 cube2PositionOffset;
 public:
 	static Core* coreInstance;
 	Core(HINSTANCE hInstance, int ShowWnd, int width, int height, bool fullscreen);
@@ -74,6 +62,9 @@ protected:
 	ConstantBuffer cbPerObject; // this is the constant buffer data we will send to the gpu 
 
 	Mesh* mesh;
+	Camera* camera;
+	Entity* entity1;
+	Entity* entity2;
 
 	int ConstantBufferPerObjectAlignedSize = (sizeof(ConstantBuffer) + 255) & ~255;
 

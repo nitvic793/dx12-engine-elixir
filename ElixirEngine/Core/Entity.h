@@ -13,6 +13,6 @@ public:
 	Entity();
 	XMFLOAT4X4 GetWorldMatrix();
 	XMFLOAT3 GetPosition();
-	void SetPosition(XMFLOAT3 pos);
+	void SetPosition(const XMFLOAT3& pos);
 	~Entity();
 };

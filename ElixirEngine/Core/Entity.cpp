@@ -17,6 +17,7 @@ XMFLOAT4X4 Entity::GetWorldMatrix()
 	XMMATRIX scle = XMMatrixScaling(scale.x, scale.y, scale.z);
 	XMMATRIX world = scle * rot * trans;
 	XMStoreFloat4x4(&worldMatrix, XMMatrixTranspose(world));
+	XMStoreFloat4x4(&worldMatrix, world);
 	return worldMatrix;
 }
 
@@ -25,7 +26,7 @@ XMFLOAT3 Entity::GetPosition()
 	return position;
 }
 
-void Entity::SetPosition(XMFLOAT3 pos)
+void Entity::SetPosition(const XMFLOAT3& pos)
 {
 	position = pos;
 }
