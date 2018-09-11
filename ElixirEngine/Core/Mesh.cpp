@@ -174,6 +174,7 @@ Mesh::Mesh(std::string objFile, ID3D12Device * device, ID3D12GraphicsCommandList
 
 void Mesh::Initialize(Vertex* vertices, UINT vertexCount, UINT * indices, UINT indexCount, ID3D12GraphicsCommandList* commandList)
 {
+	this->indexCount = indexCount;
 	CalculateTangents(vertices, vertexCount, indices, indexCount);
 	vBufferSize = sizeof(Vertex) * vertexCount;
 
@@ -211,6 +212,51 @@ void Mesh::Initialize(Vertex* vertices, UINT vertexCount, UINT * indices, UINT i
 
 	// transition the vertex buffer data from copy destination state to vertex buffer state
 	commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(vertexBuffer, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER));
+	iBufferSize = sizeof(UINT) * indexCount;
+
+	// create default heap to hold index buffer
+	device->CreateCommittedResource(
+		&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT), // a default heap
+		D3D12_HEAP_FLAG_NONE, // no flags
+		&CD3DX12_RESOURCE_DESC::Buffer(iBufferSize), // resource description for a buffer
+		D3D12_RESOURCE_STATE_COPY_DEST, // start in the copy destination state
+		nullptr, // optimized clear value must be null for this type of resource
+		IID_PPV_ARGS(&indexBuffer));
+
+	// we can give resource heaps a name so when we debug with the graphics debugger we know what resource we are looking at
+	indexBuffer->SetName(L"Index Buffer Resource Heap");
+
+	// create upload heap to upload index buffer
+	ID3D12Resource* iBufferUploadHeap;
+	device->CreateCommittedResource(
+		&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD), // upload heap
+		D3D12_HEAP_FLAG_NONE, // no flags
+		&CD3DX12_RESOURCE_DESC::Buffer(vBufferSize), // resource description for a buffer
+		D3D12_RESOURCE_STATE_GENERIC_READ, // GPU will read from this buffer and copy its contents to the default heap
+		nullptr,
+		IID_PPV_ARGS(&iBufferUploadHeap));
+	iBufferUploadHeap->SetName(L"Index Buffer Upload Resource Heap");
+
+	// store vertex buffer in upload heap
+	D3D12_SUBRESOURCE_DATA indexData = {};
+	indexData.pData = reinterpret_cast<BYTE*>(indices); // pointer to our index array
+	indexData.RowPitch = iBufferSize; // size of all our index buffer
+	indexData.SlicePitch = iBufferSize; // also the size of our index buffer
+
+										// we are now creating a command with the command list to copy the data from
+										// the upload heap to the default heap
+	UpdateSubresources(commandList, indexBuffer, iBufferUploadHeap, 0, 0, 1, &indexData);
+
+	// transition the vertex buffer data from copy destination state to vertex buffer state
+	commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(indexBuffer, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER));
+
+	vBufferView.BufferLocation = vertexBuffer->GetGPUVirtualAddress();
+	vBufferView.StrideInBytes = sizeof(Vertex);
+	vBufferView.SizeInBytes = vBufferSize;
+
+	iBufferView.BufferLocation = indexBuffer->GetGPUVirtualAddress();
+	iBufferView.Format = DXGI_FORMAT_R32_UINT;
+	iBufferView.SizeInBytes = iBufferSize;
 }
 
 void Mesh::CalculateTangents(Vertex * vertices, UINT vertexCount, UINT * indices, UINT indexCount)
@@ -276,6 +322,23 @@ void Mesh::CalculateTangents(Vertex * vertices, UINT vertexCount, UINT * indices
 	delete[] tan1;
 }
 
+const D3D12_VERTEX_BUFFER_VIEW& Mesh::GetVertexBufferView()
+{
+	return vBufferView;
+}
+
+const D3D12_INDEX_BUFFER_VIEW& Mesh::GetIndexBufferView()
+{
+	return iBufferView;
+}
+
+const UINT& Mesh::GetIndexCount()
+{
+	return indexCount;
+}
+
 Mesh::~Mesh()
 {
+	vertexBuffer->Release();
+	indexBuffer->Release();
 }

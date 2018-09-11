@@ -1,5 +1,6 @@
 #include "../stdafx.h"
 #include "ConstantBuffer.h"
+#include "Mesh.h"
 #include <string>
 #include <functional>
 
@@ -71,6 +72,8 @@ protected:
 	ID3D12Resource* constantBufferUploadHeap[FRAMEBUFFERCOUNT]; // this is the memory on the gpu where our constant buffer will be placed.
 
 	ConstantBuffer cbPerObject; // this is the constant buffer data we will send to the gpu 
+
+	Mesh* mesh;
 
 	int ConstantBufferPerObjectAlignedSize = (sizeof(ConstantBuffer) + 255) & ~255;
 
