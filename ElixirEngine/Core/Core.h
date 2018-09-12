@@ -61,6 +61,7 @@ protected:
 	ID3D12Resource* constantBufferUploadHeap[FRAMEBUFFERCOUNT]; // this is the memory on the gpu where our constant buffer will be placed.
 
 	ConstantBuffer cbPerObject; // this is the constant buffer data we will send to the gpu 
+	PixelConstantBuffer pixelCb;
 
 	Mesh* mesh;
 	Camera* camera;

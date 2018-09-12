@@ -14,6 +14,11 @@ struct DirectionalLight
 	float Padding;
 };
 
+cbuffer externalData : register(b0)
+{
+	DirectionalLight dirLight;
+}
+
 float4 calculateDirectionalLight(float3 normal, DirectionalLight light)
 {
 	float3 dirToLight = normalize(-light.Direction);
@@ -29,10 +34,6 @@ SamplerState s1 : register(s0);
 float4 main(VertexOutput input) : SV_TARGET
 {
 	input.normal = normalize(input.normal);
-	DirectionalLight light;
-	light.AmbientColor = float4(0.1f, 0.1f, 0.1f, 0);
-	light.Direction = float3(1, 0, 0);
-	light.DiffuseColor = float4(1.0f, 0.1f, 0.1f, 0);
-	float4 lightColor = calculateDirectionalLight(input.normal, light);
+	float4 lightColor = calculateDirectionalLight(input.normal, dirLight);
 	return lightColor * t1.Sample(s1, input.uv);
 }

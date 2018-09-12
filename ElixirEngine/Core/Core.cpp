@@ -183,14 +183,18 @@ void Core::InitResources()
 	descriptorTable.NumDescriptorRanges = _countof(descriptorTableRanges); // we only have one range
 	descriptorTable.pDescriptorRanges = &descriptorTableRanges[0]; // the pointer to the beginning of our ranges array
 
-	D3D12_ROOT_PARAMETER  rootParameters[2]; // only one parameter right now
+	D3D12_ROOT_PARAMETER  rootParameters[3]; 
 	rootParameters[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV; // this is a constant buffer view root descriptor
-	rootParameters[0].Descriptor = rootCBVDescriptor; // this is the root descriptor for this root parameter
-	rootParameters[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX; // our pixel shader will be the only shader accessing this parameter for now
+	rootParameters[0].Descriptor = rootCBVDescriptor; 
+	rootParameters[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
 
 	rootParameters[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE; // this is a descriptor table
 	rootParameters[1].DescriptorTable = descriptorTable; // this is our descriptor table for this root parameter
 	rootParameters[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL; // our pixel shader will be the only shader accessing this parameter for now
+
+	rootParameters[2].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV; // this is a constant buffer view root descriptor
+	rootParameters[2].Descriptor = rootCBVDescriptor;
+	rootParameters[2].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
 
 	D3D12_STATIC_SAMPLER_DESC sampler = {};
 	sampler.Filter = D3D12_FILTER_ANISOTROPIC;
@@ -296,6 +300,10 @@ void Core::InitResources()
 
 	device->CreateDepthStencilView(depthStencilBuffer, &depthStencilDesc, dsDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
 
+	pixelCb.light.AmbientColor = XMFLOAT4(0.1f, 0.1f, 0.1f, 0);
+	pixelCb.light.DiffuseColor = XMFLOAT4(1.f, 0.1f, 0.f, 0.f);
+	pixelCb.light.Direction = XMFLOAT3(1.f, 0.f, 0.f);
+
 	// create the constant buffer resource heap
 	for (int i = 0; i < frameBufferCount; ++i)
 	{
@@ -320,6 +328,7 @@ void Core::InitResources()
 		// so we need to add spacing between the two buffers, so that the second buffer starts at 256 bits from the beginning of the resource heap.
 		memcpy(cbvGPUAddress[i], &cbPerObject, sizeof(cbPerObject)); // cube1's constant buffer data
 		memcpy(cbvGPUAddress[i] + ConstantBufferPerObjectAlignedSize, &cbPerObject, sizeof(cbPerObject)); // cube2's constant buffer data
+		memcpy(cbvGPUAddress[i] + ConstantBufferPerObjectAlignedSize * 2, &pixelCb, sizeof(pixelCb)); // cube2's constant buffer data
 	}
 
 	D3D12_DESCRIPTOR_HEAP_DESC heapDesc = {};
@@ -482,6 +491,8 @@ void Core::UpdatePipeline()
 	commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	commandList->IASetVertexBuffers(0, 1, &mesh->GetVertexBufferView());
 	commandList->IASetIndexBuffer(&mesh->GetIndexBufferView());
+
+	commandList->SetGraphicsRootConstantBufferView(1, constantBufferUploadHeap[frameIndex]->GetGPUVirtualAddress() + ConstantBufferPerObjectAlignedSize * 2);
 	commandList->SetGraphicsRootConstantBufferView(0, constantBufferUploadHeap[frameIndex]->GetGPUVirtualAddress());
 
 	// draw first cube
