@@ -605,6 +605,17 @@ void Core::WaitForPreviousFrame()
 	fenceValue[frameIndex]++;
 }
 
+void Core::UpdateTimer()
+{
+	__int64 now;
+	QueryPerformanceCounter((LARGE_INTEGER*)&now);
+	currentTime = now;
+
+	deltaTime = max((float)((currentTime - previousTime) * perfCounterSeconds), 0.0f);
+	totalTime = (float)((currentTime - startTime) * perfCounterSeconds);
+	previousTime = currentTime;
+}
+
 Core::Core(HINSTANCE hInstance, int ShowWnd, int width, int height, bool fullscreen)
 {
 	coreInstance = this;
@@ -612,6 +623,13 @@ Core::Core(HINSTANCE hInstance, int ShowWnd, int width, int height, bool fullscr
 	this->InitializeWindow(hInstance, ShowWnd, width, height, fullscreen);
 	this->InitD3D();
 	this->InitResources();
+
+	fpsFrameCount = 0;
+	fpsTimeElapsed = 0.0f;
+
+	__int64 perfFreq;
+	QueryPerformanceFrequency((LARGE_INTEGER*)&perfFreq);
+	perfCounterSeconds = 1.0 / (double)perfFreq;
 }
 
 void Core::InitializeWindow(HINSTANCE hInstance, int ShowWnd, int width, int height, bool fullscreen)
@@ -678,6 +696,12 @@ void Core::InitializeWindow(HINSTANCE hInstance, int ShowWnd, int width, int hei
 
 void Core::Run(std::function<void(Core*)> coreLogicCallback)
 {
+	__int64 now;
+	QueryPerformanceCounter((LARGE_INTEGER*)&now);
+	startTime = now;
+	currentTime = now;
+	previousTime = now;
+
 	MSG msg = {};
 	while (msg.message != WM_QUIT)
 	{
@@ -688,6 +712,7 @@ void Core::Run(std::function<void(Core*)> coreLogicCallback)
 		}
 		else
 		{
+			UpdateTimer();
 			if (coreLogicCallback)
 			{
 				coreLogicCallback(this);
