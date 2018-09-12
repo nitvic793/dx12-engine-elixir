@@ -1,8 +1,52 @@
 #include "Camera.h"
+#include <Windows.h>
 
 XMFLOAT3 Camera::GetPosition()
 {
 	return position;
+}
+
+void Camera::Update(float deltaTime)
+{
+	float speed = 10.f;
+	XMVECTOR pos = XMVectorSet(position.x, position.y, position.z, 0);
+	XMVECTOR dir = XMVectorSet(direction.x, direction.y, direction.z, 0);
+	auto rotQuaternion = XMQuaternionRotationRollPitchYaw(rotationX, rotationY, 0);
+	dir = XMVector3Rotate(dir, rotQuaternion);
+	XMVECTOR up = XMVectorSet(0, 1, 0, 0); // Y is up!
+
+	if (GetAsyncKeyState('W') & 0x8000)
+	{
+		pos = pos + dir * speed * deltaTime;;
+	}
+
+	if (GetAsyncKeyState('S') & 0x8000)
+	{
+		pos = pos - dir * speed * deltaTime;;
+	}
+
+	if (GetAsyncKeyState('A') & 0x8000)
+	{
+		auto leftDir = XMVector3Cross(dir, up);
+		pos = pos + leftDir * speed * deltaTime;;
+	}
+
+	if (GetAsyncKeyState('D') & 0x8000)
+	{
+		auto rightDir = XMVector3Cross(-dir, up);
+		pos = pos + rightDir * speed * deltaTime;;
+	}
+
+	if (GetAsyncKeyState(VK_SPACE) & 0x8000)
+	{
+	pos = pos + XMVectorSet(0, speed * deltaTime, 0, 0);
+	}
+	if (GetAsyncKeyState('X') & 0x8000)
+	{
+	pos = pos + XMVectorSet(0, -speed * deltaTime, 0, 0);
+	}
+
+	XMStoreFloat3(&position, pos);
 }
 
 void Camera::SetPosition(const XMFLOAT3& pos)

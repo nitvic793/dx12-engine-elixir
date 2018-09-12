@@ -429,6 +429,7 @@ void Core::InitResources()
 
 void Core::Update()
 {
+	camera->Update(deltaTime);
 	auto pos = XMFLOAT3(0, 0, 0);
 	entity1->SetPosition(pos);
 	entity2->SetPosition(XMFLOAT3(2, 0, 2));

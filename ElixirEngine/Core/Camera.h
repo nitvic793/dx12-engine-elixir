@@ -14,6 +14,7 @@ class Camera
 	float rotationY;
 public:
 	XMFLOAT3 GetPosition();
+	void Update(float deltaTime);
 	void SetPosition(const XMFLOAT3& pos);
 	const XMFLOAT4X4& GetViewMatrix();
 	const XMFLOAT4X4& GetProjectionMatrix();
