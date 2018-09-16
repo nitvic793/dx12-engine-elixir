@@ -6,6 +6,7 @@
 #include <string>
 #include <functional>
 #include "Light.h"
+#include "DeferredRenderer.h"
 
 class Core
 {
@@ -74,6 +75,8 @@ protected:
 
 	ConstantBuffer cbPerObject; // this is the constant buffer data we will send to the gpu 
 	PixelConstantBuffer pixelCb;
+
+	DeferredRenderer* deferredRenderer;
 
 	Mesh* mesh;
 	Camera* camera;

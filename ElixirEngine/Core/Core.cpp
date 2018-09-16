@@ -1,6 +1,7 @@
 #include "Core.h"
 #include "Vertex.h"
 #include "ImageHelpers.h"
+#include "ShaderManager.h"
 
 Core* Core::coreInstance = nullptr;
 
@@ -164,6 +165,8 @@ bool Core::InitD3D()
 int ConstantBufferPerObjectAlignedSize = (sizeof(ConstantBuffer) + 255) & ~255;
 void Core::InitResources()
 {
+	deferredRenderer = new DeferredRenderer(device, Width, Height);
+	deferredRenderer->Initialize();
 	camera = new Camera((float)Width, (float)Height);
 	entity1 = new Entity();
 	entity2 = new Entity();
@@ -188,13 +191,13 @@ void Core::InitResources()
 	rootParameters[0].Descriptor = rootCBVDescriptor; 
 	rootParameters[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
 
-	rootParameters[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE; // this is a descriptor table
-	rootParameters[1].DescriptorTable = descriptorTable; // this is our descriptor table for this root parameter
-	rootParameters[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL; // our pixel shader will be the only shader accessing this parameter for now
+	rootParameters[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV; // this is a constant buffer view root descriptor
+	rootParameters[1].Descriptor = rootCBVDescriptor;
+	rootParameters[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
 
-	rootParameters[2].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV; // this is a constant buffer view root descriptor
-	rootParameters[2].Descriptor = rootCBVDescriptor;
-	rootParameters[2].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+	rootParameters[2].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE; // this is a descriptor table
+	rootParameters[2].DescriptorTable = descriptorTable; // this is our descriptor table for this root parameter
+	rootParameters[2].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL; // our pixel shader will be the only shader accessing this parameter for now
 
 	D3D12_STATIC_SAMPLER_DESC sampler = {};
 	sampler.Filter = D3D12_FILTER_ANISOTROPIC;
@@ -225,17 +228,8 @@ void Core::InitResources()
 	D3D12SerializeRootSignature(&rootSignatureDesc, D3D_ROOT_SIGNATURE_VERSION_1, &signature, nullptr);
 	device->CreateRootSignature(0, signature->GetBufferPointer(), signature->GetBufferSize(), IID_PPV_ARGS(&rootSignature));
 
-	ID3DBlob* vertexShader;
-	D3DReadFileToBlob(L"DefaultVS.cso", &vertexShader);
-	D3D12_SHADER_BYTECODE vertexShaderBytecode = {};
-	vertexShaderBytecode.BytecodeLength = vertexShader->GetBufferSize();
-	vertexShaderBytecode.pShaderBytecode = vertexShader->GetBufferPointer();
-
-	ID3DBlob* pixelShader;
-	D3DReadFileToBlob(L"DefaultPS.cso", &pixelShader);
-	D3D12_SHADER_BYTECODE pixelShaderBytecode = {};
-	pixelShaderBytecode.BytecodeLength = pixelShader->GetBufferSize();
-	pixelShaderBytecode.pShaderBytecode = pixelShader->GetBufferPointer();
+	auto vertexShaderBytecode = ShaderManager::LoadShader(L"DefaultVS.cso");
+	auto pixelShaderBytecode = ShaderManager::LoadShader(L"DefaultPS.cso");
 
 	D3D12_INPUT_ELEMENT_DESC inputLayout[] =
 	{
@@ -328,7 +322,7 @@ void Core::InitResources()
 		// so we need to add spacing between the two buffers, so that the second buffer starts at 256 bits from the beginning of the resource heap.
 		memcpy(cbvGPUAddress[i], &cbPerObject, sizeof(cbPerObject)); // cube1's constant buffer data
 		memcpy(cbvGPUAddress[i] + ConstantBufferPerObjectAlignedSize, &cbPerObject, sizeof(cbPerObject)); // cube2's constant buffer data
-		memcpy(cbvGPUAddress[i] + ConstantBufferPerObjectAlignedSize * 2, &pixelCb, sizeof(pixelCb)); // cube2's constant buffer data
+		memcpy(cbvGPUAddress[i] + ConstantBufferPerObjectAlignedSize * 2, &pixelCb, sizeof(pixelCb)); // Light data for PixelShader
 	}
 
 	D3D12_DESCRIPTOR_HEAP_DESC heapDesc = {};
@@ -469,6 +463,7 @@ void Core::UpdatePipeline()
 		Running = false;
 	}
 
+	deferredRenderer->UpdateConstantBuffer(cbPerObject, pixelCb);
 	commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(renderTargets[frameIndex], D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET));
 	CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(rtvDescriptorHeap->GetCPUDescriptorHandleForHeapStart(), frameIndex, rtvDescriptorSize);
 	CD3DX12_CPU_DESCRIPTOR_HANDLE dsvHandle(dsDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
@@ -485,23 +480,24 @@ void Core::UpdatePipeline()
 	commandList->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
 	//RTV - GBuffer
 	// set the root descriptor table 0 to the constant buffer descriptor heap
-	// set the descriptor table to the descriptor heap (parameter 1, as constant buffer root descriptor is parameter index 0)
-	commandList->SetGraphicsRootDescriptorTable(1, mainDescriptorHeap->GetGPUDescriptorHandleForHeapStart());
+	// set the descriptor table to the descriptor heap (parameter 2, as constant buffer root descriptor is parameter index 0)
+	commandList->SetGraphicsRootDescriptorTable(2, mainDescriptorHeap->GetGPUDescriptorHandleForHeapStart());
+	deferredRenderer->SetGBUfferPSO(commandList);
 	commandList->RSSetViewports(1, &viewport);
 	commandList->RSSetScissorRects(1, &scissorRect);
 	commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	commandList->IASetVertexBuffers(0, 1, &mesh->GetVertexBufferView());
 	commandList->IASetIndexBuffer(&mesh->GetIndexBufferView());
+	commandList->SetGraphicsRootDescriptorTable(2, mainDescriptorHeap->GetGPUDescriptorHandleForHeapStart());
+	/*commandList->SetGraphicsRootConstantBufferView(1, constantBufferUploadHeap[frameIndex]->GetGPUVirtualAddress() + ConstantBufferPerObjectAlignedSize * 2);
 
-	commandList->SetGraphicsRootConstantBufferView(2, constantBufferUploadHeap[frameIndex]->GetGPUVirtualAddress() + ConstantBufferPerObjectAlignedSize * 2);
-	commandList->SetGraphicsRootConstantBufferView(0, constantBufferUploadHeap[frameIndex]->GetGPUVirtualAddress());
-
+	commandList->SetGraphicsRootConstantBufferView(0, constantBufferUploadHeap[frameIndex]->GetGPUVirtualAddress());*/
 	// draw first cube
 	commandList->DrawIndexedInstanced(mesh->GetIndexCount(), 1, 0, 0, 0);
 
 	// second cube
 	// cube2's constant buffer data is stored after (256 bits from the start of the heap).
-	commandList->SetGraphicsRootConstantBufferView(0, constantBufferUploadHeap[frameIndex]->GetGPUVirtualAddress() + ConstantBufferPerObjectAlignedSize);
+	//commandList->SetGraphicsRootConstantBufferView(0, constantBufferUploadHeap[frameIndex]->GetGPUVirtualAddress() + ConstantBufferPerObjectAlignedSize);
 
 	// draw second cube
 	commandList->DrawIndexedInstanced(mesh->GetIndexCount(), 1, 0, 0, 0);
@@ -578,7 +574,7 @@ void Core::Cleanup()
 	delete camera;
 	delete entity1;
 	delete entity2;
-
+	delete deferredRenderer;
 }
 
 void Core::WaitForPreviousFrame()
