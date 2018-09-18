@@ -425,7 +425,7 @@ void Core::InitResources()
 void Core::Update()
 {
 	camera->Update(deltaTime);
-	auto pos = XMFLOAT3(0, 0, 0);
+	auto pos = XMFLOAT3(-1, 0, 0);
 	entity1->SetPosition(pos);
 	entity2->SetPosition(XMFLOAT3(2, 0, 2));
 
@@ -464,7 +464,6 @@ void Core::UpdatePipeline()
 		Running = false;
 	}
 
-	deferredRenderer->UpdateConstantBuffer(cbPerObject, pixelCb); //Needs Fixing
 	commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(renderTargets[frameIndex], D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET));
 	CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(rtvDescriptorHeap->GetCPUDescriptorHandleForHeapStart(), frameIndex, rtvDescriptorSize);
 	CD3DX12_CPU_DESCRIPTOR_HANDLE dsvHandle(dsDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
@@ -493,15 +492,23 @@ void Core::UpdatePipeline()
 	//commandList->SetGraphicsRootConstantBufferView(1, constantBufferUploadHeap[frameIndex]->GetGPUVirtualAddress() + ConstantBufferPerObjectAlignedSize * 2);
 
 	//commandList->SetGraphicsRootConstantBufferView(0, constantBufferUploadHeap[frameIndex]->GetGPUVirtualAddress());
+
+
+	//deferredRenderer->UpdateConstantBuffer(cbPerObject, pixelCb); //Needs Fixing
+	auto cb1 = ConstantBuffer{ entity1->GetWorldViewProjectionTransposed(camera->GetProjectionMatrix(), camera->GetViewMatrix()) };
+	auto cb2 = ConstantBuffer{ entity2->GetWorldViewProjectionTransposed(camera->GetProjectionMatrix(), camera->GetViewMatrix()) };
+
+	deferredRenderer->UpdateConstantBuffer(cb1, pixelCb, commandList); //Needs Fixing
+	//deferredRenderer->UpdateConstantBufferPerObject(cb1, 0);
 	// draw first cube
 	commandList->DrawIndexedInstanced(mesh->GetIndexCount(), 1, 0, 0, 0);
-
+	
 	// second cube
 	// cube2's constant buffer data is stored after (256 bits from the start of the heap).
 	//commandList->SetGraphicsRootConstantBufferView(0, constantBufferUploadHeap[frameIndex]->GetGPUVirtualAddress() + ConstantBufferPerObjectAlignedSize);
-
-	// draw second cube
-	//commandList->DrawIndexedInstanced(mesh->GetIndexCount(), 1, 0, 0, 0);
+	//deferredRenderer->UpdateConstantBufferPerObject(cb2, 1);
+	deferredRenderer->UpdateConstantBuffer(cb2, pixelCb, commandList);
+	commandList->DrawIndexedInstanced(mesh->GetIndexCount(), 1, 0, 0, 0);
 
 	commandList->OMSetRenderTargets(1, &rtvHandle, FALSE, &dsvHandle);
 	commandList->SetGraphicsRootSignature(rootSignature);

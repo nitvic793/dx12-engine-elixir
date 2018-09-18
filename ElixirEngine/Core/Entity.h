@@ -11,6 +11,7 @@ protected:
 
 public:
 	Entity();
+	XMFLOAT4X4 GetWorldViewProjectionTransposed(XMFLOAT4X4 projection, XMFLOAT4X4 view);
 	XMFLOAT4X4 GetWorldMatrix();
 	XMFLOAT3 GetPosition();
 	void SetPosition(const XMFLOAT3& pos);

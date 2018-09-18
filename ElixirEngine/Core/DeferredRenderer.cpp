@@ -33,7 +33,7 @@ void DeferredRenderer::Initialize()
 
 void DeferredRenderer::SetGBUfferPSO(ID3D12GraphicsCommandList* command)
 {
-	ID3D12DescriptorHeap* ppHeaps[1] = { cbvSrvHeap.pDescriptorHeap.Get() };
+	ID3D12DescriptorHeap* ppHeaps[] = { cbvSrvHeap.pDescriptorHeap.Get() };
 
 	command->SetPipelineState(deferredPSO);
 	for (int i = 0; i < numRTV; i++)
@@ -47,9 +47,10 @@ void DeferredRenderer::SetGBUfferPSO(ID3D12GraphicsCommandList* command)
 	command->SetGraphicsRootDescriptorTable(0, cbvSrvHeap.handleGPU(0));
 	command->SetGraphicsRootDescriptorTable(1, cbvSrvHeap.handleGPU(1));
 	command->SetGraphicsRootDescriptorTable(2, cbvSrvHeap.handleGPU(6));
+
 }
 
-void DeferredRenderer::UpdateConstantBuffer(ConstantBuffer & buffer, PixelConstantBuffer & pixelBuffer)
+void DeferredRenderer::UpdateConstantBuffer(ConstantBuffer & buffer, PixelConstantBuffer & pixelBuffer, ID3D12GraphicsCommandList* command)
 {
 	void* mapped = nullptr;
 	worldViewCB->Map(0, nullptr, &mapped);
@@ -59,6 +60,17 @@ void DeferredRenderer::UpdateConstantBuffer(ConstantBuffer & buffer, PixelConsta
 	lightCB->Map(0, nullptr, &mapped);
 	memcpy(mapped, &pixelBuffer, sizeof(PixelConstantBuffer));
 	lightCB->Unmap(0, nullptr);
+
+	command->SetGraphicsRootDescriptorTable(0, cbvSrvHeap.handleGPU(0));
+}
+
+void DeferredRenderer::UpdateConstantBufferPerObject(ConstantBuffer& buffer, int index)
+{
+	int ConstantBufferPerObjectAlignedSize = (sizeof(ConstantBuffer) + 255) & ~255;
+	UINT8 *cbvGPUAddress;
+	CD3DX12_RANGE readRange(0, 0);
+	worldViewCB->Map(0, &readRange, reinterpret_cast<void**>(&cbvGPUAddress));
+	memcpy(cbvGPUAddress + ConstantBufferPerObjectAlignedSize * index, &buffer, sizeof(ConstantBuffer));
 }
 
 void DeferredRenderer::CreateCB()

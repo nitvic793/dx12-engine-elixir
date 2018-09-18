@@ -46,6 +46,7 @@ public:
 	void SetSRV(ID3D12Resource* textureSRV, DXGI_FORMAT format);
 	void Initialize();
 	void SetGBUfferPSO(ID3D12GraphicsCommandList* command);
-	void UpdateConstantBuffer(ConstantBuffer& buffer, PixelConstantBuffer& pixelBuffer);
+	void UpdateConstantBuffer(ConstantBuffer& buffer, PixelConstantBuffer& pixelBuffer, ID3D12GraphicsCommandList* command);
+	void UpdateConstantBufferPerObject(ConstantBuffer& buffer, int index);
 	~DeferredRenderer();
 };
