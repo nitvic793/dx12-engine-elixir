@@ -9,6 +9,16 @@ DeferredRenderer::DeferredRenderer(ID3D12Device* dxDevice, int width, int height
 {
 }
 
+void DeferredRenderer::SetSRV(ID3D12Resource* textureSRV, DXGI_FORMAT format)
+{
+	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+	srvDesc.Format = format;
+	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+	srvDesc.Texture2D.MipLevels = 1;
+	device->CreateShaderResourceView(textureSRV, &srvDesc, cbvSrvHeap.handleCPU(6));
+}
+
 void DeferredRenderer::Initialize()
 {
 	CreateCB();
@@ -36,7 +46,7 @@ void DeferredRenderer::SetGBUfferPSO(ID3D12GraphicsCommandList* command)
 	command->SetGraphicsRootSignature(rootSignature);
 	command->SetGraphicsRootDescriptorTable(0, cbvSrvHeap.handleGPU(0));
 	command->SetGraphicsRootDescriptorTable(1, cbvSrvHeap.handleGPU(1));
-	//command->SetGraphicsRootDescriptorTable(2, cbvSrvHeap.hGPU(2));
+	command->SetGraphicsRootDescriptorTable(2, cbvSrvHeap.handleGPU(6));
 }
 
 void DeferredRenderer::UpdateConstantBuffer(ConstantBuffer & buffer, PixelConstantBuffer & pixelBuffer)
@@ -267,7 +277,7 @@ void DeferredRenderer::CreateRootSignature()
 	//light dependent CBV
 	range[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0);
 	//G-Buffer inputs
-	range[2].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 4, 0);
+	range[2].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 8, 0);
 
 	CD3DX12_ROOT_PARAMETER rootParameters[3];
 	rootParameters[0].InitAsDescriptorTable(1, &range[0], D3D12_SHADER_VISIBILITY_VERTEX);

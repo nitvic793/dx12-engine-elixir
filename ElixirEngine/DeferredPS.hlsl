@@ -41,8 +41,8 @@ SamplerState s1 : register(s0);
 PixelOutput main(VertexOutput input) : SV_TARGET
 {
 	PixelOutput output;
-	output.albedo = t1.Sample(s1, input.uv);
+	output.albedo =  t1.Sample(s1, input.uv);
 	output.normal = float4(normalize(input.normal), 1.0f);
-	output.specGloss = float4(0.5, 0.5, 0.5, 0.6);;
+	output.specGloss = float4(0.5f, 0.5f, 0.5f, 1);;
 	return output;
 }

@@ -388,7 +388,8 @@ void Core::InitResources()
 	srvDesc.Format = textureDesc.Format;
 	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
 	srvDesc.Texture2D.MipLevels = 1;
-	device->CreateShaderResourceView(textureBuffer, &srvDesc, mainDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
+	deferredRenderer->SetSRV(textureBuffer, textureDesc.Format);
+	//device->CreateShaderResourceView(textureBuffer, &srvDesc, mainDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
 
 	// Now we execute the command list to upload the initial assets (triangle data)
 	commandList->Close();
@@ -463,7 +464,7 @@ void Core::UpdatePipeline()
 		Running = false;
 	}
 
-	deferredRenderer->UpdateConstantBuffer(cbPerObject, pixelCb);
+	deferredRenderer->UpdateConstantBuffer(cbPerObject, pixelCb); //Needs Fixing
 	commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(renderTargets[frameIndex], D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET));
 	CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(rtvDescriptorHeap->GetCPUDescriptorHandleForHeapStart(), frameIndex, rtvDescriptorSize);
 	CD3DX12_CPU_DESCRIPTOR_HANDLE dsvHandle(dsDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
@@ -473,25 +474,25 @@ void Core::UpdatePipeline()
 	commandList->ClearDepthStencilView(dsDescriptorHeap->GetCPUDescriptorHandleForHeapStart(), D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
 
 	// draw
-	commandList->SetGraphicsRootSignature(rootSignature);
+	//commandList->SetGraphicsRootSignature(rootSignature);
 
 	// set the descriptor heap
 	ID3D12DescriptorHeap* descriptorHeaps[] = { mainDescriptorHeap };
-	commandList->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
+	//commandList->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
 	//RTV - GBuffer
 	// set the root descriptor table 0 to the constant buffer descriptor heap
 	// set the descriptor table to the descriptor heap (parameter 2, as constant buffer root descriptor is parameter index 0)
-	commandList->SetGraphicsRootDescriptorTable(2, mainDescriptorHeap->GetGPUDescriptorHandleForHeapStart());
+	//commandList->SetGraphicsRootDescriptorTable(2, mainDescriptorHeap->GetGPUDescriptorHandleForHeapStart());
 	deferredRenderer->SetGBUfferPSO(commandList);
 	commandList->RSSetViewports(1, &viewport);
 	commandList->RSSetScissorRects(1, &scissorRect);
 	commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	commandList->IASetVertexBuffers(0, 1, &mesh->GetVertexBufferView());
 	commandList->IASetIndexBuffer(&mesh->GetIndexBufferView());
-	commandList->SetGraphicsRootDescriptorTable(2, mainDescriptorHeap->GetGPUDescriptorHandleForHeapStart());
-	/*commandList->SetGraphicsRootConstantBufferView(1, constantBufferUploadHeap[frameIndex]->GetGPUVirtualAddress() + ConstantBufferPerObjectAlignedSize * 2);
+	//commandList->SetGraphicsRootDescriptorTable(2, mainDescriptorHeap->GetGPUDescriptorHandleForHeapStart());
+	//commandList->SetGraphicsRootConstantBufferView(1, constantBufferUploadHeap[frameIndex]->GetGPUVirtualAddress() + ConstantBufferPerObjectAlignedSize * 2);
 
-	commandList->SetGraphicsRootConstantBufferView(0, constantBufferUploadHeap[frameIndex]->GetGPUVirtualAddress());*/
+	//commandList->SetGraphicsRootConstantBufferView(0, constantBufferUploadHeap[frameIndex]->GetGPUVirtualAddress());
 	// draw first cube
 	commandList->DrawIndexedInstanced(mesh->GetIndexCount(), 1, 0, 0, 0);
 
@@ -500,7 +501,10 @@ void Core::UpdatePipeline()
 	//commandList->SetGraphicsRootConstantBufferView(0, constantBufferUploadHeap[frameIndex]->GetGPUVirtualAddress() + ConstantBufferPerObjectAlignedSize);
 
 	// draw second cube
-	commandList->DrawIndexedInstanced(mesh->GetIndexCount(), 1, 0, 0, 0);
+	//commandList->DrawIndexedInstanced(mesh->GetIndexCount(), 1, 0, 0, 0);
+
+	commandList->OMSetRenderTargets(1, &rtvHandle, FALSE, &dsvHandle);
+	commandList->SetGraphicsRootSignature(rootSignature);
 
 	commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(renderTargets[frameIndex], D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT));
 
