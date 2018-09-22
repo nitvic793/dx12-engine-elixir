@@ -37,6 +37,14 @@ float3 GGXBRDF(float3 lightDir, float3 lightPos, float3 albedo, float3 normal, f
 	return float4(col, 1);
 }
 
+struct DirectionalLight
+{
+	float4 AmbientColor;
+	float4 DiffuseColor;
+	float3 Direction;
+	float Padding;
+};
+
 cbuffer externalData : register(b0)
 {
 	DirectionalLight dirLight;
@@ -65,21 +73,11 @@ sampler basicSampler;
 
 float4 main(VertexToPixel pIn) : SV_TARGET
 {
-	//float z = gDepth[pIn.position.xy];
-	//float4 vProjectedPos = float4(pIn.position.xy, z, 1.0f);
-	//// Transform by the inverse screen view projection matrix to world space
-	//float4 vPositionWS = mul(vProjectedPos, gInvPV);
-	//// Divide by w to get the view-space position
-	//vPositionWS = vPositionWS / vPositionWS.w;
-	//float3 albedo = gAlbedoTexture[pIn.position.xy].xyz;
-	//float3 normal = normalize(gNormalTexture[pIn.position.xy].xyz);
-	//float4 specGloss = gSpecularGlossTexture[pIn.position.xy].xyzw;
-	//
-	//float3 col = GGXBRDF(normalize(gLightPos.xyz - vPositionWS.xyz), gLightPos, albedo ,normal,
-	//	normalize(gCamPos - vPositionWS), specGloss.xyz, specGloss.w);
-	//float d = length(gLightPos.xyz - vPositionWS.xyz);
-	//col = col * (1.0f / (1.0f + 0.1f*d + 0.01f*d));
-	
-	return float4(1,1,1,1.0f);
+	float3 albedo = gAlbedoTexture.Sample(basicSampler, pIn.uv).rgb;
+	float3 normal = gNormalTexture.Sample(basicSampler, pIn.uv).rgb;
+	float3 lightValue = calculateDirectionalLight(normal, dirLight).xyz;
+	//return float4(albedo, 1.0f);
+	float3 finalColor = lightValue * albedo;
+	return float4(finalColor,1.0f);
 
 }

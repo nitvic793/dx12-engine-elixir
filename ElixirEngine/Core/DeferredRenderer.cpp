@@ -56,6 +56,22 @@ void DeferredRenderer::SetGBUfferPSO(ID3D12GraphicsCommandList* command, std::ve
 	pixelCbWrapper.CopyData((void*)&pixelCb, sizeof(PixelConstantBuffer), 0);
 }
 
+void DeferredRenderer::SetLightPassPSO(ID3D12GraphicsCommandList * command, const PixelConstantBuffer & pixelCb)
+{
+	/*for (int i = 0; i < numRTV; i++)
+		command->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(gBufferTextures[i], D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_GENERIC_READ));
+	command->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(depthStencilTexture, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_GENERIC_READ));
+*/
+	command->SetPipelineState(lightPassPSO);
+
+	ID3D12DescriptorHeap* ppHeap2[] = { pixelCbHeap.pDescriptorHeap.Get() };
+	command->SetDescriptorHeaps(1, ppHeap2);
+	command->SetGraphicsRootDescriptorTable(1, pixelCbHeap.handleGPU(0));
+	ID3D12DescriptorHeap* ppHeaps[] = { gBufferHeap.pDescriptorHeap.Get() };
+	command->SetDescriptorHeaps(1, ppHeaps);
+	command->SetGraphicsRootDescriptorTable(2, gBufferHeap.handleGPU(0));
+}
+
 void DeferredRenderer::Draw(ID3D12GraphicsCommandList* commandList)
 {
 	int ConstantBufferPerObjectAlignedSize = (sizeof(ConstantBuffer) + 255) & ~255;
@@ -70,6 +86,23 @@ void DeferredRenderer::Draw(ID3D12GraphicsCommandList* commandList)
 		Draw(e->GetMesh(), cb, commandList);
 		index++;
 	}
+}
+
+void DeferredRenderer::DrawLightPass(ID3D12GraphicsCommandList * commandList)
+{
+	D3D12_INDEX_BUFFER_VIEW ibv;
+	ibv.Format = DXGI_FORMAT_R32_UINT;
+	ibv.BufferLocation = 0;
+	ibv.SizeInBytes = 0;
+
+	D3D12_VERTEX_BUFFER_VIEW vbv;
+	vbv.BufferLocation = 0;
+	vbv.SizeInBytes = 0;
+	vbv.StrideInBytes = 0;
+	commandList->IASetVertexBuffers(0, 0, &vbv);
+	commandList->IASetIndexBuffer(&ibv);
+	commandList->DrawInstanced(4, 1, 0, 0);
+	
 }
 
 void DeferredRenderer::Draw(Mesh * m, const ConstantBuffer & cb, ID3D12GraphicsCommandList* commandList)
@@ -184,19 +217,19 @@ void DeferredRenderer::CreatePSO()
 
 void DeferredRenderer::CreateLightPassPSO()
 {
-	D3D12_INPUT_ELEMENT_DESC inputLayout[] =
-	{
-		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
-	};
+	//D3D12_INPUT_ELEMENT_DESC inputLayout[] =
+	//{
+	//	/*{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+	//	{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }*/
+	//};
 
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC descPipelineState;
 	ZeroMemory(&descPipelineState, sizeof(descPipelineState));
 
 	descPipelineState.VS = ShaderManager::LoadShader(L"ScreenQuadVS.cso");
 	descPipelineState.PS = ShaderManager::LoadShader(L"LightPassPS.cso");
-	descPipelineState.InputLayout.pInputElementDescs = inputLayout;
-	descPipelineState.InputLayout.NumElements = _countof(inputLayout);
+	descPipelineState.InputLayout.pInputElementDescs = nullptr;
+	descPipelineState.InputLayout.NumElements = 0;// _countof(inputLayout);
 	descPipelineState.pRootSignature = rootSignature;
 	descPipelineState.DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
 	descPipelineState.DepthStencilState.DepthEnable = false;

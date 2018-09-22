@@ -90,7 +90,9 @@ public:
 	void SetSRV(ID3D12Resource* textureSRV, DXGI_FORMAT format);
 	void Initialize();
 	void SetGBUfferPSO(ID3D12GraphicsCommandList* command, std::vector<Entity*> entities, Camera* camera, const PixelConstantBuffer& pixelCb);
+	void SetLightPassPSO(ID3D12GraphicsCommandList* command, const PixelConstantBuffer& pixelCb);
 	void Draw(ID3D12GraphicsCommandList* commandList);
+	void DrawLightPass(ID3D12GraphicsCommandList* commandList);
 	void UpdateConstantBuffer(const PixelConstantBuffer& pixelBuffer, ID3D12GraphicsCommandList* command);
 	void UpdateConstantBufferPerObject(ConstantBuffer& buffer, int index);
 
