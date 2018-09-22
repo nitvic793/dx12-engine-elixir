@@ -16,7 +16,8 @@ void DeferredRenderer::SetSRV(ID3D12Resource* textureSRV, DXGI_FORMAT format)
 	srvDesc.Format = format;
 	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
 	srvDesc.Texture2D.MipLevels = 1;
-	device->CreateShaderResourceView(textureSRV, &srvDesc, cbvSrvHeap.handleCPU(6));
+	//device->CreateShaderResourceView(textureSRV, &srvDesc, srvHeap.pDescriptorHeap.Get()->GetCPUDescriptorHandleForHeapStart());
+	device->CreateShaderResourceView(textureSRV, &srvDesc, gBufferHeap.handleCPU(4));
 }
 
 void DeferredRenderer::Initialize()
@@ -31,10 +32,11 @@ void DeferredRenderer::Initialize()
 	CreateDSV();
 }
 
-void DeferredRenderer::SetGBUfferPSO(ID3D12GraphicsCommandList* command)
+void DeferredRenderer::SetGBUfferPSO(ID3D12GraphicsCommandList* command, std::vector<Entity*> entities, Camera* camera, const PixelConstantBuffer& pixelCb)
 {
-	ID3D12DescriptorHeap* ppHeaps[] = { cbvSrvHeap.pDescriptorHeap.Get() };
-
+	ID3D12DescriptorHeap* ppHeaps[] = { gBufferHeap.pDescriptorHeap.Get()};
+	this->camera = camera;
+	this->entities = entities;
 	command->SetPipelineState(deferredPSO);
 	for (int i = 0; i < numRTV; i++)
 		command->ClearRenderTargetView(rtvHeap.handleCPU(i), mClearColor, 0, nullptr);
@@ -44,24 +46,46 @@ void DeferredRenderer::SetGBUfferPSO(ID3D12GraphicsCommandList* command)
 	command->OMSetRenderTargets(numRTV, &rtvHeap.hCPUHeapStart, true, &dsvHeap.hCPUHeapStart);
 	command->SetDescriptorHeaps(1, ppHeaps);
 	command->SetGraphicsRootSignature(rootSignature);
-	command->SetGraphicsRootDescriptorTable(0, cbvSrvHeap.handleGPU(0));
-	command->SetGraphicsRootDescriptorTable(1, cbvSrvHeap.handleGPU(1));
-	command->SetGraphicsRootDescriptorTable(2, cbvSrvHeap.handleGPU(6));
-
+	command->SetGraphicsRootDescriptorTable(2, gBufferHeap.handleGPU(4));
+	//command->SetGraphicsRootDescriptorTable(0, cbHeap.handleGPU(0));
+	ID3D12DescriptorHeap* ppHeap2[] = { pixelCbHeap.pDescriptorHeap.Get() };
+	command->SetDescriptorHeaps(1, ppHeap2);
+	command->SetGraphicsRootDescriptorTable(1, pixelCbHeap.handleGPU(0));
+	//command->SetGraphicsRootDescriptorTable(2, srvHeap.pDescriptorHeap.Get()->GetGPUDescriptorHandleForHeapStart());
+	
+	pixelCbWrapper.CopyData((void*)&pixelCb, sizeof(PixelConstantBuffer), 0);
 }
 
-void DeferredRenderer::UpdateConstantBuffer(ConstantBuffer & buffer, PixelConstantBuffer & pixelBuffer, ID3D12GraphicsCommandList* command)
+void DeferredRenderer::Draw(ID3D12GraphicsCommandList* commandList)
+{
+	int ConstantBufferPerObjectAlignedSize = (sizeof(ConstantBuffer) + 255) & ~255;
+	int index = 0;
+	ID3D12DescriptorHeap* ppHeaps[] = { cbHeap.pDescriptorHeap.Get() };
+	commandList->SetDescriptorHeaps(1, ppHeaps);
+	for (auto e : entities)
+	{
+		auto cb = ConstantBuffer{ e->GetWorldViewProjectionTransposed(camera->GetProjectionMatrix(), camera->GetViewMatrix()) };
+		cbWrapper.CopyData(&cb, sizeof(ConstantBuffer), index);
+		commandList->SetGraphicsRootDescriptorTable(0, cbHeap.handleGPU(index));
+		Draw(e->GetMesh(), cb, commandList);
+		index++;
+	}
+}
+
+void DeferredRenderer::Draw(Mesh * m, const ConstantBuffer & cb, ID3D12GraphicsCommandList* commandList)
+{
+	commandList->IASetVertexBuffers(0, 1, &m->GetVertexBufferView());
+	commandList->IASetIndexBuffer(&m->GetIndexBufferView());
+	commandList->DrawIndexedInstanced(m->GetIndexCount(), 1, 0, 0, 0);
+}
+
+void DeferredRenderer::UpdateConstantBuffer(const PixelConstantBuffer & pixelBuffer, ID3D12GraphicsCommandList* command)
 {
 	void* mapped = nullptr;
-	worldViewCB->Map(0, nullptr, &mapped);
-	memcpy(mapped, &buffer, sizeof(ConstantBuffer));
-	worldViewCB->Unmap(0, nullptr);
-
 	lightCB->Map(0, nullptr, &mapped);
+	if (mapped == nullptr) return;
 	memcpy(mapped, &pixelBuffer, sizeof(PixelConstantBuffer));
 	lightCB->Unmap(0, nullptr);
-
-	command->SetGraphicsRootDescriptorTable(0, cbvSrvHeap.handleGPU(0));
 }
 
 void DeferredRenderer::UpdateConstantBufferPerObject(ConstantBuffer& buffer, int index)
@@ -85,30 +109,46 @@ void DeferredRenderer::CreateCB()
 	resourceDesc.MipLevels = 1;
 	resourceDesc.Format = DXGI_FORMAT_UNKNOWN;
 	resourceDesc.DepthOrArraySize = 1;
-	resourceDesc.Width = sizeof(ConstantBuffer);
+	resourceDesc.Width = 1024 * 64;
 	resourceDesc.Height = 1;
 	resourceDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
 
 	device->CreateCommittedResource(&heapProperty, D3D12_HEAP_FLAG_NONE, &resourceDesc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(&worldViewCB));
 
-	resourceDesc.Width = sizeof(PixelConstantBuffer);
+	resourceDesc.Width = 1024 * 64;
 	device->CreateCommittedResource(&heapProperty, D3D12_HEAP_FLAG_NONE, &resourceDesc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(&lightCB));
 }
 
 void DeferredRenderer::CreateViews()
 {
-	cbvSrvHeap.Create(device, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 10, true);
+	gBufferHeap.Create(device, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 10, true);
+	cbHeap.Create(device, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 10, true);
+	pixelCbHeap.Create(device, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 10, true);
+
 	//Camera CBV
 	D3D12_CONSTANT_BUFFER_VIEW_DESC	descBuffer;
 	descBuffer.BufferLocation = worldViewCB->GetGPUVirtualAddress();
-	//Constant buffer must be larger than 256 bytes
-	descBuffer.SizeInBytes = (sizeof(ConstantBuffer) + 255) & ~255;
-	device->CreateConstantBufferView(&descBuffer, cbvSrvHeap.handleCPU(0));
+	descBuffer.SizeInBytes = ConstantBufferSize;
+
+	const int numCBsForNow = 5;
+	for (int i = 0; i < numCBsForNow; ++i)
+	{
+		descBuffer.BufferLocation = worldViewCB->GetGPUVirtualAddress() + i * ConstantBufferSize;
+		device->CreateConstantBufferView(&descBuffer, cbHeap.handleCPU(i));
+	}
 
 	//Light CBV
 	descBuffer.BufferLocation = lightCB->GetGPUVirtualAddress();
-	descBuffer.SizeInBytes = (sizeof(PixelConstantBuffer) + 255) & ~255;
-	device->CreateConstantBufferView(&descBuffer, cbvSrvHeap.handleCPU(1));
+	descBuffer.SizeInBytes = PixelConstantBufferSize;
+	for (int i = 0; i < numCBsForNow; ++i)
+	{
+		descBuffer.BufferLocation = lightCB->GetGPUVirtualAddress() + i * PixelConstantBufferSize;
+		device->CreateConstantBufferView(&descBuffer, pixelCbHeap.handleCPU(i));
+	}
+
+	cbWrapper.Initialize(worldViewCB, ConstantBufferSize);
+	pixelCbWrapper.Initialize(lightCB, PixelConstantBufferSize);
+	
 }
 
 void DeferredRenderer::CreatePSO()
@@ -227,11 +267,11 @@ void DeferredRenderer::CreateRTV()
 	descSRV.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
 	descSRV.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
 
-	//m_srvHeap.Create(g_d3dObjects->GetD3DDevice(), D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 3,true);
+	srvHeap.Create(device, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 3,true);
 
 	for (int i = 0; i < numRTV; i++) {
 		descSRV.Format = mRtvFormat[i];
-		device->CreateShaderResourceView(gBufferTextures[i], &descSRV, cbvSrvHeap.handleCPU(i + 2));
+		device->CreateShaderResourceView(gBufferTextures[i], &descSRV, gBufferHeap.handleCPU(i));
 	}
 }
 
@@ -278,7 +318,7 @@ void DeferredRenderer::CreateDSV()
 	descSRV.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
 
 
-	device->CreateShaderResourceView(depthStencilTexture, &descSRV, cbvSrvHeap.handleCPU(5));
+	device->CreateShaderResourceView(depthStencilTexture, &descSRV, gBufferHeap.handleCPU(3));
 }
 
 void DeferredRenderer::CreateRootSignature()
@@ -317,6 +357,8 @@ void DeferredRenderer::CreateRootSignature()
 
 }
 
+
+
 DeferredRenderer::~DeferredRenderer()
 {
 	rootSignature->Release();
@@ -330,8 +372,8 @@ DeferredRenderer::~DeferredRenderer()
 
 	rtvHeap.pDescriptorHeap->Release();
 	dsvHeap.pDescriptorHeap->Release();
-	//srvHeap.pDescriptorHeap->Release();
-	cbvSrvHeap.pDescriptorHeap->Release();
+	srvHeap.pDescriptorHeap->Release();
+	gBufferHeap.pDescriptorHeap->Release();
 
 	lightCB->Release();
 	worldViewCB->Release();

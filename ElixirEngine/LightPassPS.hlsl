@@ -37,11 +37,24 @@ float3 GGXBRDF(float3 lightDir, float3 lightPos, float3 albedo, float3 normal, f
 	return float4(col, 1);
 }
 
+cbuffer externalData : register(b0)
+{
+	DirectionalLight dirLight;
+}
+
 struct VertexToPixel
 {
 	float4 position		: SV_POSITION;
 	float2 uv           : TEXCOORD0;
 };
+
+float4 calculateDirectionalLight(float3 normal, DirectionalLight light)
+{
+	float3 dirToLight = normalize(-light.Direction);
+	float NdotL = dot(normal, dirToLight);
+	NdotL = saturate(NdotL);
+	return light.DiffuseColor * NdotL + light.AmbientColor;
+}
 
 Texture2D gAlbedoTexture : register(t0);
 Texture2D gNormalTexture : register(t1);

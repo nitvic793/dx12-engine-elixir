@@ -1,8 +1,40 @@
 #pragma once
 #include "../stdafx.h"
 #include "../DirectXHelper.h"
-
+#include <vector>
+#include "Entity.h"
 #include "ConstantBuffer.h"
+#include "Camera.h"
+
+class ConstantBufferWrapper
+{
+	ID3D12Resource* constantBuffer;
+	int bufferSize;
+	char* vAddressBegin;
+public:
+	ConstantBufferWrapper()
+	{
+		constantBuffer = nullptr;
+	};
+	void Initialize(ID3D12Resource* buffer, const int& bSize)
+	{
+		bufferSize = bSize;
+		constantBuffer = buffer;
+		CD3DX12_RANGE readRange(0, 0);
+		buffer->Map(0, &readRange, reinterpret_cast<void**>(&vAddressBegin));
+	}
+	void CopyData(void* data, int size, int index)
+	{
+		char* ptr = reinterpret_cast<char*>(vAddressBegin) + bufferSize * index;
+		memcpy(ptr, data, size);
+	}
+
+	~ConstantBufferWrapper()
+	{
+		/*if (constantBuffer)
+			constantBuffer->Unmap(0, nullptr);*/
+	}
+};
 
 class DeferredRenderer
 {
@@ -20,7 +52,16 @@ class DeferredRenderer
 	CDescriptorHeapWrapper rtvHeap;
 	CDescriptorHeapWrapper dsvHeap;
 	CDescriptorHeapWrapper srvHeap;
-	CDescriptorHeapWrapper cbvSrvHeap;
+	CDescriptorHeapWrapper gBufferHeap;
+	CDescriptorHeapWrapper cbHeap;
+	CDescriptorHeapWrapper pixelCbHeap;
+
+	ConstantBufferWrapper cbWrapper;
+	ConstantBufferWrapper pixelCbWrapper;
+
+	//Constant buffer must be larger than 256 bytes
+	static const int ConstantBufferSize = (sizeof(ConstantBuffer) + 255) & ~255;;
+	static const int PixelConstantBufferSize = (sizeof(PixelConstantBuffer) + 255) & ~255;
 
 	ID3D12Resource *lightCB;
 	ID3D12Resource *worldViewCB;
@@ -33,6 +74,9 @@ class DeferredRenderer
 	UINT viewportWidth;
 	UINT viewportHeight;
 
+	std::vector<Entity*> entities;
+	Camera* camera;
+
 	void CreateCB();
 	void CreateViews();
 	void CreatePSO();
@@ -40,13 +84,15 @@ class DeferredRenderer
 	void CreateRTV();
 	void CreateDSV();
 	void CreateRootSignature();
-
+	void Draw(Mesh* m, const ConstantBuffer& cb, ID3D12GraphicsCommandList* commandList);
 public:
 	DeferredRenderer(ID3D12Device *dxDevice, int width, int height);
 	void SetSRV(ID3D12Resource* textureSRV, DXGI_FORMAT format);
 	void Initialize();
-	void SetGBUfferPSO(ID3D12GraphicsCommandList* command);
-	void UpdateConstantBuffer(ConstantBuffer& buffer, PixelConstantBuffer& pixelBuffer, ID3D12GraphicsCommandList* command);
+	void SetGBUfferPSO(ID3D12GraphicsCommandList* command, std::vector<Entity*> entities, Camera* camera, const PixelConstantBuffer& pixelCb);
+	void Draw(ID3D12GraphicsCommandList* commandList);
+	void UpdateConstantBuffer(const PixelConstantBuffer& pixelBuffer, ID3D12GraphicsCommandList* command);
 	void UpdateConstantBufferPerObject(ConstantBuffer& buffer, int index);
+
 	~DeferredRenderer();
 };

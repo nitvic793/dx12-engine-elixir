@@ -186,9 +186,9 @@ void Core::InitResources()
 	descriptorTable.NumDescriptorRanges = _countof(descriptorTableRanges); // we only have one range
 	descriptorTable.pDescriptorRanges = &descriptorTableRanges[0]; // the pointer to the beginning of our ranges array
 
-	D3D12_ROOT_PARAMETER  rootParameters[3]; 
+	D3D12_ROOT_PARAMETER  rootParameters[3];
 	rootParameters[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV; // this is a constant buffer view root descriptor
-	rootParameters[0].Descriptor = rootCBVDescriptor; 
+	rootParameters[0].Descriptor = rootCBVDescriptor;
 	rootParameters[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
 
 	rootParameters[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV; // this is a constant buffer view root descriptor
@@ -264,6 +264,9 @@ void Core::InitResources()
 
 	mesh = new Mesh("../../Assets/sphere.obj", device, commandList);
 
+	entity1->SetMesh(mesh);
+	entity2->SetMesh(mesh);
+
 	//Create depth stencil buffer
 	D3D12_DESCRIPTOR_HEAP_DESC dsvHeapDesc = {};
 	dsvHeapDesc.NumDescriptors = 1;
@@ -295,7 +298,7 @@ void Core::InitResources()
 	device->CreateDepthStencilView(depthStencilBuffer, &depthStencilDesc, dsDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
 
 	pixelCb.light.AmbientColor = XMFLOAT4(0.1f, 0.1f, 0.1f, 0);
-	pixelCb.light.DiffuseColor = XMFLOAT4(1.f, 0.1f, 0.f, 0.f);
+	pixelCb.light.DiffuseColor = XMFLOAT4(1.f, 0.0f, 0.f, 0.f);
 	pixelCb.light.Direction = XMFLOAT3(1.f, 0.f, 0.f);
 
 	// create the constant buffer resource heap
@@ -482,33 +485,34 @@ void Core::UpdatePipeline()
 	// set the root descriptor table 0 to the constant buffer descriptor heap
 	// set the descriptor table to the descriptor heap (parameter 2, as constant buffer root descriptor is parameter index 0)
 	//commandList->SetGraphicsRootDescriptorTable(2, mainDescriptorHeap->GetGPUDescriptorHandleForHeapStart());
-	deferredRenderer->SetGBUfferPSO(commandList);
+	deferredRenderer->SetGBUfferPSO(commandList, { entity1, entity2 }, camera, pixelCb);
 	commandList->RSSetViewports(1, &viewport);
 	commandList->RSSetScissorRects(1, &scissorRect);
 	commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	commandList->IASetVertexBuffers(0, 1, &mesh->GetVertexBufferView());
 	commandList->IASetIndexBuffer(&mesh->GetIndexBufferView());
-	//commandList->SetGraphicsRootDescriptorTable(2, mainDescriptorHeap->GetGPUDescriptorHandleForHeapStart());
-	//commandList->SetGraphicsRootConstantBufferView(1, constantBufferUploadHeap[frameIndex]->GetGPUVirtualAddress() + ConstantBufferPerObjectAlignedSize * 2);
+	/*commandList->SetGraphicsRootDescriptorTable(2, mainDescriptorHeap->GetGPUDescriptorHandleForHeapStart());
+	commandList->SetGraphicsRootConstantBufferView(1, constantBufferUploadHeap[frameIndex]->GetGPUVirtualAddress() + ConstantBufferPerObjectAlignedSize * 2);
 
-	//commandList->SetGraphicsRootConstantBufferView(0, constantBufferUploadHeap[frameIndex]->GetGPUVirtualAddress());
-
+	commandList->SetGraphicsRootConstantBufferView(0, constantBufferUploadHeap[frameIndex]->GetGPUVirtualAddress());
+*/
+	deferredRenderer->Draw(commandList);
 
 	//deferredRenderer->UpdateConstantBuffer(cbPerObject, pixelCb); //Needs Fixing
-	auto cb1 = ConstantBuffer{ entity1->GetWorldViewProjectionTransposed(camera->GetProjectionMatrix(), camera->GetViewMatrix()) };
-	auto cb2 = ConstantBuffer{ entity2->GetWorldViewProjectionTransposed(camera->GetProjectionMatrix(), camera->GetViewMatrix()) };
+	/*auto cb1 = ConstantBuffer{ entity1->GetWorldViewProjectionTransposed(camera->GetProjectionMatrix(), camera->GetViewMatrix()) };
+	auto cb2 = ConstantBuffer{ entity2->GetWorldViewProjectionTransposed(camera->GetProjectionMatrix(), camera->GetViewMatrix()) };*/
 
-	deferredRenderer->UpdateConstantBuffer(cb1, pixelCb, commandList); //Needs Fixing
+	//deferredRenderer->UpdateConstantBuffer(cb1, pixelCb, commandList); //Needs Fixing
 	//deferredRenderer->UpdateConstantBufferPerObject(cb1, 0);
-	// draw first cube
-	commandList->DrawIndexedInstanced(mesh->GetIndexCount(), 1, 0, 0, 0);
-	
-	// second cube
-	// cube2's constant buffer data is stored after (256 bits from the start of the heap).
+	//// draw first cube
+	//commandList->DrawIndexedInstanced(mesh->GetIndexCount(), 1, 0, 0, 0);
+
+	//// second cube
+	//// cube2's constant buffer data is stored after (256 bits from the start of the heap).
 	//commandList->SetGraphicsRootConstantBufferView(0, constantBufferUploadHeap[frameIndex]->GetGPUVirtualAddress() + ConstantBufferPerObjectAlignedSize);
-	//deferredRenderer->UpdateConstantBufferPerObject(cb2, 1);
-	deferredRenderer->UpdateConstantBuffer(cb2, pixelCb, commandList);
-	commandList->DrawIndexedInstanced(mesh->GetIndexCount(), 1, 0, 0, 0);
+	////deferredRenderer->UpdateConstantBufferPerObject(cb2, 1);
+	////deferredRenderer->UpdateConstantBuffer(cb2, pixelCb, commandList);
+	//commandList->DrawIndexedInstanced(mesh->GetIndexCount(), 1, 0, 0, 0);
 
 	commandList->OMSetRenderTargets(1, &rtvHandle, FALSE, &dsvHandle);
 	commandList->SetGraphicsRootSignature(rootSignature);
@@ -568,11 +572,11 @@ void Core::Cleanup()
 		renderTargets[i]->Release();
 		commandAllocator[i]->Release();
 		fence[i]->Release();
-		
+
 		constantBufferUploadHeap[i]->Release();
 
 	};
-	
+
 	mainDescriptorHeap->Release();
 	pipelineStateObject->Release();
 	rootSignature->Release();

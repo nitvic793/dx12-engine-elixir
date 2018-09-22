@@ -8,8 +8,8 @@ struct VertexInput
 
 struct VertexOutput
 {
-	float4 pos	: SV_POSITION;
-	float2 uv	: TEXCOORD;
+	float4 pos		: SV_POSITION;
+	float2 uv		: TEXCOORD;
 	float3 normal	: NORMAL;
 	float3 tangent	: TANGENT;
 };

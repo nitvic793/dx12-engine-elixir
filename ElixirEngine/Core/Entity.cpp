@@ -10,6 +10,16 @@ Entity::Entity()
 	XMStoreFloat3(&rotation, v);
 }
 
+void Entity::SetMesh(Mesh * m)
+{
+	mesh = m;
+}
+
+Mesh * Entity::GetMesh()
+{
+	return mesh;
+}
+
 XMFLOAT4X4 Entity::GetWorldViewProjectionTransposed(XMFLOAT4X4 projection, XMFLOAT4X4 view)
 {
 	XMMATRIX viewMat = XMLoadFloat4x4(&view); // load view matrix
