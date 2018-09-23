@@ -87,7 +87,7 @@ class DeferredRenderer
 	void Draw(Mesh* m, const ConstantBuffer& cb, ID3D12GraphicsCommandList* commandList);
 public:
 	DeferredRenderer(ID3D12Device *dxDevice, int width, int height);
-	void SetSRV(ID3D12Resource* textureSRV, DXGI_FORMAT format);
+	void SetSRV(ID3D12Resource* textureSRV, DXGI_FORMAT format, int index);
 	void Initialize();
 	void SetGBUfferPSO(ID3D12GraphicsCommandList* command, std::vector<Entity*> entities, Camera* camera, const PixelConstantBuffer& pixelCb);
 	void SetLightPassPSO(ID3D12GraphicsCommandList* command, const PixelConstantBuffer& pixelCb);

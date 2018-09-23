@@ -12,6 +12,7 @@ LRESULT CALLBACK WindowsProcessMessage(HWND hWnd, UINT msg, WPARAM wParam, LPARA
 
 bool Core::InitD3D()
 {
+	CoInitializeEx(nullptr, COINITBASE_MULTITHREADED);
 	IDXGIFactory4* dxgiFactory;
 	auto hr = CreateDXGIFactory1(IID_PPV_ARGS(&dxgiFactory));
 	if (FAILED(hr))
@@ -165,6 +166,7 @@ bool Core::InitD3D()
 int ConstantBufferPerObjectAlignedSize = (sizeof(ConstantBuffer) + 255) & ~255;
 void Core::InitResources()
 {
+	ResourceUploadBatch uploadBatch(device);
 	deferredRenderer = new DeferredRenderer(device, Width, Height);
 	deferredRenderer->Initialize();
 	camera = new Camera((float)Width, (float)Height);
@@ -391,14 +393,22 @@ void Core::InitResources()
 	srvDesc.Format = textureDesc.Format;
 	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
 	srvDesc.Texture2D.MipLevels = 1;
-	deferredRenderer->SetSRV(textureBuffer, textureDesc.Format);
-	device->CreateShaderResourceView(textureBuffer, &srvDesc, mainDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
+	deferredRenderer->SetSRV(textureBuffer, textureDesc.Format, 0);
 
+	//device->CreateShaderResourceView(textureBuffer, &srvDesc, mainDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
+	
 	// Now we execute the command list to upload the initial assets (triangle data)
 	commandList->Close();
 	ID3D12CommandList* ppCommandLists[] = { commandList };
+	
 	commandQueue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
 
+	uploadBatch.Begin();
+	CreateWICTextureFromFile(device, uploadBatch, L"../../Assets/metalNormal.png", &normalTexture, true);
+	auto uploadOperation = uploadBatch.End(commandQueue);
+	uploadOperation.wait();
+	
+	//deferredRenderer->SetSRV(normalTexture, textureDesc.Format, 1);
 	// increment the fence value now, otherwise the buffer might not be uploaded by the time we start drawing
 	fenceValue[frameIndex]++;
 	auto hr = commandQueue->Signal(fence[frameIndex], fenceValue[frameIndex]);
@@ -422,7 +432,7 @@ void Core::InitResources()
 	scissorRect.top = 0;
 	scissorRect.right = Width;
 	scissorRect.bottom = Height;
-
+	
 }
 
 void Core::Update()
@@ -498,7 +508,7 @@ void Core::UpdatePipeline()
 	deferredRenderer->Draw(commandList);
 
 	deferredRenderer->SetLightPassPSO(commandList, pixelCb);
-	commandList->OMSetRenderTargets(1, &rtvHandle, FALSE, &dsvHandle);
+	commandList->OMSetRenderTargets(1, &rtvHandle, true, nullptr);
 	commandList->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
 	deferredRenderer->DrawLightPass(commandList);
 
@@ -528,6 +538,7 @@ void Core::Render()
 	hr = swapChain->Present(0, 0);
 	if (FAILED(hr))
 	{
+		HRESULT r = device->GetDeviceRemovedReason();
 		Running = false;
 	}
 }

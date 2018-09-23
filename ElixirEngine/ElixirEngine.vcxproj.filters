@@ -86,6 +86,9 @@
     <ClInclude Include="Core\ShaderManager.h">
       <Filter>Header Files\Core</Filter>
     </ClInclude>
+    <ClInclude Include="DirectXHelper.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Shaders\DefaultVS.hlsl">
@@ -103,5 +106,8 @@
     <FxCompile Include="LightPassPS.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
   </ItemGroup>
 </Project>

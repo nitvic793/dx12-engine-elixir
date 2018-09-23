@@ -9,7 +9,7 @@ DeferredRenderer::DeferredRenderer(ID3D12Device* dxDevice, int width, int height
 {
 }
 
-void DeferredRenderer::SetSRV(ID3D12Resource* textureSRV, DXGI_FORMAT format)
+void DeferredRenderer::SetSRV(ID3D12Resource* textureSRV, DXGI_FORMAT format, int index)
 {
 	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
 	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
@@ -17,7 +17,7 @@ void DeferredRenderer::SetSRV(ID3D12Resource* textureSRV, DXGI_FORMAT format)
 	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
 	srvDesc.Texture2D.MipLevels = 1;
 	//device->CreateShaderResourceView(textureSRV, &srvDesc, srvHeap.pDescriptorHeap.Get()->GetCPUDescriptorHandleForHeapStart());
-	device->CreateShaderResourceView(textureSRV, &srvDesc, gBufferHeap.handleCPU(4));
+	device->CreateShaderResourceView(textureSRV, &srvDesc, srvHeap.handleCPU(index));
 }
 
 void DeferredRenderer::Initialize()
@@ -34,7 +34,7 @@ void DeferredRenderer::Initialize()
 
 void DeferredRenderer::SetGBUfferPSO(ID3D12GraphicsCommandList* command, std::vector<Entity*> entities, Camera* camera, const PixelConstantBuffer& pixelCb)
 {
-	ID3D12DescriptorHeap* ppHeaps[] = { gBufferHeap.pDescriptorHeap.Get()};
+	ID3D12DescriptorHeap* ppHeaps[] = { srvHeap.pDescriptorHeap.Get()};
 	this->camera = camera;
 	this->entities = entities;
 	command->SetPipelineState(deferredPSO);
@@ -46,7 +46,7 @@ void DeferredRenderer::SetGBUfferPSO(ID3D12GraphicsCommandList* command, std::ve
 	command->OMSetRenderTargets(numRTV, &rtvHeap.hCPUHeapStart, true, &dsvHeap.hCPUHeapStart);
 	command->SetDescriptorHeaps(1, ppHeaps);
 	command->SetGraphicsRootSignature(rootSignature);
-	command->SetGraphicsRootDescriptorTable(2, gBufferHeap.handleGPU(4));
+	command->SetGraphicsRootDescriptorTable(2, srvHeap.handleGPU(0));
 	//command->SetGraphicsRootDescriptorTable(0, cbHeap.handleGPU(0));
 	ID3D12DescriptorHeap* ppHeap2[] = { pixelCbHeap.pDescriptorHeap.Get() };
 	command->SetDescriptorHeaps(1, ppHeap2);
@@ -300,7 +300,7 @@ void DeferredRenderer::CreateRTV()
 	descSRV.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
 	descSRV.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
 
-	srvHeap.Create(device, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 3,true);
+	srvHeap.Create(device, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 10, true);
 
 	for (int i = 0; i < numRTV; i++) {
 		descSRV.Format = mRtvFormat[i];
