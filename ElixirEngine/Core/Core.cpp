@@ -461,7 +461,7 @@ void Core::InitResources()
 	scissorRect.right = Width;
 	scissorRect.bottom = Height;
 
-	pixelCb.pointLight = PointLight{ {0.f, 1.f, 0.f, 0.f} , {2.f, 2.f, 0.f}, 5.f };
+	pixelCb.pointLight = PointLight{ {0.f, 1.f, 0.f, 0.f} , {5.f, 0.f, 0.f}, 5.f };
 }
 
 void Core::Update()
