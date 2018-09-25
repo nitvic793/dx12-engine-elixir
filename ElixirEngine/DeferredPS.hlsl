@@ -52,9 +52,12 @@ float3 calculateNormalFromMap(float2 uv, float3 normal, float3 tangent)
 
 PixelOutput main(VertexOutput input) : SV_TARGET
 {
+	float3 normal = calculateNormalFromMap(input.uv, input.normal, input.tangent);
+
 	PixelOutput output;
-	output.albedo =  t1.Sample(s1, input.uv);
-	output.normal = float4(normalize(input.normal), 1.0f);
-	output.specGloss = float4(0.5f, 0.5f, 0.5f, 1);;
+	output.albedo = t1.Sample(s1, input.uv);
+	output.normal = float4(normalize(normal), 1.0f);
+	output.specGloss = float4(0.5f, 0.5f, 0.5f, 1);
+
 	return output;
 }

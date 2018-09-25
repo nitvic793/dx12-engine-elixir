@@ -395,6 +395,34 @@ void Core::InitResources()
 	srvDesc.Texture2D.MipLevels = 1;
 	deferredRenderer->SetSRV(textureBuffer, textureDesc.Format, 0);
 
+	delete imageData;
+
+	imageSize = LoadImageDataFromFile(&imageData, textureDesc, L"../../Assets/metalNormal.png", imageBytesPerRow);
+	
+	device->CreateCommittedResource(
+		&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT), 
+		D3D12_HEAP_FLAG_NONE, 
+		&textureDesc, 
+		D3D12_RESOURCE_STATE_COPY_DEST, 
+		nullptr, 
+		IID_PPV_ARGS(&normalTexture));
+	device->GetCopyableFootprints(&textureDesc, 0, 1, 0, nullptr, nullptr, nullptr, &textureUploadBufferSize);
+	device->CreateCommittedResource(
+		&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD), 
+		D3D12_HEAP_FLAG_NONE, // no flags
+		&CD3DX12_RESOURCE_DESC::Buffer(textureUploadBufferSize), 
+		D3D12_RESOURCE_STATE_GENERIC_READ, 
+		nullptr,
+		IID_PPV_ARGS(&textureBufferUploadHeap));
+
+	textureData.pData = &imageData[0]; 
+	textureData.RowPitch = imageBytesPerRow; 
+	textureData.SlicePitch = imageBytesPerRow * textureDesc.Height; 
+
+	UpdateSubresources(commandList, normalTexture, textureBufferUploadHeap, 0, 0, 1, &textureData);
+
+	commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(normalTexture, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE));
+	deferredRenderer->SetSRV(normalTexture, textureDesc.Format, 1);
 	//device->CreateShaderResourceView(textureBuffer, &srvDesc, mainDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
 	
 	// Now we execute the command list to upload the initial assets (triangle data)
@@ -403,10 +431,10 @@ void Core::InitResources()
 	
 	commandQueue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
 
-	uploadBatch.Begin();
-	CreateWICTextureFromFile(device, uploadBatch, L"../../Assets/metalNormal.png", &normalTexture, true);
-	auto uploadOperation = uploadBatch.End(commandQueue);
-	uploadOperation.wait();
+	//uploadBatch.Begin();
+	//CreateWICTextureFromFile(device, uploadBatch, L"../../Assets/metalNormal.png", &normalTexture, true);
+	//auto uploadOperation = uploadBatch.End(commandQueue);
+	//uploadOperation.wait();
 	
 	//deferredRenderer->SetSRV(normalTexture, textureDesc.Format, 1);
 	// increment the fence value now, otherwise the buffer might not be uploaded by the time we start drawing
@@ -580,7 +608,9 @@ void Core::Cleanup()
 	//indexBuffer->Release();
 	depthStencilBuffer->Release();
 	dsDescriptorHeap->Release();
-
+	textureBuffer->Release();
+	textureBufferUploadHeap->Release();
+	
 	delete mesh;
 	delete camera;
 	delete entity1;
