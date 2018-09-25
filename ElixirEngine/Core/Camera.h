@@ -7,7 +7,7 @@ class Camera
 {
 	XMFLOAT4X4 viewMatrix;
 	XMFLOAT4X4 projectionMatrix;
-	XMFLOAT4X4 reflectionMatrix;
+	XMFLOAT4X4 inverseProjectionView;
 	XMFLOAT3 position;
 	XMFLOAT3 direction;
 	float rotationX;
@@ -18,6 +18,7 @@ public:
 	void SetPosition(const XMFLOAT3& pos);
 	const XMFLOAT4X4& GetViewMatrix();
 	const XMFLOAT4X4& GetProjectionMatrix();
+	const XMFLOAT4X4& GetInverseProjectionViewMatrix();
 	void SetProjectionMatrix(float width, float height);
 	Camera(float width, float height);
 	~Camera();

@@ -78,9 +78,10 @@ void DeferredRenderer::Draw(ID3D12GraphicsCommandList* commandList)
 	int index = 0;
 	ID3D12DescriptorHeap* ppHeaps[] = { cbHeap.pDescriptorHeap.Get() };
 	commandList->SetDescriptorHeaps(1, ppHeaps);
+	//ConstantBuffer cb;
 	for (auto e : entities)
 	{
-		auto cb = ConstantBuffer{ e->GetWorldViewProjectionTransposed(camera->GetProjectionMatrix(), camera->GetViewMatrix()) };
+		auto cb = ConstantBuffer{ e->GetWorldViewProjectionTransposed(camera->GetProjectionMatrix(), camera->GetViewMatrix()), e->GetWorldMatrixTransposed() };
 		cbWrapper.CopyData(&cb, sizeof(ConstantBuffer), index);
 		commandList->SetGraphicsRootDescriptorTable(0, cbHeap.handleGPU(index));
 		Draw(e->GetMesh(), cb, commandList);

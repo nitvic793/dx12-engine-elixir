@@ -1,5 +1,15 @@
 #include "Entity.h"
 
+void Entity::CalculateWorldMatrix()
+{
+	XMMATRIX trans = XMMatrixTranslation(position.x, position.y, position.z);
+	XMMATRIX rot = XMMatrixRotationRollPitchYawFromVector(XMLoadFloat3(&rotation));
+	XMMATRIX scle = XMMatrixScaling(scale.x, scale.y, scale.z);
+	XMMATRIX world = scle * rot * trans;
+	XMStoreFloat4x4(&worldMatrix, XMMatrixTranspose(world));
+	XMStoreFloat4x4(&worldMatrix, world);
+}
+
 Entity::Entity()
 {
 	XMStoreFloat4x4(&worldMatrix, XMMatrixTranspose(XMMatrixIdentity()));
@@ -33,13 +43,17 @@ XMFLOAT4X4 Entity::GetWorldViewProjectionTransposed(XMFLOAT4X4 projection, XMFLO
 
 XMFLOAT4X4 Entity::GetWorldMatrix()
 {
-	XMMATRIX trans = XMMatrixTranslation(position.x, position.y, position.z);
-	XMMATRIX rot = XMMatrixRotationRollPitchYawFromVector(XMLoadFloat3(&rotation));
-	XMMATRIX scle = XMMatrixScaling(scale.x, scale.y, scale.z);
-	XMMATRIX world = scle * rot * trans;
-	XMStoreFloat4x4(&worldMatrix, XMMatrixTranspose(world));
-	XMStoreFloat4x4(&worldMatrix, world);
+	CalculateWorldMatrix();
 	return worldMatrix;
+}
+
+XMFLOAT4X4 Entity::GetWorldMatrixTransposed()
+{
+	CalculateWorldMatrix();
+	auto worldT = XMMatrixTranspose(XMLoadFloat4x4(&worldMatrix));
+	XMFLOAT4X4 worldTransposed;
+	XMStoreFloat4x4(&worldTransposed, worldT);
+	return worldTransposed;
 }
 
 XMFLOAT3 Entity::GetPosition()

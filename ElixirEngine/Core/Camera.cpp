@@ -75,6 +75,15 @@ const XMFLOAT4X4& Camera::GetProjectionMatrix()
 	return projectionMatrix;
 }
 
+const XMFLOAT4X4 & Camera::GetInverseProjectionViewMatrix()
+{
+	auto proj = XMLoadFloat4x4(&projectionMatrix);
+	auto view = XMLoadFloat4x4(&viewMatrix);
+	auto invProjView = XMMatrixInverse(nullptr, proj * view);
+	XMStoreFloat4x4(&inverseProjectionView, invProjView);
+	return inverseProjectionView;
+}
+
 void Camera::SetProjectionMatrix(float width, float height)
 {
 	float aspectRatio = width / height;

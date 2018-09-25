@@ -398,44 +398,44 @@ void Core::InitResources()
 	delete imageData;
 
 	imageSize = LoadImageDataFromFile(&imageData, textureDesc, L"../../Assets/metalNormal.png", imageBytesPerRow);
-	
+
 	device->CreateCommittedResource(
-		&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT), 
-		D3D12_HEAP_FLAG_NONE, 
-		&textureDesc, 
-		D3D12_RESOURCE_STATE_COPY_DEST, 
-		nullptr, 
+		&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
+		D3D12_HEAP_FLAG_NONE,
+		&textureDesc,
+		D3D12_RESOURCE_STATE_COPY_DEST,
+		nullptr,
 		IID_PPV_ARGS(&normalTexture));
 	device->GetCopyableFootprints(&textureDesc, 0, 1, 0, nullptr, nullptr, nullptr, &textureUploadBufferSize);
 	device->CreateCommittedResource(
-		&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD), 
+		&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
 		D3D12_HEAP_FLAG_NONE, // no flags
-		&CD3DX12_RESOURCE_DESC::Buffer(textureUploadBufferSize), 
-		D3D12_RESOURCE_STATE_GENERIC_READ, 
+		&CD3DX12_RESOURCE_DESC::Buffer(textureUploadBufferSize),
+		D3D12_RESOURCE_STATE_GENERIC_READ,
 		nullptr,
 		IID_PPV_ARGS(&textureBufferUploadHeap));
 
-	textureData.pData = &imageData[0]; 
-	textureData.RowPitch = imageBytesPerRow; 
-	textureData.SlicePitch = imageBytesPerRow * textureDesc.Height; 
+	textureData.pData = &imageData[0];
+	textureData.RowPitch = imageBytesPerRow;
+	textureData.SlicePitch = imageBytesPerRow * textureDesc.Height;
 
 	UpdateSubresources(commandList, normalTexture, textureBufferUploadHeap, 0, 0, 1, &textureData);
 
 	commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(normalTexture, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE));
 	deferredRenderer->SetSRV(normalTexture, textureDesc.Format, 1);
 	//device->CreateShaderResourceView(textureBuffer, &srvDesc, mainDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
-	
+
 	// Now we execute the command list to upload the initial assets (triangle data)
 	commandList->Close();
 	ID3D12CommandList* ppCommandLists[] = { commandList };
-	
+
 	commandQueue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
 
 	//uploadBatch.Begin();
 	//CreateWICTextureFromFile(device, uploadBatch, L"../../Assets/metalNormal.png", &normalTexture, true);
 	//auto uploadOperation = uploadBatch.End(commandQueue);
 	//uploadOperation.wait();
-	
+
 	//deferredRenderer->SetSRV(normalTexture, textureDesc.Format, 1);
 	// increment the fence value now, otherwise the buffer might not be uploaded by the time we start drawing
 	fenceValue[frameIndex]++;
@@ -460,13 +460,14 @@ void Core::InitResources()
 	scissorRect.top = 0;
 	scissorRect.right = Width;
 	scissorRect.bottom = Height;
-	
+
+	pixelCb.pointLight = PointLight{ {0.f, 1.f, 0.f, 0.f} , {2.f, 2.f, 0.f}, 5.f };
 }
 
 void Core::Update()
 {
 	camera->Update(deltaTime);
-	auto pos = XMFLOAT3(-1, 0, 0);
+	auto pos = XMFLOAT3(-1, 0, 2);
 	entity1->SetPosition(pos);
 	entity2->SetPosition(XMFLOAT3(2, 0, 2));
 
@@ -530,6 +531,7 @@ void Core::UpdatePipeline()
 	//commandList->DrawIndexedInstanced(mesh->GetIndexCount(), 1, 0, 0, 0);
 
 	//commandList->SetGraphicsRootSignature(rootSignature);
+	pixelCb.invProjView = camera->GetInverseProjectionViewMatrix();
 
 	// draw
 	deferredRenderer->SetGBUfferPSO(commandList, { entity1, entity2 }, camera, pixelCb);
@@ -610,7 +612,7 @@ void Core::Cleanup()
 	dsDescriptorHeap->Release();
 	textureBuffer->Release();
 	textureBufferUploadHeap->Release();
-	
+
 	delete mesh;
 	delete camera;
 	delete entity1;

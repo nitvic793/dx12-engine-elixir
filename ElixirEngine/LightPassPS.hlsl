@@ -45,9 +45,18 @@ struct DirectionalLight
 	float Padding;
 };
 
+struct PointLight
+{
+	float4 Color;
+	float3 Position;
+	float Range;
+};
+
 cbuffer externalData : register(b0)
 {
 	DirectionalLight dirLight;
+	PointLight pointLight;
+	float4x4 invProjView;
 }
 
 struct VertexToPixel
@@ -64,9 +73,17 @@ float4 calculateDirectionalLight(float3 normal, DirectionalLight light)
 	return light.DiffuseColor * NdotL + light.AmbientColor;
 }
 
+float4 calculatePointLight(float3 normal, float3 worldPos, PointLight light)
+{
+	float3 dirToPointLight = normalize(light.Position - worldPos);
+	float pointNdotL = dot(normal, dirToPointLight);
+	pointNdotL = saturate(pointNdotL);
+	return light.Color * pointNdotL;
+}
+
 Texture2D gAlbedoTexture : register(t0);
 Texture2D gNormalTexture : register(t1);
-Texture2D gSpecularGlossTexture : register(t2);
+Texture2D gWorldPosTexture : register(t2);
 Texture2D gDepth: register(t3);
 
 sampler basicSampler;
@@ -75,9 +92,12 @@ float4 main(VertexToPixel pIn) : SV_TARGET
 {
 	float3 albedo = gAlbedoTexture.Sample(basicSampler, pIn.uv).rgb;
 	float3 normal = gNormalTexture.Sample(basicSampler, pIn.uv).rgb;
+	float3 worldPos = gWorldPosTexture.Sample(basicSampler, pIn.uv).rgb;
 	float3 lightValue = calculateDirectionalLight(normal, dirLight).xyz;
+	float3 pointLightValue = calculatePointLight(normal, worldPos, pointLight).rgb;
 	//return float4(albedo, 1.0f);
 	float3 finalColor = lightValue * albedo;
+	finalColor += pointLightValue * albedo;
 	return float4(finalColor,1.0f);
 
 }
