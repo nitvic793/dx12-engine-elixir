@@ -47,7 +47,8 @@ class DeferredRenderer
 	ID3D12Resource* depthStencilTexture;
 
 	ID3D12PipelineState* deferredPSO;
-	ID3D12PipelineState* lightPassPSO;
+	ID3D12PipelineState* dirLightPassPSO;
+	ID3D12PipelineState* shapeLightPassPSO;
 
 	CDescriptorHeapWrapper rtvHeap;
 	CDescriptorHeapWrapper dsvHeap;
@@ -65,6 +66,7 @@ class DeferredRenderer
 
 	ID3D12Resource *lightCB;
 	ID3D12Resource *worldViewCB;
+	Mesh* sphereMesh;
 
 	DXGI_FORMAT mDsvFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
 	DXGI_FORMAT mRtvFormat[3] = { DXGI_FORMAT_R11G11B10_FLOAT,DXGI_FORMAT_R8G8B8A8_SNORM,DXGI_FORMAT_R8G8B8A8_UNORM };
@@ -88,7 +90,7 @@ class DeferredRenderer
 public:
 	DeferredRenderer(ID3D12Device *dxDevice, int width, int height);
 	void SetSRV(ID3D12Resource* textureSRV, DXGI_FORMAT format, int index);
-	void Initialize();
+	void Initialize(ID3D12GraphicsCommandList* command);
 	void SetGBUfferPSO(ID3D12GraphicsCommandList* command, std::vector<Entity*> entities, Camera* camera, const PixelConstantBuffer& pixelCb);
 	void SetLightPassPSO(ID3D12GraphicsCommandList* command, const PixelConstantBuffer& pixelCb);
 	void Draw(ID3D12GraphicsCommandList* commandList);

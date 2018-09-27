@@ -20,7 +20,7 @@ void DeferredRenderer::SetSRV(ID3D12Resource* textureSRV, DXGI_FORMAT format, in
 	device->CreateShaderResourceView(textureSRV, &srvDesc, srvHeap.handleCPU(index));
 }
 
-void DeferredRenderer::Initialize()
+void DeferredRenderer::Initialize(ID3D12GraphicsCommandList* command)
 {
 	CreateCB();
 	CreateViews();
@@ -30,11 +30,12 @@ void DeferredRenderer::Initialize()
 
 	CreateRTV();
 	CreateDSV();
+	sphereMesh = new Mesh("../../Assets/sphere.obj", device, command);
 }
 
 void DeferredRenderer::SetGBUfferPSO(ID3D12GraphicsCommandList* command, std::vector<Entity*> entities, Camera* camera, const PixelConstantBuffer& pixelCb)
 {
-	ID3D12DescriptorHeap* ppHeaps[] = { srvHeap.pDescriptorHeap.Get()};
+	ID3D12DescriptorHeap* ppHeaps[] = { srvHeap.pDescriptorHeap.Get() };
 	this->camera = camera;
 	this->entities = entities;
 	command->SetPipelineState(deferredPSO);
@@ -52,7 +53,7 @@ void DeferredRenderer::SetGBUfferPSO(ID3D12GraphicsCommandList* command, std::ve
 	command->SetDescriptorHeaps(1, ppHeap2);
 	command->SetGraphicsRootDescriptorTable(1, pixelCbHeap.handleGPU(0));
 	//command->SetGraphicsRootDescriptorTable(2, srvHeap.pDescriptorHeap.Get()->GetGPUDescriptorHandleForHeapStart());
-	
+
 	pixelCbWrapper.CopyData((void*)&pixelCb, sizeof(PixelConstantBuffer), 0);
 }
 
@@ -62,7 +63,7 @@ void DeferredRenderer::SetLightPassPSO(ID3D12GraphicsCommandList * command, cons
 		command->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(gBufferTextures[i], D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_GENERIC_READ));
 	command->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(depthStencilTexture, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_GENERIC_READ));
 */
-	command->SetPipelineState(lightPassPSO);
+	command->SetPipelineState(dirLightPassPSO);
 
 	ID3D12DescriptorHeap* ppHeap2[] = { pixelCbHeap.pDescriptorHeap.Get() };
 	command->SetDescriptorHeaps(1, ppHeap2);
@@ -103,7 +104,7 @@ void DeferredRenderer::DrawLightPass(ID3D12GraphicsCommandList * commandList)
 	commandList->IASetVertexBuffers(0, 0, &vbv);
 	commandList->IASetIndexBuffer(&ibv);
 	commandList->DrawInstanced(4, 1, 0, 0);
-	
+
 }
 
 void DeferredRenderer::Draw(Mesh * m, const ConstantBuffer & cb, ID3D12GraphicsCommandList* commandList)
@@ -182,7 +183,7 @@ void DeferredRenderer::CreateViews()
 
 	cbWrapper.Initialize(worldViewCB, ConstantBufferSize);
 	pixelCbWrapper.Initialize(lightCB, PixelConstantBufferSize);
-	
+
 }
 
 void DeferredRenderer::CreatePSO()
@@ -243,7 +244,21 @@ void DeferredRenderer::CreateLightPassPSO()
 	descPipelineState.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
 	descPipelineState.SampleDesc.Count = 1;
 
-	device->CreateGraphicsPipelineState(&descPipelineState, IID_PPV_ARGS(&lightPassPSO));
+	device->CreateGraphicsPipelineState(&descPipelineState, IID_PPV_ARGS(&dirLightPassPSO));
+
+	D3D12_INPUT_ELEMENT_DESC inputLayout[] =
+	{
+		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+		{ "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 20, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+		{ "TANGENT", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 32, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
+	};
+
+	descPipelineState.VS = ShaderManager::LoadShader(L"LightShapeVS.cso");
+	descPipelineState.InputLayout.pInputElementDescs = inputLayout;
+	descPipelineState.InputLayout.NumElements = _countof(inputLayout);
+	device->CreateGraphicsPipelineState(&descPipelineState, IID_PPV_ARGS(&shapeLightPassPSO));
+
 }
 
 
@@ -402,7 +417,8 @@ DeferredRenderer::~DeferredRenderer()
 	depthStencilTexture->Release();
 
 	deferredPSO->Release();
-	lightPassPSO->Release();
+	dirLightPassPSO->Release();
+	shapeLightPassPSO->Release();
 
 	rtvHeap.pDescriptorHeap->Release();
 	dsvHeap.pDescriptorHeap->Release();
@@ -411,4 +427,5 @@ DeferredRenderer::~DeferredRenderer()
 
 	lightCB->Release();
 	worldViewCB->Release();
+	delete sphereMesh;
 }

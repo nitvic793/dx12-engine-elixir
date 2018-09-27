@@ -168,7 +168,7 @@ void Core::InitResources()
 {
 	ResourceUploadBatch uploadBatch(device);
 	deferredRenderer = new DeferredRenderer(device, Width, Height);
-	deferredRenderer->Initialize();
+	deferredRenderer->Initialize(commandList);
 	camera = new Camera((float)Width, (float)Height);
 	entity1 = new Entity();
 	entity2 = new Entity();
