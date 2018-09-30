@@ -5,7 +5,14 @@ struct VertexOutput
 	float3 normal	: NORMAL;
 	float3 tangent	: TANGENT;
 	float3 worldPos	: POSITION;
-}; 
+};
+
+struct PixelOutput
+{
+	float3 albedo: SV_TARGET0;
+	float4 normal: SV_TARGET1;
+	float4 worldPos: SV_TARGET2;
+};
 
 struct DirectionalLight
 {
@@ -24,6 +31,14 @@ Texture2D t1 : register(t0);
 Texture2D normalTexture : register(t1);
 SamplerState s1 : register(s0);
 
+float4 calculateDirectionalLight(float3 normal, DirectionalLight light)
+{
+	float3 dirToLight = normalize(-light.Direction);
+	float NdotL = dot(normal, dirToLight);
+	NdotL = saturate(NdotL);
+	return light.DiffuseColor * NdotL + light.AmbientColor;
+}
+
 float3 calculateNormalFromMap(float2 uv, float3 normal, float3 tangent)
 {
 	float3 normalFromTexture = normalTexture.Sample(s1, uv).xyz;
@@ -35,17 +50,15 @@ float3 calculateNormalFromMap(float2 uv, float3 normal, float3 tangent)
 	return normalize(mul(unpackedNormal, TBN));
 }
 
-float4 calculateDirectionalLight(float3 normal, DirectionalLight light)
-{
-	float3 dirToLight = normalize(-light.Direction);
-	float NdotL = dot(normal, dirToLight);
-	NdotL = saturate(NdotL);
-	return light.DiffuseColor * NdotL + light.AmbientColor;
-}
 
-float4 main(VertexOutput input) : SV_TARGET
+PixelOutput main(VertexOutput input) : SV_TARGET
 {
-	input.normal = normalize(input.normal);
-	float4 lightColor = calculateDirectionalLight(input.normal, dirLight);
-	return lightColor * t1.Sample(s1, input.uv);
+	float3 normal = calculateNormalFromMap(input.uv, input.normal, input.tangent);
+
+	PixelOutput output;
+	output.albedo = t1.Sample(s1, input.uv);
+	output.normal = float4(normalize(normal), 1.0f);
+	output.worldPos = float4(input.worldPos, 0.0f);
+
+	return output;
 }

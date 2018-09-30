@@ -12,3 +12,9 @@ struct Vertex {
 	XMFLOAT3 tangent;
 	float padding[5];
 };
+
+struct ScreenQuadVertex
+{
+	DirectX::XMFLOAT4 position;
+	DirectX::XMFLOAT2 uv;
+};

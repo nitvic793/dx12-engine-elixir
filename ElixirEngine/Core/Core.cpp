@@ -1,6 +1,7 @@
 #include "Core.h"
 #include "Vertex.h"
 #include "ImageHelpers.h"
+#include "ShaderManager.h"
 
 Core* Core::coreInstance = nullptr;
 
@@ -11,6 +12,7 @@ LRESULT CALLBACK WindowsProcessMessage(HWND hWnd, UINT msg, WPARAM wParam, LPARA
 
 bool Core::InitD3D()
 {
+	CoInitializeEx(nullptr, COINITBASE_MULTITHREADED);
 	IDXGIFactory4* dxgiFactory;
 	auto hr = CreateDXGIFactory1(IID_PPV_ARGS(&dxgiFactory));
 	if (FAILED(hr))
@@ -164,6 +166,9 @@ bool Core::InitD3D()
 int ConstantBufferPerObjectAlignedSize = (sizeof(ConstantBuffer) + 255) & ~255;
 void Core::InitResources()
 {
+	ResourceUploadBatch uploadBatch(device);
+	deferredRenderer = new DeferredRenderer(device, Width, Height);
+	deferredRenderer->Initialize(commandList);
 	camera = new Camera((float)Width, (float)Height);
 	entity1 = new Entity();
 	entity2 = new Entity();
@@ -183,18 +188,18 @@ void Core::InitResources()
 	descriptorTable.NumDescriptorRanges = _countof(descriptorTableRanges); // we only have one range
 	descriptorTable.pDescriptorRanges = &descriptorTableRanges[0]; // the pointer to the beginning of our ranges array
 
-	D3D12_ROOT_PARAMETER  rootParameters[3]; 
+	D3D12_ROOT_PARAMETER  rootParameters[3];
 	rootParameters[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV; // this is a constant buffer view root descriptor
-	rootParameters[0].Descriptor = rootCBVDescriptor; 
+	rootParameters[0].Descriptor = rootCBVDescriptor;
 	rootParameters[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
 
-	rootParameters[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE; // this is a descriptor table
-	rootParameters[1].DescriptorTable = descriptorTable; // this is our descriptor table for this root parameter
-	rootParameters[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL; // our pixel shader will be the only shader accessing this parameter for now
+	rootParameters[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV; // this is a constant buffer view root descriptor
+	rootParameters[1].Descriptor = rootCBVDescriptor;
+	rootParameters[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
 
-	rootParameters[2].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV; // this is a constant buffer view root descriptor
-	rootParameters[2].Descriptor = rootCBVDescriptor;
-	rootParameters[2].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+	rootParameters[2].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE; // this is a descriptor table
+	rootParameters[2].DescriptorTable = descriptorTable; // this is our descriptor table for this root parameter
+	rootParameters[2].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL; // our pixel shader will be the only shader accessing this parameter for now
 
 	D3D12_STATIC_SAMPLER_DESC sampler = {};
 	sampler.Filter = D3D12_FILTER_ANISOTROPIC;
@@ -225,17 +230,8 @@ void Core::InitResources()
 	D3D12SerializeRootSignature(&rootSignatureDesc, D3D_ROOT_SIGNATURE_VERSION_1, &signature, nullptr);
 	device->CreateRootSignature(0, signature->GetBufferPointer(), signature->GetBufferSize(), IID_PPV_ARGS(&rootSignature));
 
-	ID3DBlob* vertexShader;
-	D3DReadFileToBlob(L"DefaultVS.cso", &vertexShader);
-	D3D12_SHADER_BYTECODE vertexShaderBytecode = {};
-	vertexShaderBytecode.BytecodeLength = vertexShader->GetBufferSize();
-	vertexShaderBytecode.pShaderBytecode = vertexShader->GetBufferPointer();
-
-	ID3DBlob* pixelShader;
-	D3DReadFileToBlob(L"DefaultPS.cso", &pixelShader);
-	D3D12_SHADER_BYTECODE pixelShaderBytecode = {};
-	pixelShaderBytecode.BytecodeLength = pixelShader->GetBufferSize();
-	pixelShaderBytecode.pShaderBytecode = pixelShader->GetBufferPointer();
+	auto vertexShaderBytecode = ShaderManager::LoadShader(L"DefaultVS.cso");
+	auto pixelShaderBytecode = ShaderManager::LoadShader(L"DefaultPS.cso");
 
 	D3D12_INPUT_ELEMENT_DESC inputLayout[] =
 	{
@@ -270,6 +266,9 @@ void Core::InitResources()
 
 	mesh = new Mesh("../../Assets/sphere.obj", device, commandList);
 
+	entity1->SetMesh(mesh);
+	entity2->SetMesh(mesh);
+
 	//Create depth stencil buffer
 	D3D12_DESCRIPTOR_HEAP_DESC dsvHeapDesc = {};
 	dsvHeapDesc.NumDescriptors = 1;
@@ -301,7 +300,7 @@ void Core::InitResources()
 	device->CreateDepthStencilView(depthStencilBuffer, &depthStencilDesc, dsDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
 
 	pixelCb.light.AmbientColor = XMFLOAT4(0.1f, 0.1f, 0.1f, 0);
-	pixelCb.light.DiffuseColor = XMFLOAT4(1.f, 0.1f, 0.f, 0.f);
+	pixelCb.light.DiffuseColor = XMFLOAT4(1.f, 0.0f, 0.f, 0.f);
 	pixelCb.light.Direction = XMFLOAT3(1.f, 0.f, 0.f);
 
 	// create the constant buffer resource heap
@@ -328,7 +327,7 @@ void Core::InitResources()
 		// so we need to add spacing between the two buffers, so that the second buffer starts at 256 bits from the beginning of the resource heap.
 		memcpy(cbvGPUAddress[i], &cbPerObject, sizeof(cbPerObject)); // cube1's constant buffer data
 		memcpy(cbvGPUAddress[i] + ConstantBufferPerObjectAlignedSize, &cbPerObject, sizeof(cbPerObject)); // cube2's constant buffer data
-		memcpy(cbvGPUAddress[i] + ConstantBufferPerObjectAlignedSize * 2, &pixelCb, sizeof(pixelCb)); // cube2's constant buffer data
+		memcpy(cbvGPUAddress[i] + ConstantBufferPerObjectAlignedSize * 2, &pixelCb, sizeof(pixelCb)); // Light data for PixelShader
 	}
 
 	D3D12_DESCRIPTOR_HEAP_DESC heapDesc = {};
@@ -394,13 +393,50 @@ void Core::InitResources()
 	srvDesc.Format = textureDesc.Format;
 	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
 	srvDesc.Texture2D.MipLevels = 1;
-	device->CreateShaderResourceView(textureBuffer, &srvDesc, mainDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
+	deferredRenderer->SetSRV(textureBuffer, textureDesc.Format, 0);
+
+	delete imageData;
+
+	imageSize = LoadImageDataFromFile(&imageData, textureDesc, L"../../Assets/metalNormal.png", imageBytesPerRow);
+
+	device->CreateCommittedResource(
+		&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
+		D3D12_HEAP_FLAG_NONE,
+		&textureDesc,
+		D3D12_RESOURCE_STATE_COPY_DEST,
+		nullptr,
+		IID_PPV_ARGS(&normalTexture));
+	device->GetCopyableFootprints(&textureDesc, 0, 1, 0, nullptr, nullptr, nullptr, &textureUploadBufferSize);
+	device->CreateCommittedResource(
+		&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
+		D3D12_HEAP_FLAG_NONE, // no flags
+		&CD3DX12_RESOURCE_DESC::Buffer(textureUploadBufferSize),
+		D3D12_RESOURCE_STATE_GENERIC_READ,
+		nullptr,
+		IID_PPV_ARGS(&textureBufferUploadHeap));
+
+	textureData.pData = &imageData[0];
+	textureData.RowPitch = imageBytesPerRow;
+	textureData.SlicePitch = imageBytesPerRow * textureDesc.Height;
+
+	UpdateSubresources(commandList, normalTexture, textureBufferUploadHeap, 0, 0, 1, &textureData);
+
+	commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(normalTexture, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE));
+	deferredRenderer->SetSRV(normalTexture, textureDesc.Format, 1);
+	//device->CreateShaderResourceView(textureBuffer, &srvDesc, mainDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
 
 	// Now we execute the command list to upload the initial assets (triangle data)
 	commandList->Close();
 	ID3D12CommandList* ppCommandLists[] = { commandList };
+
 	commandQueue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
 
+	//uploadBatch.Begin();
+	//CreateWICTextureFromFile(device, uploadBatch, L"../../Assets/metalNormal.png", &normalTexture, true);
+	//auto uploadOperation = uploadBatch.End(commandQueue);
+	//uploadOperation.wait();
+
+	//deferredRenderer->SetSRV(normalTexture, textureDesc.Format, 1);
 	// increment the fence value now, otherwise the buffer might not be uploaded by the time we start drawing
 	fenceValue[frameIndex]++;
 	auto hr = commandQueue->Signal(fence[frameIndex], fenceValue[frameIndex]);
@@ -425,12 +461,13 @@ void Core::InitResources()
 	scissorRect.right = Width;
 	scissorRect.bottom = Height;
 
+	pixelCb.pointLight = PointLight{ {0.f, 1.f, 0.f, 0.f} , {0.5f, 0.f, 1.f}, 5.f };
 }
 
 void Core::Update()
 {
 	camera->Update(deltaTime);
-	auto pos = XMFLOAT3(0, 0, 0);
+	auto pos = XMFLOAT3(-1, 0, 2);
 	entity1->SetPosition(pos);
 	entity2->SetPosition(XMFLOAT3(2, 0, 2));
 
@@ -473,39 +510,41 @@ void Core::UpdatePipeline()
 	CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(rtvDescriptorHeap->GetCPUDescriptorHandleForHeapStart(), frameIndex, rtvDescriptorSize);
 	CD3DX12_CPU_DESCRIPTOR_HANDLE dsvHandle(dsDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
 	commandList->OMSetRenderTargets(1, &rtvHandle, FALSE, &dsvHandle);
-	const float clearColor[] = { 0.0f, 0.2f, 0.4f, 1.0f };
+	const float clearColor[] = { 0.0f, 0.0f, 0.0f, 0.0f };
 	commandList->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
 	commandList->ClearDepthStencilView(dsDescriptorHeap->GetCPUDescriptorHandleForHeapStart(), D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
 
-	// draw
-	commandList->SetGraphicsRootSignature(rootSignature);
-
-	// set the descriptor heap
-	ID3D12DescriptorHeap* descriptorHeaps[] = { mainDescriptorHeap };
-	commandList->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
-	//RTV - GBuffer
-	// set the root descriptor table 0 to the constant buffer descriptor heap
-	// set the descriptor table to the descriptor heap (parameter 1, as constant buffer root descriptor is parameter index 0)
-	commandList->SetGraphicsRootDescriptorTable(1, mainDescriptorHeap->GetGPUDescriptorHandleForHeapStart());
 	commandList->RSSetViewports(1, &viewport);
 	commandList->RSSetScissorRects(1, &scissorRect);
 	commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	commandList->IASetVertexBuffers(0, 1, &mesh->GetVertexBufferView());
-	commandList->IASetIndexBuffer(&mesh->GetIndexBufferView());
 
-	commandList->SetGraphicsRootConstantBufferView(2, constantBufferUploadHeap[frameIndex]->GetGPUVirtualAddress() + ConstantBufferPerObjectAlignedSize * 2);
-	commandList->SetGraphicsRootConstantBufferView(0, constantBufferUploadHeap[frameIndex]->GetGPUVirtualAddress());
+	//commandList->SetGraphicsRootSignature(rootSignature);
+	//ID3D12DescriptorHeap* descriptorHeaps[] = { mainDescriptorHeap };
+	//commandList->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
 
-	// draw first cube
-	commandList->DrawIndexedInstanced(mesh->GetIndexCount(), 1, 0, 0, 0);
+	//commandList->IASetVertexBuffers(0, 1, &mesh->GetVertexBufferView());
+	//commandList->IASetIndexBuffer(&mesh->GetIndexBufferView());
+	//commandList->SetGraphicsRootDescriptorTable(2, mainDescriptorHeap->GetGPUDescriptorHandleForHeapStart());
+	//commandList->SetGraphicsRootConstantBufferView(1, constantBufferUploadHeap[frameIndex]->GetGPUVirtualAddress() + ConstantBufferPerObjectAlignedSize * 2);
 
-	// second cube
-	// cube2's constant buffer data is stored after (256 bits from the start of the heap).
-	commandList->SetGraphicsRootConstantBufferView(0, constantBufferUploadHeap[frameIndex]->GetGPUVirtualAddress() + ConstantBufferPerObjectAlignedSize);
+	//commandList->SetGraphicsRootConstantBufferView(0, constantBufferUploadHeap[frameIndex]->GetGPUVirtualAddress());
+	//commandList->DrawIndexedInstanced(mesh->GetIndexCount(), 1, 0, 0, 0);
 
-	// draw second cube
-	commandList->DrawIndexedInstanced(mesh->GetIndexCount(), 1, 0, 0, 0);
+	//commandList->SetGraphicsRootSignature(rootSignature);
+	pixelCb.invProjView = camera->GetInverseProjectionViewMatrix();
 
+	// draw
+	deferredRenderer->SetGBUfferPSO(commandList, { entity1, entity2 }, camera, pixelCb);
+	deferredRenderer->Draw(commandList);
+
+	deferredRenderer->SetLightShapePassPSO(commandList, pixelCb);
+	deferredRenderer->DrawLightShapePass(commandList, pixelCb);
+
+	commandList->OMSetRenderTargets(1, &rtvHandle, true, nullptr);
+	commandList->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
+	
+	deferredRenderer->SetLightPassPSO(commandList, pixelCb);
+	deferredRenderer->DrawLightPass(commandList);
 	commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(renderTargets[frameIndex], D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT));
 
 	hr = commandList->Close();
@@ -532,6 +571,7 @@ void Core::Render()
 	hr = swapChain->Present(0, 0);
 	if (FAILED(hr))
 	{
+		HRESULT r = device->GetDeviceRemovedReason();
 		Running = false;
 	}
 }
@@ -561,11 +601,11 @@ void Core::Cleanup()
 		renderTargets[i]->Release();
 		commandAllocator[i]->Release();
 		fence[i]->Release();
-		
+
 		constantBufferUploadHeap[i]->Release();
 
 	};
-	
+
 	mainDescriptorHeap->Release();
 	pipelineStateObject->Release();
 	rootSignature->Release();
@@ -573,12 +613,14 @@ void Core::Cleanup()
 	//indexBuffer->Release();
 	depthStencilBuffer->Release();
 	dsDescriptorHeap->Release();
+	textureBuffer->Release();
+	textureBufferUploadHeap->Release();
 
 	delete mesh;
 	delete camera;
 	delete entity1;
 	delete entity2;
-
+	delete deferredRenderer;
 }
 
 void Core::WaitForPreviousFrame()

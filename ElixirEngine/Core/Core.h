@@ -6,6 +6,7 @@
 #include <string>
 #include <functional>
 #include "Light.h"
+#include "DeferredRenderer.h"
 
 class Core
 {
@@ -67,13 +68,15 @@ protected:
 	ID3D12DescriptorHeap* dsDescriptorHeap; // heap for depth stencil buffer descriptor
 
 	ID3D12Resource* textureBuffer; // the resource heap containing our texture
-	ID3D12Resource* textureBuffer1; // the resource heap containing our texture
+	ID3D12Resource* normalTexture; // the resource heap containing our texture
 	ID3D12DescriptorHeap* mainDescriptorHeap;
 	ID3D12Resource* textureBufferUploadHeap;
 	ID3D12Resource* constantBufferUploadHeap[FRAMEBUFFERCOUNT]; // this is the memory on the gpu where our constant buffer will be placed.
 
 	ConstantBuffer cbPerObject; // this is the constant buffer data we will send to the gpu 
 	PixelConstantBuffer pixelCb;
+
+	DeferredRenderer* deferredRenderer;
 
 	Mesh* mesh;
 	Camera* camera;
