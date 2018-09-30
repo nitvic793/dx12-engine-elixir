@@ -20,5 +20,6 @@ public:
 	XMFLOAT4X4 GetWorldMatrixTransposed();
 	XMFLOAT3 GetPosition();
 	void SetPosition(const XMFLOAT3& pos);
+	void SetScale(const XMFLOAT3& scale);
 	~Entity();
 };

@@ -32,7 +32,7 @@ float4 GGXBRDF(float3 lightDir, float3 lightPos, float3 albedo, float3 normal, f
 	float2 FV_helper = float2(F_a*vis, F_b*vis);
 	float3 col = specular * FV_helper.x + (1 - specular)*FV_helper.y;
 
-	col = (NdotL*D*col + NdotL * albedo);
+	col = (NdotL*D*col + NdotL * albedo).rgb;
 
 	return float4(col, 1);
 }
@@ -76,6 +76,7 @@ float4 calculateDirectionalLight(float3 normal, DirectionalLight light)
 float4 calculatePointLight(float3 normal, float3 worldPos, PointLight light)
 {
 	float3 dirToPointLight = normalize(light.Position - worldPos);
+	float distance = length(worldPos - light.Position);
 	float pointNdotL = dot(normal, dirToPointLight);
 	pointNdotL = saturate(pointNdotL);
 	return light.Color * pointNdotL;
@@ -84,21 +85,22 @@ float4 calculatePointLight(float3 normal, float3 worldPos, PointLight light)
 Texture2D gAlbedoTexture : register(t0);
 Texture2D gNormalTexture : register(t1);
 Texture2D gWorldPosTexture : register(t2);
+
 Texture2D gDepth: register(t4);
-Texture2D gLightShapePass: register(t3);
 
 sampler basicSampler;
 
 float4 main(VertexToPixel pIn) : SV_TARGET
 {
-	float3 albedo = gAlbedoTexture.Sample(basicSampler, pIn.uv).rgb;
-	float3 normal = gNormalTexture.Sample(basicSampler, pIn.uv).rgb;
-	float3 worldPos = gWorldPosTexture.Sample(basicSampler, pIn.uv).rgb;
-	float3 otherlights = gLightShapePass.Sample(basicSampler, pIn.uv).rgb;
-
-	float3 lightValue = calculateDirectionalLight(normal, dirLight).xyz;
-	float3 finalColor = lightValue * albedo;
-
-	return float4(otherlights + finalColor,1.0f);
+	int3 sampleIndices = int3(pIn.position.xy, 0);
+	float3 albedo = gAlbedoTexture.Load(sampleIndices).rgb;
+	float3 normal = gNormalTexture.Load(sampleIndices).rgb;
+	float3 worldPos = gWorldPosTexture.Load(sampleIndices).rgb;
+	//float3 lightValue = calculateDirectionalLight(normal, dirLight).xyz;
+	float3 pointLightValue = calculatePointLight(normal, worldPos, pointLight).rgb;
+	//return float4(albedo, 1.0f);
+	float3 finalColor = pointLightValue * albedo;
+	//finalColor += pointLightValue * albedo;
+	return float4(finalColor,1.0f);
 
 }

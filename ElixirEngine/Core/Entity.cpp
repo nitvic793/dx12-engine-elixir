@@ -66,6 +66,11 @@ void Entity::SetPosition(const XMFLOAT3& pos)
 	position = pos;
 }
 
+void Entity::SetScale(const XMFLOAT3 & scale)
+{
+	this->scale = scale;
+}
+
 Entity::~Entity()
 {
 }

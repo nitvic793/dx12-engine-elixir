@@ -461,7 +461,7 @@ void Core::InitResources()
 	scissorRect.right = Width;
 	scissorRect.bottom = Height;
 
-	pixelCb.pointLight = PointLight{ {0.f, 1.f, 0.f, 0.f} , {5.f, 0.f, 0.f}, 5.f };
+	pixelCb.pointLight = PointLight{ {0.f, 1.f, 0.f, 0.f} , {0.5f, 0.f, 1.f}, 5.f };
 }
 
 void Core::Update()
@@ -510,7 +510,7 @@ void Core::UpdatePipeline()
 	CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(rtvDescriptorHeap->GetCPUDescriptorHandleForHeapStart(), frameIndex, rtvDescriptorSize);
 	CD3DX12_CPU_DESCRIPTOR_HANDLE dsvHandle(dsDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
 	commandList->OMSetRenderTargets(1, &rtvHandle, FALSE, &dsvHandle);
-	const float clearColor[] = { 0.0f, 0.2f, 0.4f, 1.0f };
+	const float clearColor[] = { 0.0f, 0.0f, 0.0f, 0.0f };
 	commandList->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
 	commandList->ClearDepthStencilView(dsDescriptorHeap->GetCPUDescriptorHandleForHeapStart(), D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
 
@@ -537,11 +537,14 @@ void Core::UpdatePipeline()
 	deferredRenderer->SetGBUfferPSO(commandList, { entity1, entity2 }, camera, pixelCb);
 	deferredRenderer->Draw(commandList);
 
-	deferredRenderer->SetLightPassPSO(commandList, pixelCb);
+	deferredRenderer->SetLightShapePassPSO(commandList, pixelCb);
+	deferredRenderer->DrawLightShapePass(commandList, pixelCb);
+
 	commandList->OMSetRenderTargets(1, &rtvHandle, true, nullptr);
 	commandList->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
+	
+	deferredRenderer->SetLightPassPSO(commandList, pixelCb);
 	deferredRenderer->DrawLightPass(commandList);
-
 	commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(renderTargets[frameIndex], D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT));
 
 	hr = commandList->Close();
