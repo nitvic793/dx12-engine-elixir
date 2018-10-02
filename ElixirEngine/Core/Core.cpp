@@ -172,6 +172,7 @@ void Core::InitResources()
 	camera = new Camera((float)Width, (float)Height);
 	entity1 = new Entity();
 	entity2 = new Entity();
+	entity3 = new Entity();
 
 	D3D12_ROOT_DESCRIPTOR rootCBVDescriptor;
 	rootCBVDescriptor.RegisterSpace = 0;
@@ -268,6 +269,7 @@ void Core::InitResources()
 
 	entity1->SetMesh(mesh);
 	entity2->SetMesh(mesh);
+	entity3->SetMesh(mesh);
 
 	//Create depth stencil buffer
 	D3D12_DESCRIPTOR_HEAP_DESC dsvHeapDesc = {};
@@ -461,15 +463,16 @@ void Core::InitResources()
 	scissorRect.right = Width;
 	scissorRect.bottom = Height;
 
-	pixelCb.pointLight = PointLight{ {0.f, 1.f, 0.f, 0.f} , {0.5f, 0.f, 1.f}, 5.f };
+	pixelCb.pointLight = PointLight{ {0.f, 1.f, 0.f, 0.f} , {0.5f, 0.f, 1.f}, 6.f };
 }
 
 void Core::Update()
 {
 	camera->Update(deltaTime);
-	auto pos = XMFLOAT3(-1, 0, 2);
+	auto pos = XMFLOAT3(-3, 0, 2);
 	entity1->SetPosition(pos);
-	entity2->SetPosition(XMFLOAT3(2, 0, 2));
+	entity2->SetPosition(XMFLOAT3(3, 0, 2));
+	entity3->SetPosition(XMFLOAT3(0.5, 1, 1));
 
 	XMMATRIX viewMat = XMLoadFloat4x4(&camera->GetViewMatrix()); // load view matrix
 	XMMATRIX projMat = XMLoadFloat4x4(&camera->GetProjectionMatrix()); // load projection matrix
@@ -534,7 +537,7 @@ void Core::UpdatePipeline()
 	pixelCb.invProjView = camera->GetInverseProjectionViewMatrix();
 
 	// draw
-	deferredRenderer->SetGBUfferPSO(commandList, { entity1, entity2 }, camera, pixelCb);
+	deferredRenderer->SetGBUfferPSO(commandList, { entity1, entity2, entity3 }, camera, pixelCb);
 	deferredRenderer->Draw(commandList);
 
 	deferredRenderer->SetLightShapePassPSO(commandList, pixelCb);

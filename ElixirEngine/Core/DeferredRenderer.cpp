@@ -135,7 +135,8 @@ void DeferredRenderer::DrawLightShapePass(ID3D12GraphicsCommandList * commandLis
 	Entity e;
 	e.SetMesh(sphereMesh);
 	e.SetPosition(pixelCb.pointLight.Position);
-	e.SetScale(XMFLOAT3(3, 3, 3));
+	float range = pixelCb.pointLight.Range;
+	e.SetScale(XMFLOAT3(range, range, range));
 	auto cb = ConstantBuffer{ e.GetWorldViewProjectionTransposed(camera->GetProjectionMatrix(), camera->GetViewMatrix()), e.GetWorldMatrixTransposed() };
 	cbWrapper.CopyData(&cb, sizeof(ConstantBuffer), constBufferIndex);
 	commandList->SetGraphicsRootDescriptorTable(0, cbHeap.handleGPU(constBufferIndex));
@@ -291,9 +292,13 @@ void DeferredRenderer::CreateLightPassPSO()
 		{ "TANGENT", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 32, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
 	};
 
+	auto rasterizer = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
+	rasterizer.CullMode = D3D12_CULL_MODE_NONE;
+	rasterizer.DepthClipEnable = false;
 	descPipelineState.VS = ShaderManager::LoadShader(L"LightShapeVS.cso");
 	descPipelineState.PS = ShaderManager::LoadShader(L"LightShapePassPS.cso");
 	descPipelineState.InputLayout.pInputElementDescs = inputLayout;
+	descPipelineState.RasterizerState = rasterizer;
 	descPipelineState.InputLayout.NumElements = _countof(inputLayout);
 	device->CreateGraphicsPipelineState(&descPipelineState, IID_PPV_ARGS(&shapeLightPassPSO));
 

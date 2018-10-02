@@ -82,6 +82,7 @@ protected:
 	Camera* camera;
 	Entity* entity1;
 	Entity* entity2;
+	Entity* entity3;
 
 	int ConstantBufferPerObjectAlignedSize = (sizeof(ConstantBuffer) + 255) & ~255;
 
