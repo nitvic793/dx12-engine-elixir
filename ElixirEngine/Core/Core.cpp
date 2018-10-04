@@ -163,7 +163,7 @@ bool Core::InitD3D()
 
 	return true;
 }
-int ConstantBufferPerObjectAlignedSize = (sizeof(ConstantBuffer) + 255) & ~255;
+
 void Core::InitResources()
 {
 	ResourceUploadBatch uploadBatch(device);
@@ -305,32 +305,7 @@ void Core::InitResources()
 	pixelCb.light.DiffuseColor = XMFLOAT4(1.f, 0.0f, 0.f, 0.f);
 	pixelCb.light.Direction = XMFLOAT3(1.f, 0.f, 0.f);
 
-	// create the constant buffer resource heap
-	for (int i = 0; i < frameBufferCount; ++i)
-	{
-		device->CreateCommittedResource(
-			&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD), // this heap will be used to upload the constant buffer data
-			D3D12_HEAP_FLAG_NONE, // no flags
-			&CD3DX12_RESOURCE_DESC::Buffer(1024 * 64), // size of the resource heap. Must be a multiple of 64KB for single-textures and constant buffers
-			D3D12_RESOURCE_STATE_GENERIC_READ, // will be data that is read from so we keep it in the generic read state
-			nullptr, // we do not have use an optimized clear value for constant buffers
-			IID_PPV_ARGS(&constantBufferUploadHeap[i]));
 
-		constantBufferUploadHeap[i]->SetName(L"Constant Buffer Upload Resource Heap");
-
-		ZeroMemory(&cbPerObject, sizeof(cbPerObject));
-
-		CD3DX12_RANGE readRange(0, 0);	// We do not intend to read from this resource on the CPU. (so end is less than or equal to begin)
-
-										// map the resource heap to get a gpu virtual address to the beginning of the heap
-		constantBufferUploadHeap[i]->Map(0, &readRange, reinterpret_cast<void**>(&cbvGPUAddress[i]));
-
-		// Because of the constant read alignment requirements, constant buffer views must be 256 bit aligned. Our buffers are smaller than 256 bits,
-		// so we need to add spacing between the two buffers, so that the second buffer starts at 256 bits from the beginning of the resource heap.
-		memcpy(cbvGPUAddress[i], &cbPerObject, sizeof(cbPerObject)); // cube1's constant buffer data
-		memcpy(cbvGPUAddress[i] + ConstantBufferPerObjectAlignedSize, &cbPerObject, sizeof(cbPerObject)); // cube2's constant buffer data
-		memcpy(cbvGPUAddress[i] + ConstantBufferPerObjectAlignedSize * 2, &pixelCb, sizeof(pixelCb)); // Light data for PixelShader
-	}
 
 	D3D12_DESCRIPTOR_HEAP_DESC heapDesc = {};
 	heapDesc.NumDescriptors = 1;
@@ -350,7 +325,7 @@ void Core::InitResources()
 		Running = false;
 	}
 
-	// create a default heap where the upload heap will copy its contents into (contents being the texture)
+	//// create a default heap where the upload heap will copy its contents into (contents being the texture)
 	device->CreateCommittedResource(
 		&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT), // a default heap
 		D3D12_HEAP_FLAG_NONE, // no flags
@@ -365,7 +340,6 @@ void Core::InitResources()
 
 	// this function gets the size an upload buffer needs to be to upload a texture to the gpu.
 	device->GetCopyableFootprints(&textureDesc, 0, 1, 0, nullptr, nullptr, nullptr, &textureUploadBufferSize);
-
 	// now we create an upload heap to upload our texture to the GPU
 	device->CreateCommittedResource(
 		&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD), // upload heap
@@ -387,7 +361,7 @@ void Core::InitResources()
 	UpdateSubresources(commandList, textureBuffer, textureBufferUploadHeap, 0, 0, 1, &textureData);
 
 	// transition the texture default heap to a pixel shader resource (we will be sampling from this heap in the pixel shader to get the color of pixels)
-	commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(textureBuffer, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE));
+	
 
 	// now we create a shader resource view (descriptor that points to the texture and describes it)
 	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
@@ -401,30 +375,38 @@ void Core::InitResources()
 
 	imageSize = LoadImageDataFromFile(&imageData, textureDesc, L"../../Assets/metalNormal.png", imageBytesPerRow);
 
-	device->CreateCommittedResource(
-		&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
-		D3D12_HEAP_FLAG_NONE,
-		&textureDesc,
-		D3D12_RESOURCE_STATE_COPY_DEST,
-		nullptr,
-		IID_PPV_ARGS(&normalTexture));
-	device->GetCopyableFootprints(&textureDesc, 0, 1, 0, nullptr, nullptr, nullptr, &textureUploadBufferSize);
-	device->CreateCommittedResource(
-		&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
-		D3D12_HEAP_FLAG_NONE, // no flags
-		&CD3DX12_RESOURCE_DESC::Buffer(textureUploadBufferSize),
-		D3D12_RESOURCE_STATE_GENERIC_READ,
-		nullptr,
-		IID_PPV_ARGS(&textureBufferUploadHeap));
+	//device->CreateCommittedResource(
+	//	&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
+	//	D3D12_HEAP_FLAG_NONE,
+	//	&textureDesc,
+	//	D3D12_RESOURCE_STATE_COPY_DEST,
+	//	nullptr,
+	//	IID_PPV_ARGS(&normalTexture));
+	//device->GetCopyableFootprints(&textureDesc, 0, 1, 0, nullptr, nullptr, nullptr, &textureUploadBufferSize);
+	//device->CreateCommittedResource(
+	//	&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
+	//	D3D12_HEAP_FLAG_NONE, // no flags
+	//	&CD3DX12_RESOURCE_DESC::Buffer(textureUploadBufferSize),
+	//	D3D12_RESOURCE_STATE_GENERIC_READ,
+	//	nullptr,
+	//	IID_PPV_ARGS(&textureBufferUploadHeap));
 
-	textureData.pData = &imageData[0];
-	textureData.RowPitch = imageBytesPerRow;
-	textureData.SlicePitch = imageBytesPerRow * textureDesc.Height;
+	//textureData.pData = &imageData[0];
+	//textureData.RowPitch = imageBytesPerRow;
+	//textureData.SlicePitch = imageBytesPerRow * textureDesc.Height;
 
-	UpdateSubresources(commandList, normalTexture, textureBufferUploadHeap, 0, 0, 1, &textureData);
+	//UpdateSubresources(commandList, normalTexture, textureBufferUploadHeap, 0, 0, 1, &textureData);
 
-	commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(normalTexture, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE));
-	deferredRenderer->SetSRV(normalTexture, textureDesc.Format, 1);
+
+	uploadBatch.Begin();
+	//CreateWICTextureFromFile(device, uploadBatch, L"../../Assets/metal.jpg", &textureBuffer, true);
+	CreateWICTextureFromFile(device, uploadBatch, L"../../Assets/metalNormal.png", &normalTexture, true);
+	auto uploadOperation = uploadBatch.End(commandQueue);
+	uploadOperation.wait();
+
+	//commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(normalTexture, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE));
+	//deferredRenderer->SetSRV(textureBuffer, DXGI_FORMAT_R11G11B10_FLOAT, 0);
+	deferredRenderer->SetSRV(normalTexture, DXGI_FORMAT_B8G8R8A8_UNORM, 1);
 	//device->CreateShaderResourceView(textureBuffer, &srvDesc, mainDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
 
 	// Now we execute the command list to upload the initial assets (triangle data)
@@ -433,10 +415,6 @@ void Core::InitResources()
 
 	commandQueue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
 
-	//uploadBatch.Begin();
-	//CreateWICTextureFromFile(device, uploadBatch, L"../../Assets/metalNormal.png", &normalTexture, true);
-	//auto uploadOperation = uploadBatch.End(commandQueue);
-	//uploadOperation.wait();
 
 	//deferredRenderer->SetSRV(normalTexture, textureDesc.Format, 1);
 	// increment the fence value now, otherwise the buffer might not be uploaded by the time we start drawing
@@ -473,22 +451,6 @@ void Core::Update()
 	entity1->SetPosition(pos);
 	entity2->SetPosition(XMFLOAT3(3, 0, 2));
 	entity3->SetPosition(XMFLOAT3(0.5, 1, 1));
-
-	XMMATRIX viewMat = XMLoadFloat4x4(&camera->GetViewMatrix()); // load view matrix
-	XMMATRIX projMat = XMLoadFloat4x4(&camera->GetProjectionMatrix()); // load projection matrix
-	XMMATRIX wvpMat = XMLoadFloat4x4(&entity1->GetWorldMatrix()) * viewMat * projMat; // create wvp matrix
-	XMMATRIX transposed = XMMatrixTranspose(wvpMat); // must transpose wvp matrix for the gpu
-	XMStoreFloat4x4(&cbPerObject.worldViewProjection, transposed); // store transposed wvp matrix in constant buffer
-
-													  // copy our ConstantBuffer instance to the mapped constant buffer resource
-	memcpy(cbvGPUAddress[frameIndex], &cbPerObject, sizeof(cbPerObject));
-
-	wvpMat = XMLoadFloat4x4(&entity2->GetWorldMatrix()) * viewMat * projMat; // create wvp matrix
-	transposed = XMMatrixTranspose(wvpMat); // must transpose wvp matrix for the gpu
-	XMStoreFloat4x4(&cbPerObject.worldViewProjection, transposed); // store transposed wvp matrix in constant buffer
-
-													  // copy our ConstantBuffer instance to the mapped constant buffer resource
-	memcpy(cbvGPUAddress[frameIndex] + ConstantBufferPerObjectAlignedSize, &cbPerObject, sizeof(cbPerObject));
 }
 
 void Core::UpdatePipeline()
@@ -521,19 +483,6 @@ void Core::UpdatePipeline()
 	commandList->RSSetScissorRects(1, &scissorRect);
 	commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
-	//commandList->SetGraphicsRootSignature(rootSignature);
-	//ID3D12DescriptorHeap* descriptorHeaps[] = { mainDescriptorHeap };
-	//commandList->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
-
-	//commandList->IASetVertexBuffers(0, 1, &mesh->GetVertexBufferView());
-	//commandList->IASetIndexBuffer(&mesh->GetIndexBufferView());
-	//commandList->SetGraphicsRootDescriptorTable(2, mainDescriptorHeap->GetGPUDescriptorHandleForHeapStart());
-	//commandList->SetGraphicsRootConstantBufferView(1, constantBufferUploadHeap[frameIndex]->GetGPUVirtualAddress() + ConstantBufferPerObjectAlignedSize * 2);
-
-	//commandList->SetGraphicsRootConstantBufferView(0, constantBufferUploadHeap[frameIndex]->GetGPUVirtualAddress());
-	//commandList->DrawIndexedInstanced(mesh->GetIndexCount(), 1, 0, 0, 0);
-
-	//commandList->SetGraphicsRootSignature(rootSignature);
 	pixelCb.invProjView = camera->GetInverseProjectionViewMatrix();
 
 	// draw
@@ -604,9 +553,6 @@ void Core::Cleanup()
 		renderTargets[i]->Release();
 		commandAllocator[i]->Release();
 		fence[i]->Release();
-
-		constantBufferUploadHeap[i]->Release();
-
 	};
 
 	mainDescriptorHeap->Release();
@@ -623,6 +569,7 @@ void Core::Cleanup()
 	delete camera;
 	delete entity1;
 	delete entity2;
+	delete entity3;
 	delete deferredRenderer;
 }
 

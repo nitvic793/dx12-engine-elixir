@@ -45,6 +45,15 @@ struct DirectionalLight
 	float Padding;
 };
 
+struct SpotLight
+{
+	float4 Color;
+	float4 Direction;
+	float3 Position;
+	float Range;
+	float SpotlightAngle;
+};
+
 struct PointLight
 {
 	float4 Color;
@@ -73,12 +82,24 @@ float4 calculateDirectionalLight(float3 normal, DirectionalLight light)
 	return light.DiffuseColor * NdotL + light.AmbientColor;
 }
 
+float Attenuate(float3 lightPosition, float lightRange, float3 worldPos)
+{
+	float dist = distance(lightPosition, worldPos);
+
+	// Ranged-based attenuation
+	float att = saturate(1.0f - (dist * dist / (lightRange * lightRange)));
+
+	// Soft falloff
+	return att * att;
+}
+
 float4 calculatePointLight(float3 normal, float3 worldPos, PointLight light)
 {
 	float3 dirToPointLight = normalize(light.Position - worldPos);
 	float distance = length(worldPos - light.Position);
 	float pointNdotL = dot(normal, dirToPointLight);
 	pointNdotL = saturate(pointNdotL);
+	//Attenuate(light.Position)
 	float attenuation = max(1.0f / (distance * distance) - 1.0f/(light.Range * light.Range), 0.0f);
 	return (light.Color * pointNdotL) / attenuation;
 }
