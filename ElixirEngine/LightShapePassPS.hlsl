@@ -64,7 +64,7 @@ float4 calculatePointLight(float3 normal, float3 worldPos, PointLight light)
 	pointNdotL = saturate(pointNdotL) * POINT_INTENSITY;
 	float attenuation = Attenuate(light.Position, light.Range, worldPos);
 	//float attenuation = max(1.0f / (distance * distance) - 1.0f/(light.Range * light.Range), 0.0f);
-	return (light.Color * pointNdotL);// *attenuation;// attenuation;
+	return (light.Color * pointNdotL);// *attenuation;// *attenuation;// attenuation;
 }
 
 Texture2D gAlbedoTexture : register(t0);

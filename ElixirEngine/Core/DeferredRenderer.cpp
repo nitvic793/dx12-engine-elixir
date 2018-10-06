@@ -33,7 +33,7 @@ void DeferredRenderer::Initialize(ID3D12GraphicsCommandList* command)
 	sphereMesh = new Mesh("../../Assets/sphere.obj", device, command);
 }
 
-void DeferredRenderer::SetGBUfferPSO(ID3D12GraphicsCommandList* command, std::vector<Entity*> entities, Camera* camera, const PixelConstantBuffer& pixelCb)
+void DeferredRenderer::SetGBUfferPSO(ID3D12GraphicsCommandList* command, Camera* camera, const PixelConstantBuffer& pixelCb)
 {
 	ID3D12DescriptorHeap* ppHeaps[] = { srvHeap.pDescriptorHeap.Get() };
 	this->camera = camera;
@@ -91,7 +91,7 @@ void DeferredRenderer::SetLightShapePassPSO(ID3D12GraphicsCommandList * command,
 	command->SetGraphicsRootDescriptorTable(2, gBufferHeap.handleGPU(0));
 }
 
-void DeferredRenderer::Draw(ID3D12GraphicsCommandList* commandList)
+void DeferredRenderer::Draw(ID3D12GraphicsCommandList* commandList, std::vector<Entity*> entities)
 {
 	int ConstantBufferPerObjectAlignedSize = (sizeof(ConstantBuffer) + 255) & ~255;
 	int index = 0;

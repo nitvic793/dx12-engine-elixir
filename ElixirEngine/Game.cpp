@@ -17,7 +17,7 @@ void Game::InitializeAssets()
 	pixelCb.light.AmbientColor = XMFLOAT4(0.1f, 0.1f, 0.1f, 0);
 	pixelCb.light.DiffuseColor = XMFLOAT4(1.f, 0.0f, 0.f, 0.f);
 	pixelCb.light.Direction = XMFLOAT3(1.f, 0.f, 0.f);
-	pixelCb.pointLight = PointLight{ {0.f, 1.f, 0.f, 0.f} , {0.8f, 0.f, 1.f}, 6.f };
+	pixelCb.pointLight = PointLight{ {0.f, 1.f, 0.f, 0.f} , {0.0f, 0.f, 0.f}, 5.f };
 
 	ResourceUploadBatch uploadBatch(device);
 	uploadBatch.Begin();
@@ -30,7 +30,7 @@ void Game::InitializeAssets()
 	deferredRenderer->SetSRV(normalTexture, DXGI_FORMAT_B8G8R8A8_UNORM, 1);
 }
 
-Game::Game(HINSTANCE hInstance, int ShowWnd, int width, int height, bool fullscreen):
+Game::Game(HINSTANCE hInstance, int ShowWnd, int width, int height, bool fullscreen) :
 	Core(hInstance, ShowWnd, width, height, fullscreen)
 {
 }
@@ -48,7 +48,7 @@ void Game::Update()
 	auto pos = XMFLOAT3(-2, 0, 2);
 	entity1->SetPosition(pos);
 	entity2->SetPosition(XMFLOAT3(2, 0, 2));
-	entity3->SetPosition(XMFLOAT3(0, 1, 5));
+	entity3->SetPosition(XMFLOAT3(0, 0, 5));
 }
 
 void Game::Draw()
@@ -67,8 +67,8 @@ void Game::Draw()
 	pixelCb.invProjView = camera->GetInverseProjectionViewMatrix();
 
 	// draw
-	deferredRenderer->SetGBUfferPSO(commandList, { entity1, entity2, entity3 }, camera, pixelCb);
-	deferredRenderer->Draw(commandList);
+	deferredRenderer->SetGBUfferPSO(commandList, camera, pixelCb);
+	deferredRenderer->Draw(commandList, { entity1, entity2, entity3 });
 
 	deferredRenderer->SetLightShapePassPSO(commandList, pixelCb);
 	deferredRenderer->DrawLightShapePass(commandList, pixelCb);
