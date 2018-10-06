@@ -10,7 +10,7 @@ LRESULT CALLBACK WindowsProcessMessage(HWND hWnd, UINT msg, WPARAM wParam, LPARA
 	return Core::coreInstance->HandleWindowsCallback(hWnd, msg, wParam, lParam);
 }
 
-bool Core::InitD3D()
+bool Core::InitializeDirectX()
 {
 	CoInitializeEx(nullptr, COINITBASE_MULTITHREADED);
 	IDXGIFactory4* dxgiFactory;
@@ -164,15 +164,10 @@ bool Core::InitD3D()
 	return true;
 }
 
-void Core::InitResources()
+void Core::InitializeResources()
 {
-	ResourceUploadBatch uploadBatch(device);
 	deferredRenderer = new DeferredRenderer(device, Width, Height);
 	deferredRenderer->Initialize(commandList);
-	camera = new Camera((float)Width, (float)Height);
-	entity1 = new Entity();
-	entity2 = new Entity();
-	entity3 = new Entity();
 
 	D3D12_ROOT_DESCRIPTOR rootCBVDescriptor;
 	rootCBVDescriptor.RegisterSpace = 0;
@@ -265,11 +260,6 @@ void Core::InitResources()
 
 	device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&pipelineStateObject));
 
-	mesh = new Mesh("../../Assets/sphere.obj", device, commandList);
-
-	entity1->SetMesh(mesh);
-	entity2->SetMesh(mesh);
-	entity3->SetMesh(mesh);
 
 	//Create depth stencil buffer
 	D3D12_DESCRIPTOR_HEAP_DESC dsvHeapDesc = {};
@@ -301,9 +291,7 @@ void Core::InitResources()
 
 	device->CreateDepthStencilView(depthStencilBuffer, &depthStencilDesc, dsDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
 
-	pixelCb.light.AmbientColor = XMFLOAT4(0.1f, 0.1f, 0.1f, 0);
-	pixelCb.light.DiffuseColor = XMFLOAT4(1.f, 0.0f, 0.f, 0.f);
-	pixelCb.light.Direction = XMFLOAT3(1.f, 0.f, 0.f);
+
 
 	D3D12_DESCRIPTOR_HEAP_DESC heapDesc = {};
 	heapDesc.NumDescriptors = 1;
@@ -311,32 +299,6 @@ void Core::InitResources()
 	heapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
 	device->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(&mainDescriptorHeap));
 
-	uploadBatch.Begin();
-	CreateWICTextureFromFile(device, uploadBatch, L"../../Assets/metal.jpg", &textureBuffer, false);
-	CreateWICTextureFromFile(device, uploadBatch, L"../../Assets/metalNormal.png", &normalTexture, true);
-	auto uploadOperation = uploadBatch.End(commandQueue);
-	uploadOperation.wait();
-
-	//commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(normalTexture, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE));
-	deferredRenderer->SetSRV(textureBuffer, DXGI_FORMAT_R8G8B8A8_UNORM, 0);
-	deferredRenderer->SetSRV(normalTexture, DXGI_FORMAT_B8G8R8A8_UNORM, 1);
-	//device->CreateShaderResourceView(textureBuffer, &srvDesc, mainDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
-
-	// Now we execute the command list to upload the initial assets (triangle data)
-	commandList->Close();
-	ID3D12CommandList* ppCommandLists[] = { commandList };
-
-	commandQueue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
-
-
-	//deferredRenderer->SetSRV(normalTexture, textureDesc.Format, 1);
-	// increment the fence value now, otherwise the buffer might not be uploaded by the time we start drawing
-	fenceValue[frameIndex]++;
-	auto hr = commandQueue->Signal(fence[frameIndex], fenceValue[frameIndex]);
-	if (FAILED(hr))
-	{
-		Running = false;
-	}
 
 	// Fill out the Viewport
 	viewport.TopLeftX = 0;
@@ -352,16 +314,29 @@ void Core::InitResources()
 	scissorRect.right = Width;
 	scissorRect.bottom = Height;
 
-	pixelCb.pointLight = PointLight{ {0.f, 1.f, 0.f, 0.f} , {0.5f, 0.f, 1.f}, 6.f };
+}
+
+void Core::EndInitialization()
+{
+	commandList->Close();
+	ID3D12CommandList* ppCommandLists[] = { commandList };
+
+	commandQueue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
+
+
+	//deferredRenderer->SetSRV(normalTexture, textureDesc.Format, 1);
+	// increment the fence value now, otherwise the buffer might not be uploaded by the time we start drawing
+	fenceValue[frameIndex]++;
+	auto hr = commandQueue->Signal(fence[frameIndex], fenceValue[frameIndex]);
+	if (FAILED(hr))
+	{
+		Running = false;
+	}
 }
 
 void Core::Update()
 {
-	camera->Update(deltaTime);
-	auto pos = XMFLOAT3(-3, 0, 2);
-	entity1->SetPosition(pos);
-	entity2->SetPosition(XMFLOAT3(3, 0, 2));
-	entity3->SetPosition(XMFLOAT3(0.5, 1, 1));
+
 }
 
 void Core::UpdatePipeline()
@@ -383,31 +358,9 @@ void Core::UpdatePipeline()
 	}
 
 	commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(renderTargets[frameIndex], D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET));
-	CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(rtvDescriptorHeap->GetCPUDescriptorHandleForHeapStart(), frameIndex, rtvDescriptorSize);
-	CD3DX12_CPU_DESCRIPTOR_HANDLE dsvHandle(dsDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
-	commandList->OMSetRenderTargets(1, &rtvHandle, FALSE, &dsvHandle);
-	const float clearColor[] = { 0.0f, 0.0f, 0.0f, 0.0f };
-	commandList->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
-	commandList->ClearDepthStencilView(dsDescriptorHeap->GetCPUDescriptorHandleForHeapStart(), D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
 
-	commandList->RSSetViewports(1, &viewport);
-	commandList->RSSetScissorRects(1, &scissorRect);
-	commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	Draw();
 
-	pixelCb.invProjView = camera->GetInverseProjectionViewMatrix();
-
-	// draw
-	deferredRenderer->SetGBUfferPSO(commandList, { entity1, entity2, entity3 }, camera, pixelCb);
-	deferredRenderer->Draw(commandList);
-
-	deferredRenderer->SetLightShapePassPSO(commandList, pixelCb);
-	deferredRenderer->DrawLightShapePass(commandList, pixelCb);
-
-	commandList->OMSetRenderTargets(1, &rtvHandle, true, nullptr);
-	commandList->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
-	
-	deferredRenderer->SetLightPassPSO(commandList, pixelCb);
-	deferredRenderer->DrawLightPass(commandList);
 	commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(renderTargets[frameIndex], D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT));
 
 	hr = commandList->Close();
@@ -473,14 +426,8 @@ void Core::Cleanup()
 	//indexBuffer->Release();
 	depthStencilBuffer->Release();
 	dsDescriptorHeap->Release();
-	textureBuffer->Release();
-	//textureBufferUploadHeap->Release();
 
-	delete mesh;
-	delete camera;
-	delete entity1;
-	delete entity2;
-	delete entity3;
+	//textureBufferUploadHeap->Release();
 	delete deferredRenderer;
 }
 
@@ -525,8 +472,7 @@ Core::Core(HINSTANCE hInstance, int ShowWnd, int width, int height, bool fullscr
 	coreInstance = this;
 	Running = true;
 	this->InitializeWindow(hInstance, ShowWnd, width, height, fullscreen);
-	this->InitD3D();
-	this->InitResources();
+	this->InitializeDirectX();
 
 	fpsFrameCount = 0;
 	fpsTimeElapsed = 0.0f;

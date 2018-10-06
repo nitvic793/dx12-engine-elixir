@@ -10,18 +10,6 @@
 
 class Core
 {
-	double perfCounterSeconds;
-	float totalTime;
-	float deltaTime;
-	__int64 startTime;
-	__int64 currentTime;
-	__int64 previousTime;
-
-	// FPS calculation
-	int fpsFrameCount;
-	float fpsTimeElapsed;
-
-	void UpdateTimer();
 public:
 	static Core* coreInstance;
 	Core(HINSTANCE hInstance, int ShowWnd, int width, int height, bool fullscreen);
@@ -67,22 +55,29 @@ protected:
 	ID3D12Resource* depthStencilBuffer; 
 	ID3D12DescriptorHeap* dsDescriptorHeap; // heap for depth stencil buffer descriptor
 
-	ID3D12Resource* textureBuffer; // the resource heap containing our texture
-	ID3D12Resource* normalTexture; // the resource heap containing our texture
 	ID3D12DescriptorHeap* mainDescriptorHeap;
 	ID3D12Resource* textureBufferUploadHeap;
 	ID3D12Resource* constantBufferUploadHeap[FRAMEBUFFERCOUNT]; // this is the memory on the gpu where our constant buffer will be placed.
+
+	double perfCounterSeconds;
+	float totalTime;
+	float deltaTime;
+	__int64 startTime;
+	__int64 currentTime;
+	__int64 previousTime;
+
+	// FPS calculation
+	int fpsFrameCount;
+	float fpsTimeElapsed;
+
+	void UpdateTimer();
 
 	ConstantBuffer cbPerObject; // this is the constant buffer data we will send to the gpu 
 	PixelConstantBuffer pixelCb;
 
 	DeferredRenderer* deferredRenderer;
 
-	Mesh* mesh;
-	Camera* camera;
-	Entity* entity1;
-	Entity* entity2;
-	Entity* entity3;
+
 
 	int ConstantBufferPerObjectAlignedSize = (sizeof(ConstantBuffer) + 255) & ~255;
 
@@ -93,9 +88,12 @@ protected:
 	int frameIndex; // current rtv
 	int rtvDescriptorSize; // size of the rtv descriptor on the device (all front and back buffers will be the same size)
 
-	bool InitD3D();
-	void InitResources();
-	void Update(); // update the game logic
+	bool InitializeDirectX();
+	void InitializeResources();
+	void EndInitialization();
+	virtual void Initialize() = 0;
+	virtual void Update(); // update the game logic
+	virtual void Draw() = 0;
 	void UpdatePipeline(); 
 	void Render(); 
 	void Cleanup();

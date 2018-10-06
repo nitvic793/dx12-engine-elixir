@@ -1,5 +1,5 @@
 #include "stdafx.h"
-#include "Core/Core.h"
+#include "Game.h"
 
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow)
@@ -20,12 +20,13 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow)
 		}
 	}
 
-	Core* core = new Core(hInstance, nCmdShow, 1280, 720, false);
-	core->Run([&](Core* core) 
+	Game* game = new Game(hInstance, nCmdShow, 1280, 720, false);
+	game->Initialize();
+	game->Run([&](Core* core) 
 	{
 		//Game Logic here...
 	});
 
-	delete core;
+	delete game;
 	return 0;
 }
