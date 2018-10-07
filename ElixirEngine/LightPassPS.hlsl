@@ -1,18 +1,4 @@
-
-struct DirectionalLight
-{
-	float4 AmbientColor;
-	float4 DiffuseColor;
-	float3 Direction;
-	float Padding;
-};
-
-struct PointLight
-{
-	float4 Color;
-	float3 Position;
-	float Range;
-};
+#include "Lighting.hlsli"
 
 cbuffer externalData : register(b0)
 {
@@ -57,14 +43,22 @@ sampler basicSampler;
 
 float4 main(VertexToPixel pIn) : SV_TARGET
 {
+	int3 sampleIndices = int3(pIn.position.xy, 0);
 	float3 albedo = gAlbedoTexture.Sample(basicSampler, pIn.uv).rgb;
 	float3 normal = gNormalTexture.Sample(basicSampler, pIn.uv).rgb;
 	float3 worldPos = gWorldPosTexture.Sample(basicSampler, pIn.uv).rgb;
+	float roughness = gRoughnessTexture.Sample(basicSampler, pIn.uv).r;
+	float metal = gMetalnessTexture.Sample(basicSampler, pIn.uv).r;
+
 	float3 otherlights = gLightShapePass.Sample(basicSampler, pIn.uv).rgb;
 
-	float3 lightValue = calculateDirectionalLight(normal, dirLight).xyz;
-	float3 finalColor = lightValue * albedo;
+	float3 specColor = lerp(F0_NON_METAL.rrr, albedo.rgb, metal);
 
-	return float4(otherlights + finalColor,1.0f);
+	float3 finalColor = DirLightPBR(dirLight, normal, worldPos, cameraPosition, roughness, metal, albedo, specColor);
+	//float3 lightValue = calculateDirectionalLight(normal, dirLight).xyz;
+	//float3 finalColor = lightValue * albedo;
+	float3 totalColor = finalColor + otherlights ;
+	float3 gammaCorrect = pow(totalColor, 1.0 / 2.2);
+	return float4(gammaCorrect, 1.0f);
 
 }

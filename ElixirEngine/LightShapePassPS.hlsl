@@ -1,12 +1,5 @@
 #define POINT_INTENSITY 0.5
-
-struct DirectionalLight
-{
-	float4 AmbientColor;
-	float4 DiffuseColor;
-	float3 Direction;
-	float Padding;
-};
+#include "Lighting.hlsli"
 
 struct SpotLight
 {
@@ -17,12 +10,6 @@ struct SpotLight
 	float SpotlightAngle;
 };
 
-struct PointLight
-{
-	float4 Color;
-	float3 Position;
-	float Range;
-};
 
 cbuffer externalData : register(b0)
 {
@@ -46,16 +33,6 @@ float4 calculateDirectionalLight(float3 normal, DirectionalLight light)
 	return light.DiffuseColor * NdotL + light.AmbientColor;
 }
 
-float Attenuate(float3 lightPosition, float lightRange, float3 worldPos)
-{
-	float dist = distance(lightPosition, worldPos);
-
-	// Ranged-based attenuation
-	float att = saturate(1.0f - (dist * dist / (lightRange * lightRange)));
-
-	// Soft falloff
-	return att * att;
-}
 
 float4 calculatePointLight(float3 normal, float3 worldPos, PointLight light)
 {
@@ -84,7 +61,12 @@ float4 main(VertexToPixel pIn) : SV_TARGET
 	float3 albedo = gAlbedoTexture.Load(sampleIndices).rgb;
 	float3 normal = gNormalTexture.Load(sampleIndices).rgb;
 	float3 worldPos = gWorldPosTexture.Load(sampleIndices).rgb;
+	float roughness = gRoughnessTexture.Load(sampleIndices).r;
+	float metal  = gMetalnessTexture.Load(sampleIndices).r;
+
+	float3 specColor = lerp(F0_NON_METAL.rrr, albedo.rgb, metal);
 	float3 pointLightValue = calculatePointLight(normal, worldPos, pointLight).rgb;
-	float3 finalColor = pointLightValue * albedo;
+	//float3 finalColor = pointLightValue * albedo;
+	float3 finalColor = PointLightPBR(pointLight, normal, worldPos, cameraPosition, roughness, metal, albedo, specColor);
 	return float4(finalColor,1.0f);
 }

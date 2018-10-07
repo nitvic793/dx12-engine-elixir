@@ -55,14 +55,16 @@ float3 calculateNormalFromMap(float2 uv, float3 normal, float3 tangent)
 }
 
 
-PixelOutput main(VertexOutput input) : SV_TARGET
+PixelOutput main(VertexOutput input)// : SV_TARGET
 {
 	float3 normal = calculateNormalFromMap(input.uv, input.normal, input.tangent);
 	PixelOutput output;
-	output.albedo = AlbedoTexture.Sample(Sampler, input.uv);
+	output.albedo = AlbedoTexture.Sample(Sampler, input.uv).rgb;
 	output.normal = float4(normalize(normal), 1.0f);
 	output.worldPos = float4(input.worldPos, 0.0f);
-	output.roughness = float4(0, 0, 1.f, 0);
-	output.metalness = float4(0, 1.f, 0.f, 0);
+	float roughness = RoughnessTexture.Sample(Sampler, input.uv).r;
+	float metal = MetalTexture.Sample(Sampler, input.uv).r;
+	output.roughness = float4(roughness, 0, 0, 0);
+	output.metalness = float4(metal, 0.f, 0.f, 0);
 	return output;
 }
