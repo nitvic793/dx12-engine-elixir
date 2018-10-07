@@ -25,6 +25,16 @@ void Entity::SetMesh(Mesh * m)
 	mesh = m;
 }
 
+void Entity::SetMaterial(Material * mat)
+{
+	material = mat;
+}
+
+Material * Entity::GetMaterial()
+{
+	return material;
+}
+
 Mesh * Entity::GetMesh()
 {
 	return mesh;

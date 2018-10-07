@@ -1,6 +1,7 @@
 #pragma once
 #include "../stdafx.h"
 #include "Mesh.h"
+#include "../Material.h"
 
 class Entity
 {
@@ -10,10 +11,13 @@ protected:
 	XMFLOAT3 scale;
 	XMFLOAT3 rotation;
 	Mesh* mesh;
+	Material* material;
 	void CalculateWorldMatrix();
 public:
 	Entity();
 	void SetMesh(Mesh* m);
+	void SetMaterial(Material* mat);
+	Material* GetMaterial();
 	Mesh* GetMesh();
 	XMFLOAT4X4 GetWorldViewProjectionTransposed(XMFLOAT4X4 projection, XMFLOAT4X4 view);
 	XMFLOAT4X4 GetWorldMatrix();

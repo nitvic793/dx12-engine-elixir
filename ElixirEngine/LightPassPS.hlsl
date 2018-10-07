@@ -54,10 +54,10 @@ float4 main(VertexToPixel pIn) : SV_TARGET
 
 	float3 specColor = lerp(F0_NON_METAL.rrr, albedo.rgb, metal);
 
-	float3 finalColor = DirLightPBR(dirLight, normal, worldPos, cameraPosition, roughness, metal, albedo, specColor);
+	float3 finalColor = DirLightPBR(dirLight, normalize(normal), worldPos, cameraPosition, roughness, metal, albedo, specColor);
 	//float3 lightValue = calculateDirectionalLight(normal, dirLight).xyz;
 	//float3 finalColor = lightValue * albedo;
-	float3 totalColor = finalColor + otherlights ;
+	float3 totalColor = finalColor + otherlights;
 	float3 gammaCorrect = pow(totalColor, 1.0 / 2.2);
 	return float4(gammaCorrect, 1.0f);
 

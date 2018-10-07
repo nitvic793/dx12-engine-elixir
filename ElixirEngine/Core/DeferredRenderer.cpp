@@ -96,13 +96,18 @@ void DeferredRenderer::Draw(ID3D12GraphicsCommandList* commandList, std::vector<
 	int ConstantBufferPerObjectAlignedSize = (sizeof(ConstantBuffer) + 255) & ~255;
 	int index = 0;
 	ID3D12DescriptorHeap* ppHeaps[] = { cbHeap.pDescriptorHeap.Get() };
-	commandList->SetDescriptorHeaps(1, ppHeaps);
+	ID3D12DescriptorHeap* ppSrvHeaps[] = { srvHeap.pDescriptorHeap.Get() };
 	//ConstantBuffer cb;
 	for (auto e : entities)
 	{
+		commandList->SetDescriptorHeaps(1, ppSrvHeaps);
+		commandList->SetGraphicsRootDescriptorTable(2, e->GetMaterial()->GetGPUDescriptorHandle());
+
+		commandList->SetDescriptorHeaps(1, ppHeaps);
 		auto cb = ConstantBuffer{ e->GetWorldViewProjectionTransposed(camera->GetProjectionMatrix(), camera->GetViewMatrix()), e->GetWorldMatrixTransposed() };
 		cbWrapper.CopyData(&cb, sizeof(ConstantBuffer), index);
 		commandList->SetGraphicsRootDescriptorTable(0, cbHeap.handleGPU(index));
+
 		Draw(e->GetMesh(), cb, commandList);
 		index++;
 	}
@@ -169,7 +174,7 @@ void DeferredRenderer::UpdateConstantBufferPerObject(ConstantBuffer& buffer, int
 	memcpy(cbvGPUAddress + ConstantBufferPerObjectAlignedSize * index, &buffer, sizeof(ConstantBuffer));
 }
 
-CDescriptorHeapWrapper DeferredRenderer::GetSRVHeap()
+CDescriptorHeapWrapper& DeferredRenderer::GetSRVHeap()
 {
 	return srvHeap;
 }

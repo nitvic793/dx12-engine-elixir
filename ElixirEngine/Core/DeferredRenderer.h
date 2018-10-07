@@ -106,7 +106,7 @@ public:
 	void DrawLightShapePass(ID3D12GraphicsCommandList* commandList, const PixelConstantBuffer & pixelCb);
 	void UpdateConstantBuffer(const PixelConstantBuffer& pixelBuffer, ID3D12GraphicsCommandList* command);
 	void UpdateConstantBufferPerObject(ConstantBuffer& buffer, int index);
-	CDescriptorHeapWrapper GetSRVHeap();
+	CDescriptorHeapWrapper& GetSRVHeap();
 
 	~DeferredRenderer();
 };

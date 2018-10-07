@@ -16,22 +16,66 @@ void Game::InitializeAssets()
 
 	pixelCb.light.AmbientColor = XMFLOAT4(0.1f, 0.1f, 0.1f, 0);
 	pixelCb.light.DiffuseColor = XMFLOAT4(0.6f, 0.6f, 0.6f, 0.f);
-	pixelCb.light.Direction = XMFLOAT3(1.f, 0.f, 0.f);
-	pixelCb.pointLight = PointLight{ {0.f, 0.6f, 0.f, 0.f} , {0.0f, 0.f, 0.f}, 5.f };
+	pixelCb.light.Direction = XMFLOAT3(0.f, 0.f, 1.f);
+	pixelCb.pointLight = PointLight{ {0.2f, 0.6f, 0.2f, 0.f} , {0.0f, 0.f, 0.f}, 5.f };
 
 	ResourceUploadBatch uploadBatch(device);
 	uploadBatch.Begin();
-	CreateWICTextureFromFile(device, uploadBatch, L"../../Assets/Textures/bronze_albedo.png", &textureBuffer, false);
-	CreateWICTextureFromFile(device, uploadBatch, L"../../Assets/Textures/bronze_normals.png", &normalTexture, true);
-	CreateWICTextureFromFile(device, uploadBatch, L"../../Assets/Textures/bronze_roughness.png", &roughnessTexture, true);
-	CreateWICTextureFromFile(device, uploadBatch, L"../../Assets/Textures/bronze_metal.png", &metalnessTexture, true);
+	CreateWICTextureFromFile(device, uploadBatch, L"../../Assets/Textures/scratched_albedo.png", &textureBuffer, false);
+	CreateWICTextureFromFile(device, uploadBatch, L"../../Assets/Textures/scratched_normals.png", &normalTexture, true);
+	CreateWICTextureFromFile(device, uploadBatch, L"../../Assets/Textures/scratched_roughness.png", &roughnessTexture, true);
+	CreateWICTextureFromFile(device, uploadBatch, L"../../Assets/Textures/scratched_metal.png", &metalnessTexture, true);
 	auto uploadOperation = uploadBatch.End(commandQueue);
 	uploadOperation.wait();
 
-	CreateShaderResourceView(device, textureBuffer, deferredRenderer->GetSRVHeap().handleCPU(0));
+	/*CreateShaderResourceView(device, textureBuffer, deferredRenderer->GetSRVHeap().handleCPU(0));
 	CreateShaderResourceView(device, normalTexture, deferredRenderer->GetSRVHeap().handleCPU(1));
 	CreateShaderResourceView(device, roughnessTexture, deferredRenderer->GetSRVHeap().handleCPU(2));
-	CreateShaderResourceView(device, metalnessTexture, deferredRenderer->GetSRVHeap().handleCPU(3));
+	CreateShaderResourceView(device, metalnessTexture, deferredRenderer->GetSRVHeap().handleCPU(3));*/
+
+	scratchedMaterial = new Material(
+		deferredRenderer->GetSRVHeap(), 
+		{ 
+			L"../../Assets/Textures/scratched_albedo.png" ,
+			L"../../Assets/Textures/scratched_normals.png" ,
+			L"../../Assets/Textures/scratched_roughness.png" ,
+			L"../../Assets/Textures/scratched_metal.png" 
+		},
+		device, 
+		commandQueue, 
+		0
+	);
+
+	woodenMaterial = new Material(
+		deferredRenderer->GetSRVHeap(),
+		{
+			L"../../Assets/Textures/wood_albedo.png" ,
+			L"../../Assets/Textures/wood_normals.png" ,
+			L"../../Assets/Textures/wood_roughness.png" ,
+			L"../../Assets/Textures/wood_metal.png"
+		},
+		device,
+		commandQueue,
+		1 * MATERIAL_COUNT
+	);
+
+	cobblestoneMaterial = new Material(
+		deferredRenderer->GetSRVHeap(),
+		{
+			L"../../Assets/Textures/rough_albedo.png" ,
+			L"../../Assets/Textures/rough_normals.png" ,
+			L"../../Assets/Textures/rough_roughness.png" ,
+			L"../../Assets/Textures/rough_metal.png"
+		},
+		device,
+		commandQueue,
+		2 * MATERIAL_COUNT
+	);
+
+	entity1->SetMaterial(scratchedMaterial);
+	entity2->SetMaterial(woodenMaterial);
+	entity3->SetMaterial(cobblestoneMaterial);
+
 	//deferredRenderer->SetSRV(textureBuffer, DXGI_FORMAT_R8G8B8A8_UNORM, 0);
 	//deferredRenderer->SetSRV(normalTexture, DXGI_FORMAT_B8G8R8A8_UNORM, 1);
 	//deferredRenderer->SetSRV(roughnessTexture, DXGI_FORMAT_R8G8B8A8_UNORM, 2);
@@ -97,6 +141,9 @@ Game::~Game()
 	delete entity1;
 	delete entity2;
 	delete entity3;
+	delete scratchedMaterial;
+	delete woodenMaterial;
+	delete cobblestoneMaterial;
 
 	textureBuffer->Release();
 	normalTexture->Release();

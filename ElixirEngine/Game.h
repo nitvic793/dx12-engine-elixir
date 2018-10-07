@@ -14,6 +14,9 @@ protected:
 	Entity* entity1;
 	Entity* entity2;
 	Entity* entity3;
+	Material* scratchedMaterial;
+	Material* woodenMaterial;
+	Material* cobblestoneMaterial;
 
 	void InitializeAssets();
 public:
