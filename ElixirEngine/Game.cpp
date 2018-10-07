@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "Game.h"
 
-
+//Initializes assets. This function's scope has access to commandList which is not closed. 
 void Game::InitializeAssets()
 {
 	camera = new Camera((float)Width, (float)Height);
@@ -15,19 +15,27 @@ void Game::InitializeAssets()
 	entity3->SetMesh(mesh);
 
 	pixelCb.light.AmbientColor = XMFLOAT4(0.1f, 0.1f, 0.1f, 0);
-	pixelCb.light.DiffuseColor = XMFLOAT4(1.f, 0.0f, 0.f, 0.f);
+	pixelCb.light.DiffuseColor = XMFLOAT4(0.6f, 0.6f, 0.6f, 0.f);
 	pixelCb.light.Direction = XMFLOAT3(1.f, 0.f, 0.f);
-	pixelCb.pointLight = PointLight{ {0.f, 1.f, 0.f, 0.f} , {0.0f, 0.f, 0.f}, 5.f };
+	pixelCb.pointLight = PointLight{ {0.f, 0.6f, 0.f, 0.f} , {0.0f, 0.f, 0.f}, 5.f };
 
 	ResourceUploadBatch uploadBatch(device);
 	uploadBatch.Begin();
-	CreateWICTextureFromFile(device, uploadBatch, L"../../Assets/metal.jpg", &textureBuffer, false);
-	CreateWICTextureFromFile(device, uploadBatch, L"../../Assets/metalNormal.png", &normalTexture, true);
+	CreateWICTextureFromFile(device, uploadBatch, L"../../Assets/Textures/bronze_albedo.png", &textureBuffer, false);
+	CreateWICTextureFromFile(device, uploadBatch, L"../../Assets/Textures/bronze_normals.png", &normalTexture, true);
+	CreateWICTextureFromFile(device, uploadBatch, L"../../Assets/Textures/bronze_roughness.png", &roughnessTexture, true);
+	CreateWICTextureFromFile(device, uploadBatch, L"../../Assets/Textures/bronze_metal.png", &metalnessTexture, true);
 	auto uploadOperation = uploadBatch.End(commandQueue);
 	uploadOperation.wait();
 
-	deferredRenderer->SetSRV(textureBuffer, DXGI_FORMAT_R8G8B8A8_UNORM, 0);
-	deferredRenderer->SetSRV(normalTexture, DXGI_FORMAT_B8G8R8A8_UNORM, 1);
+	CreateShaderResourceView(device, textureBuffer, deferredRenderer->GetSRVHeap().handleCPU(0));
+	CreateShaderResourceView(device, normalTexture, deferredRenderer->GetSRVHeap().handleCPU(1));
+	CreateShaderResourceView(device, roughnessTexture, deferredRenderer->GetSRVHeap().handleCPU(2));
+	CreateShaderResourceView(device, metalnessTexture, deferredRenderer->GetSRVHeap().handleCPU(3));
+	//deferredRenderer->SetSRV(textureBuffer, DXGI_FORMAT_R8G8B8A8_UNORM, 0);
+	//deferredRenderer->SetSRV(normalTexture, DXGI_FORMAT_B8G8R8A8_UNORM, 1);
+	//deferredRenderer->SetSRV(roughnessTexture, DXGI_FORMAT_R8G8B8A8_UNORM, 2);
+	//deferredRenderer->SetSRV(metalnessTexture, DXGI_FORMAT_R8G8B8A8_UNORM, 3);
 }
 
 Game::Game(HINSTANCE hInstance, int ShowWnd, int width, int height, bool fullscreen) :
@@ -64,6 +72,7 @@ void Game::Draw()
 	commandList->RSSetScissorRects(1, &scissorRect);
 	commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
+	pixelCb.cameraPosition = camera->GetPosition();
 	pixelCb.invProjView = camera->GetInverseProjectionViewMatrix();
 
 	// draw
@@ -91,4 +100,6 @@ Game::~Game()
 
 	textureBuffer->Release();
 	normalTexture->Release();
+	//roughnessTexture->Release();
+	//metalnessTexture->Release();
 }

@@ -4,8 +4,10 @@
 class Game : public Core
 {
 protected:
-	ID3D12Resource* textureBuffer; // the resource heap containing our texture
-	ID3D12Resource* normalTexture; // the resource heap containing our texture'
+	ID3D12Resource* textureBuffer;
+	ID3D12Resource* normalTexture;
+	ID3D12Resource* roughnessTexture;
+	ID3D12Resource* metalnessTexture;
 
 	Mesh* mesh;
 	Camera* camera;

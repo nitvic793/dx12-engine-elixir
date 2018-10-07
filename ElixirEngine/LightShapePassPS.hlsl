@@ -29,6 +29,7 @@ cbuffer externalData : register(b0)
 	DirectionalLight dirLight;
 	PointLight pointLight;
 	float4x4 invProjView;
+	float3 cameraPosition;
 }
 
 struct VertexToPixel
@@ -70,8 +71,10 @@ float4 calculatePointLight(float3 normal, float3 worldPos, PointLight light)
 Texture2D gAlbedoTexture : register(t0);
 Texture2D gNormalTexture : register(t1);
 Texture2D gWorldPosTexture : register(t2);
-
-Texture2D gDepth: register(t4);
+Texture2D gRoughnessTexture : register(t3);
+Texture2D gMetalnessTexture : register(t4);
+Texture2D gLightShapePass: register(t5);
+Texture2D gDepth: register(t6);
 
 sampler basicSampler;
 
@@ -81,11 +84,7 @@ float4 main(VertexToPixel pIn) : SV_TARGET
 	float3 albedo = gAlbedoTexture.Load(sampleIndices).rgb;
 	float3 normal = gNormalTexture.Load(sampleIndices).rgb;
 	float3 worldPos = gWorldPosTexture.Load(sampleIndices).rgb;
-	//float3 lightValue = calculateDirectionalLight(normal, dirLight).xyz;
 	float3 pointLightValue = calculatePointLight(normal, worldPos, pointLight).rgb;
-	//return float4(albedo, 1.0f);
 	float3 finalColor = pointLightValue * albedo;
-	//finalColor += pointLightValue * albedo;
 	return float4(finalColor,1.0f);
-
 }

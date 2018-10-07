@@ -12,6 +12,8 @@ struct PixelOutput
 	float3 albedo: SV_TARGET0;
 	float4 normal: SV_TARGET1;
 	float4 worldPos: SV_TARGET2;
+	float4 roughness: SV_TARGET3;
+	float4 metalness: SV_TARGET4;
 };
 
 struct DirectionalLight
@@ -59,6 +61,8 @@ PixelOutput main(VertexOutput input) : SV_TARGET
 	PixelOutput output;
 	output.albedo = AlbedoTexture.Sample(Sampler, input.uv);
 	output.normal = float4(normalize(normal), 1.0f);
-	output.worldPos = float4(input.worldPos, 0.0f);;
+	output.worldPos = float4(input.worldPos, 0.0f);
+	output.roughness = float4(0, 0, 1.f, 0);
+	output.metalness = float4(0, 1.f, 0.f, 0);
 	return output;
 }

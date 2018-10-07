@@ -13,4 +13,5 @@ struct PixelConstantBuffer
 	DirectionalLight light;
 	PointLight pointLight;
 	XMFLOAT4X4 invProjView;
+	XMFLOAT3 cameraPosition;
 };

@@ -39,7 +39,7 @@ public:
 class DeferredRenderer
 {
 	ID3D12Device *device;
-	const static int numRTV = 4;
+	const static int numRTV = 6;
 	int constBufferIndex = 0;
 	ID3D12RootSignature* rootSignature;
 
@@ -69,7 +69,14 @@ class DeferredRenderer
 	Mesh* sphereMesh;
 
 	DXGI_FORMAT mDsvFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
-	DXGI_FORMAT mRtvFormat[4] = { DXGI_FORMAT_R11G11B10_FLOAT,DXGI_FORMAT_R8G8B8A8_SNORM,DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_FORMAT_R11G11B10_FLOAT };
+	DXGI_FORMAT mRtvFormat[numRTV] = {
+		DXGI_FORMAT_R11G11B10_FLOAT,
+		DXGI_FORMAT_R8G8B8A8_SNORM,
+		DXGI_FORMAT_R8G8B8A8_UNORM, 
+		DXGI_FORMAT_R11G11B10_FLOAT,
+		DXGI_FORMAT_R11G11B10_FLOAT,
+		DXGI_FORMAT_R11G11B10_FLOAT
+	};
 	float mClearColor[4] = { 0.0,0.0f,0.0f,1.0f };
 	float mClearDepth = 1.0f;
 
@@ -99,6 +106,7 @@ public:
 	void DrawLightShapePass(ID3D12GraphicsCommandList* commandList, const PixelConstantBuffer & pixelCb);
 	void UpdateConstantBuffer(const PixelConstantBuffer& pixelBuffer, ID3D12GraphicsCommandList* command);
 	void UpdateConstantBufferPerObject(ConstantBuffer& buffer, int index);
+	CDescriptorHeapWrapper GetSRVHeap();
 
 	~DeferredRenderer();
 };
