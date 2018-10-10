@@ -303,7 +303,7 @@ void DeferredRenderer::CreateLightPassPSO()
 	};
 
 	auto rasterizer = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
-	rasterizer.CullMode = D3D12_CULL_MODE_NONE;
+	rasterizer.CullMode = D3D12_CULL_MODE_NONE; // Disable culling for point light
 	rasterizer.DepthClipEnable = false;
 	descPipelineState.VS = ShaderManager::LoadShader(L"LightShapeVS.cso");
 	descPipelineState.PS = ShaderManager::LoadShader(L"LightShapePassPS.cso");
