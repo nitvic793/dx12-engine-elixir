@@ -100,4 +100,9 @@ protected:
 	void WaitForPreviousFrame(); // wait until gpu is finished with command list
 
 	void InitializeWindow(HINSTANCE hInstance, int ShowWnd, int width, int height, bool fullscreen);
+
+	virtual void OnMouseDown(WPARAM buttonState, int x, int y) { }
+	virtual void OnMouseUp(WPARAM buttonState, int x, int y) { }
+	virtual void OnMouseMove(WPARAM buttonState, int x, int y) { }
+	virtual void OnMouseWheel(float wheelDelta, int x, int y) { }
 };

@@ -12,7 +12,7 @@ void Camera::Update(float deltaTime)
 	XMVECTOR pos = XMVectorSet(position.x, position.y, position.z, 0);
 	XMVECTOR dir = XMVectorSet(direction.x, direction.y, direction.z, 0);
 	auto rotQuaternion = XMQuaternionRotationRollPitchYaw(rotationX, rotationY, 0);
-	dir = XMVector3Rotate(dir, rotQuaternion);
+	dir = XMVector3Rotate(dir, DirectX::XMLoadFloat4(&rotation));
 	XMVECTOR up = XMVectorSet(0, 1, 0, 0); // Y is up!
 
 	if (GetAsyncKeyState('W') & 0x8000)
@@ -39,13 +39,14 @@ void Camera::Update(float deltaTime)
 
 	if (GetAsyncKeyState(VK_SPACE) & 0x8000)
 	{
-	pos = pos + XMVectorSet(0, speed * deltaTime, 0, 0);
+		pos = pos + XMVectorSet(0, speed * deltaTime, 0, 0);
 	}
 	if (GetAsyncKeyState('X') & 0x8000)
 	{
-	pos = pos + XMVectorSet(0, -speed * deltaTime, 0, 0);
+		pos = pos + XMVectorSet(0, -speed * deltaTime, 0, 0);
 	}
 
+	//dir = XMVector3Rotate(pos, XMLoadFloat4(&rotation));
 	XMStoreFloat3(&position, pos);
 }
 
@@ -59,6 +60,7 @@ const XMFLOAT4X4& Camera::GetViewMatrix()
 	auto rotQuaternion = XMQuaternionRotationRollPitchYaw(rotationX, rotationY, 0);
 	XMVECTOR pos = XMVectorSet(position.x, position.y, position.z, 0);
 	XMVECTOR dir = XMVectorSet(direction.x, direction.y, direction.z, 0);
+	//XMVECTOR dir = XMVector3Rotate(XMVectorSet(0, 0, 1, 0), XMLoadFloat4(&rotation));
 	XMVECTOR up = XMVectorSet(0, 1, 0, 0);
 	dir = XMVector3Rotate(dir, rotQuaternion);
 	XMMATRIX V = XMMatrixLookToLH(
@@ -84,6 +86,16 @@ const XMFLOAT4X4 & Camera::GetInverseProjectionViewMatrix()
 	return inverseProjectionView;
 }
 
+void Camera::Rotate(float x, float y)
+{
+	rotationX += x;// *XM_PIDIV2;
+	rotationY += y;// *XM_PIDIV2;
+
+	rotationX = max(min(rotationX, XM_PIDIV2), -XM_PIDIV2);
+
+	XMStoreFloat4(&rotation, XMQuaternionRotationRollPitchYaw(rotationX, rotationY, 0));
+}
+
 void Camera::SetProjectionMatrix(float width, float height)
 {
 	float aspectRatio = width / height;
@@ -99,6 +111,7 @@ void Camera::SetProjectionMatrix(float width, float height)
 Camera::Camera(float width, float height)
 {
 	float aspectRatio = width / height;
+	XMStoreFloat4(&rotation, XMQuaternionIdentity());
 	position = XMFLOAT3(0.f, 1.f, -5.f);
 	direction = XMFLOAT3(0.f, 0.f, 1.f);
 	rotationX = rotationY = 0.f;

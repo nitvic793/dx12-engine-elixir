@@ -18,12 +18,19 @@ protected:
 	Material* woodenMaterial;
 	Material* cobblestoneMaterial;
 
+	POINT prevMousePos;
+
 	void InitializeAssets();
 public:
 	Game(HINSTANCE hInstance, int ShowWnd, int width, int height, bool fullscreen);
 	virtual void Initialize() override;
 	virtual void Update() override;
 	virtual void Draw() override;
+
+	void OnMouseDown(WPARAM buttonState, int x, int y);
+	void OnMouseUp(WPARAM buttonState, int x, int y);
+	void OnMouseMove(WPARAM buttonState, int x, int y);
+	void OnMouseWheel(float wheelDelta, int x, int y);
 	~Game();
 };
 

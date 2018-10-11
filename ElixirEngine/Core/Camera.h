@@ -10,6 +10,7 @@ class Camera
 	XMFLOAT4X4 inverseProjectionView;
 	XMFLOAT3 position;
 	XMFLOAT3 direction;
+	XMFLOAT4 rotation;
 	float rotationX;
 	float rotationY;
 public:
@@ -19,6 +20,7 @@ public:
 	const XMFLOAT4X4& GetViewMatrix();
 	const XMFLOAT4X4& GetProjectionMatrix();
 	const XMFLOAT4X4& GetInverseProjectionViewMatrix();
+	void Rotate(float x, float y);
 	void SetProjectionMatrix(float width, float height);
 	Camera(float width, float height);
 	~Camera();

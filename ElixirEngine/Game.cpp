@@ -17,7 +17,7 @@ void Game::InitializeAssets()
 	pixelCb.light.AmbientColor = XMFLOAT4(0.1f, 0.1f, 0.1f, 0);
 	pixelCb.light.DiffuseColor = XMFLOAT4(0.6f, 0.6f, 0.6f, 0.f);
 	pixelCb.light.Direction = XMFLOAT3(0.f, 0.f, 1.f);
-	pixelCb.pointLight = PointLight{ {0.2f, 0.2f, 0.2f, 0.f} , {0.0f, 0.f, 0.f}, 0.f };
+	pixelCb.pointLight = PointLight{ {0.2f, 0.6f, 0.2f, 0.f} , {0.0f, 0.f, 0.f}, 4.f };
 
 	ResourceUploadBatch uploadBatch(device);
 	uploadBatch.Begin();
@@ -131,6 +131,35 @@ void Game::Draw()
 
 	deferredRenderer->SetLightPassPSO(commandList, pixelCb);
 	deferredRenderer->DrawLightPass(commandList);
+}
+
+void Game::OnMouseDown(WPARAM buttonState, int x, int y)
+{
+	prevMousePos.x = x;
+	prevMousePos.y = y;
+	SetCapture(hwnd);
+}
+
+void Game::OnMouseUp(WPARAM buttonState, int x, int y)
+{
+	ReleaseCapture();
+}
+
+void Game::OnMouseMove(WPARAM buttonState, int x, int y)
+{
+	if (buttonState & 0x0001)
+	{
+		float xDiff = (x - prevMousePos.x) * 0.005f;
+		float yDiff = (y - prevMousePos.y) * 0.005f;
+		camera->Rotate(yDiff, xDiff);
+	}
+
+	prevMousePos.x = x;
+	prevMousePos.y = y;
+}
+
+void Game::OnMouseWheel(float wheelDelta, int x, int y)
+{
 }
 
 
