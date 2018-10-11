@@ -11,7 +11,6 @@ void Camera::Update(float deltaTime)
 	float speed = 10.f;
 	XMVECTOR pos = XMVectorSet(position.x, position.y, position.z, 0);
 	XMVECTOR dir = XMVectorSet(direction.x, direction.y, direction.z, 0);
-	auto rotQuaternion = XMQuaternionRotationRollPitchYaw(rotationX, rotationY, 0);
 	dir = XMVector3Rotate(dir, DirectX::XMLoadFloat4(&rotation));
 	XMVECTOR up = XMVectorSet(0, 1, 0, 0); // Y is up!
 
