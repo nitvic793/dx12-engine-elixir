@@ -16,10 +16,10 @@ Material::Material(CDescriptorHeapWrapper& heap, std::vector<std::wstring> textu
 	auto uploadOperation = uploadBatch.End(commandQueue);
 	uploadOperation.wait();
 
-	CreateShaderResourceView(device, albedoTexture, heap.handleCPU(startIndex));
-	CreateShaderResourceView(device, normalTexture, heap.handleCPU(startIndex + 1));
-	CreateShaderResourceView(device, roughnessTexture, heap.handleCPU(startIndex + 2));
-	CreateShaderResourceView(device, metalnessTexture, heap.handleCPU(startIndex + 3));
+	CreateShaderResourceView(device, albedoTexture, heap.handleCPU(startIndex + MATERIAL_ALBEDO));
+	CreateShaderResourceView(device, normalTexture, heap.handleCPU(startIndex + MATERIAL_NORMAL));
+	CreateShaderResourceView(device, roughnessTexture, heap.handleCPU(startIndex + MATERIAL_ROUGHNESS));
+	CreateShaderResourceView(device, metalnessTexture, heap.handleCPU(startIndex + MATERIAL_METALNESS));
 }
 
 D3D12_GPU_DESCRIPTOR_HANDLE Material::GetGPUDescriptorHandle()

@@ -75,7 +75,7 @@ class DeferredRenderer
 		DXGI_FORMAT_R8G8B8A8_UNORM, 
 		DXGI_FORMAT_R11G11B10_FLOAT,
 		DXGI_FORMAT_R8_UNORM,
-		DXGI_FORMAT_B8G8R8A8_UNORM_SRGB
+		DXGI_FORMAT_R8G8B8A8_UNORM
 	};
 	float mClearColor[4] = { 0.0,0.0f,0.0f,1.0f };
 	float mClearDepth = 1.0f;
@@ -96,6 +96,7 @@ class DeferredRenderer
 	void Draw(Mesh* m, const ConstantBuffer& cb, ID3D12GraphicsCommandList* commandList);
 public:
 	DeferredRenderer(ID3D12Device *dxDevice, int width, int height);
+	void ResetRenderTargetStates(ID3D12GraphicsCommandList* command);
 	void SetSRV(ID3D12Resource* textureSRV, DXGI_FORMAT format, int index);
 	void Initialize(ID3D12GraphicsCommandList* command);
 	void SetGBUfferPSO(ID3D12GraphicsCommandList* command, Camera* camera, const PixelConstantBuffer& pixelCb);

@@ -14,6 +14,10 @@ LRESULT CALLBACK WindowsProcessMessage(HWND hWnd, UINT msg, WPARAM wParam, LPARA
 bool Core::InitializeDirectX()
 {
 	CoInitializeEx(nullptr, COINITBASE_MULTITHREADED);
+	ID3D12Debug* debugInterface;
+	D3D12GetDebugInterface(IID_PPV_ARGS(&debugInterface));
+	debugInterface->EnableDebugLayer();
+
 	IDXGIFactory4* dxgiFactory;
 	auto hr = CreateDXGIFactory1(IID_PPV_ARGS(&dxgiFactory));
 	if (FAILED(hr))
@@ -63,6 +67,8 @@ bool Core::InitializeDirectX()
 	{
 		return false;
 	}
+
+
 
 	D3D12_COMMAND_QUEUE_DESC cqDesc = {};
 
@@ -250,6 +256,8 @@ void Core::InitializeResources()
 	psoDesc.pRootSignature = rootSignature; // the root signature that describes the input data this pso needs
 	psoDesc.VS = vertexShaderBytecode; // structure describing where to find the vertex shader bytecode and how large it is
 	psoDesc.PS = pixelShaderBytecode; // same as VS but for pixel shader
+	psoDesc.DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
+	psoDesc.DepthStencilState.DepthEnable = false;
 	psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE; // type of topology we are drawing
 	psoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM; // format of the render target
 	psoDesc.SampleDesc = sampleDesc; // must be the same sample description as the swapchain and depth/stencil buffer

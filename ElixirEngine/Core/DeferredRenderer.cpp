@@ -9,6 +9,12 @@ DeferredRenderer::DeferredRenderer(ID3D12Device* dxDevice, int width, int height
 {
 }
 
+void DeferredRenderer::ResetRenderTargetStates(ID3D12GraphicsCommandList* command)
+{
+	for (int i = 0; i < numRTV; i++)
+		command->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(gBufferTextures[i], D3D12_RESOURCE_STATE_GENERIC_READ, D3D12_RESOURCE_STATE_RENDER_TARGET));
+}
+
 void DeferredRenderer::SetSRV(ID3D12Resource* textureSRV, DXGI_FORMAT format, int index)
 {
 	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
@@ -60,8 +66,8 @@ void DeferredRenderer::SetGBUfferPSO(ID3D12GraphicsCommandList* command, Camera*
 void DeferredRenderer::SetLightPassPSO(ID3D12GraphicsCommandList * command, const PixelConstantBuffer & pixelCb)
 {
 	
-	for (int i = 0; i < numRTV; i++)
-		command->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(gBufferTextures[i], D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_GENERIC_READ));
+	/*for (int i = 0; i < numRTV; i++)
+		command->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(gBufferTextures[i], D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_GENERIC_READ));*/
 	//command->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(depthStencilTexture, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_GENERIC_READ));
 	command->SetPipelineState(dirLightPassPSO);
 
@@ -78,6 +84,7 @@ void DeferredRenderer::SetLightShapePassPSO(ID3D12GraphicsCommandList * command,
 	for (int i = 0; i < numRTV; i++)
 		command->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(gBufferTextures[i], D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_GENERIC_READ));
 
+	command->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(gBufferTextures[numRTV-1], D3D12_RESOURCE_STATE_GENERIC_READ, D3D12_RESOURCE_STATE_RENDER_TARGET));
 
 	command->ClearRenderTargetView(rtvHeap.handleCPU(numRTV-1), mClearColor, 0, nullptr);
 	command->OMSetRenderTargets(1, &rtvHeap.handleCPU(numRTV-1), true, nullptr);
@@ -89,6 +96,7 @@ void DeferredRenderer::SetLightShapePassPSO(ID3D12GraphicsCommandList * command,
 	ID3D12DescriptorHeap* ppHeaps[] = { gBufferHeap.pDescriptorHeap.Get() };
 	command->SetDescriptorHeaps(1, ppHeaps);
 	command->SetGraphicsRootDescriptorTable(2, gBufferHeap.handleGPU(0));
+
 }
 
 void DeferredRenderer::Draw(ID3D12GraphicsCommandList* commandList, std::vector<Entity*> entities)
@@ -147,6 +155,8 @@ void DeferredRenderer::DrawLightShapePass(ID3D12GraphicsCommandList * commandLis
 	commandList->SetGraphicsRootDescriptorTable(0, cbHeap.handleGPU(constBufferIndex));
 	Draw(e.GetMesh(), cb, commandList);
 	constBufferIndex++;
+
+	commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(gBufferTextures[numRTV - 1], D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_GENERIC_READ));
 }
 
 void DeferredRenderer::Draw(Mesh * m, const ConstantBuffer & cb, ID3D12GraphicsCommandList* commandList)
@@ -260,6 +270,7 @@ void DeferredRenderer::CreatePSO()
 	descPipelineState.RTVFormats[1] = mRtvFormat[1];
 	descPipelineState.RTVFormats[2] = mRtvFormat[2];
 	descPipelineState.RTVFormats[3] = mRtvFormat[3];
+	descPipelineState.RTVFormats[4] = mRtvFormat[4];
 	descPipelineState.DSVFormat = mDsvFormat;
 	descPipelineState.SampleDesc.Count = 1;
 	device->CreateGraphicsPipelineState(&descPipelineState, IID_PPV_ARGS(&deferredPSO));

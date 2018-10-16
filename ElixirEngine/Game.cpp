@@ -131,6 +131,8 @@ void Game::Draw()
 
 	deferredRenderer->SetLightPassPSO(commandList, pixelCb);
 	deferredRenderer->DrawLightPass(commandList);
+
+	deferredRenderer->ResetRenderTargetStates(commandList);
 }
 
 void Game::OnMouseDown(WPARAM buttonState, int x, int y)
