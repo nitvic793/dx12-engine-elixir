@@ -8,11 +8,11 @@ void Game::InitializeAssets()
 	entity1 = new Entity();
 	entity2 = new Entity();
 	entity3 = new Entity();
-	mesh = new Mesh("../../Assets/sphere.obj", device, commandList);
-
-	entity1->SetMesh(mesh);
-	entity2->SetMesh(mesh);
-	entity3->SetMesh(mesh);
+	sphereMesh = new Mesh("../../Assets/sphere.obj", device, commandList);
+	cubeMesh = new Mesh("../../Assets/cylinder.obj", device, commandList);
+	entity1->SetMesh(sphereMesh);
+	entity2->SetMesh(sphereMesh);
+	entity3->SetMesh(sphereMesh);
 
 	pixelCb.light.AmbientColor = XMFLOAT4(0.1f, 0.1f, 0.1f, 0);
 	pixelCb.light.DiffuseColor = XMFLOAT4(0.6f, 0.6f, 0.6f, 0.f);
@@ -21,10 +21,11 @@ void Game::InitializeAssets()
 
 	ResourceUploadBatch uploadBatch(device);
 	uploadBatch.Begin();
-	CreateWICTextureFromFile(device, uploadBatch, L"../../Assets/Textures/scratched_albedo.png", &textureBuffer, false);
-	CreateWICTextureFromFile(device, uploadBatch, L"../../Assets/Textures/scratched_normals.png", &normalTexture, true);
-	CreateWICTextureFromFile(device, uploadBatch, L"../../Assets/Textures/scratched_roughness.png", &roughnessTexture, true);
-	CreateWICTextureFromFile(device, uploadBatch, L"../../Assets/Textures/scratched_metal.png", &metalnessTexture, true);
+	CreateDDSTextureFromFile(device, uploadBatch, L"../../Assets/skybox2.dds", &skyboxTexture);
+	//CreateWICTextureFromFile(device, uploadBatch, L"../../Assets/Textures/scratched_albedo.png", &textureBuffer, false);
+	//CreateWICTextureFromFile(device, uploadBatch, L"../../Assets/Textures/scratched_normals.png", &normalTexture, true);
+	//CreateWICTextureFromFile(device, uploadBatch, L"../../Assets/Textures/scratched_roughness.png", &roughnessTexture, true);
+	//CreateWICTextureFromFile(device, uploadBatch, L"../../Assets/Textures/scratched_metal.png", &metalnessTexture, true);
 	auto uploadOperation = uploadBatch.End(commandQueue);
 	uploadOperation.wait();
 
@@ -71,6 +72,8 @@ void Game::InitializeAssets()
 		commandQueue,
 		2 * MATERIAL_COUNT
 	);
+
+	deferredRenderer->SetSRV(skyboxTexture, DXGI_FORMAT_B8G8R8X8_UNORM, 3 * MATERIAL_COUNT);
 
 	entity1->SetMaterial(scratchedMaterial);
 	entity2->SetMaterial(woodenMaterial);
@@ -167,7 +170,8 @@ void Game::OnMouseWheel(float wheelDelta, int x, int y)
 
 Game::~Game()
 {
-	delete mesh;
+	delete sphereMesh;
+	delete cubeMesh;
 	delete camera;
 	delete entity1;
 	delete entity2;
@@ -176,8 +180,10 @@ Game::~Game()
 	delete woodenMaterial;
 	delete cobblestoneMaterial;
 
-	textureBuffer->Release();
-	normalTexture->Release();
+	skyboxTexture->Release();
+
+	//textureBuffer->Release();
+	//normalTexture->Release();
 	//roughnessTexture->Release();
 	//metalnessTexture->Release();
 }

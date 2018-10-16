@@ -9,7 +9,10 @@ protected:
 	ID3D12Resource* roughnessTexture;
 	ID3D12Resource* metalnessTexture;
 
-	Mesh* mesh;
+	ID3D12Resource* skyboxTexture;
+
+	Mesh* sphereMesh;
+	Mesh* cubeMesh;
 	Camera* camera;
 	Entity* entity1;
 	Entity* entity2;

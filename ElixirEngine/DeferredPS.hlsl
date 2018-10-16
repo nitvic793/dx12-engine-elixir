@@ -57,7 +57,7 @@ float3 calculateNormalFromMap(float2 uv, float3 normal, float3 tangent)
 
 PixelOutput main(VertexOutput input)// : SV_TARGET
 {
-	float3 normal = calculateNormalFromMap(input.uv, input.normal, input.tangent);
+	float3 normal = calculateNormalFromMap(input.uv, normalize(input.normal), input.tangent);
 	PixelOutput output;
 	output.albedo = AlbedoTexture.Sample(Sampler, input.uv).rgb;
 	output.normal = float4(normalize(normal), 1.0f);

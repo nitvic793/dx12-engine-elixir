@@ -13,6 +13,7 @@
 #include <string>
 #include <wincodec.h>
 #include "WICTextureLoader.h"
+#include "DDSTextureLoader.h"
 #include "ResourceUploadBatch.h"
 #include "DirectXHelpers.h"
 

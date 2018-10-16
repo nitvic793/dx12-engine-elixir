@@ -418,7 +418,7 @@ void Core::Cleanup()
 	commandQueue->Release();
 	rtvDescriptorHeap->Release();
 	commandList->Release();
-
+	delete deferredRenderer;
 	for (int i = 0; i < frameBufferCount; ++i)
 	{
 		renderTargets[i]->Release();
@@ -435,7 +435,7 @@ void Core::Cleanup()
 	dsDescriptorHeap->Release();
 
 	//textureBufferUploadHeap->Release();
-	delete deferredRenderer;
+
 }
 
 void Core::WaitForPreviousFrame()
