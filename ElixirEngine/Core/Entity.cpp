@@ -76,6 +76,11 @@ void Entity::SetPosition(const XMFLOAT3& pos)
 	position = pos;
 }
 
+void Entity::SetRotation(const XMFLOAT3 & rot)
+{
+	rotation = rot;
+}
+
 void Entity::SetScale(const XMFLOAT3 & scale)
 {
 	this->scale = scale;

@@ -9,7 +9,7 @@ struct VertexOutput
 
 struct PixelOutput
 {
-	float3 albedo: SV_TARGET0;
+	float4 albedo: SV_TARGET0;
 	float4 normal: SV_TARGET1;
 	float4 worldPos: SV_TARGET2;
 	float4 roughness: SV_TARGET3;
@@ -59,7 +59,7 @@ PixelOutput main(VertexOutput input)// : SV_TARGET
 {
 	float3 normal = calculateNormalFromMap(input.uv, normalize(input.normal), input.tangent);
 	PixelOutput output;
-	output.albedo = AlbedoTexture.Sample(Sampler, input.uv).rgb;
+	output.albedo = AlbedoTexture.Sample(Sampler, input.uv);
 	output.normal = float4(normalize(normal), 1.0f);
 	output.worldPos = float4(input.worldPos, 0.0f);
 	float roughness = RoughnessTexture.Sample(Sampler, input.uv).r;

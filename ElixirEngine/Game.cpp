@@ -9,8 +9,8 @@ void Game::InitializeAssets()
 	entity2 = new Entity();
 	entity3 = new Entity();
 	sphereMesh = new Mesh("../../Assets/sphere.obj", device, commandList);
-	cubeMesh = new Mesh("../../Assets/cylinder.obj", device, commandList);
-	entity1->SetMesh(sphereMesh);
+	cubeMesh = new Mesh("../../Assets/cube.obj", device, commandList);
+	entity1->SetMesh(cubeMesh);
 	entity2->SetMesh(sphereMesh);
 	entity3->SetMesh(sphereMesh);
 
@@ -21,7 +21,7 @@ void Game::InitializeAssets()
 
 	ResourceUploadBatch uploadBatch(device);
 	uploadBatch.Begin();
-	CreateDDSTextureFromFile(device, uploadBatch, L"../../Assets/skybox2.dds", &skyboxTexture);
+	CreateDDSTextureFromFile(device, uploadBatch, L"../../Assets/skybox1.dds", &skyboxTexture);
 	CreateDDSTextureFromFile(device, uploadBatch, L"../../Assets/skybox2IR.dds", &skyboxIRTexture);
 	CreateWICTextureFromFile(device, uploadBatch, L"../../Assets/ibl_brdf_lut.png", &brdfLutTexture);
 	//CreateWICTextureFromFile(device, uploadBatch, L"../../Assets/Textures/scratched_albedo.png", &textureBuffer, false);
@@ -108,6 +108,8 @@ void Game::Update()
 	entity1->SetPosition(pos);
 	entity2->SetPosition(XMFLOAT3(2, 0, 2));
 	entity3->SetPosition(XMFLOAT3(0, 0, 5));
+	float rotX = 2 * sin(totalTime);
+	entity1->SetRotation(XMFLOAT3(rotX, rotX, 0));
 }
 
 void Game::Draw()
@@ -139,7 +141,7 @@ void Game::Draw()
 	deferredRenderer->SetLightPassPSO(commandList, pixelCb);
 	deferredRenderer->DrawLightPass(commandList);
 
-	//deferredRenderer->DrawSkybox(commandList, rtvHandle, 3 * MATERIAL_COUNT);
+	deferredRenderer->DrawSkybox(commandList, rtvHandle, 3 * MATERIAL_COUNT);
 
 	deferredRenderer->ResetRenderTargetStates(commandList);
 }

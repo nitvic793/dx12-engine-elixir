@@ -30,7 +30,7 @@ VertexOutput main(VertexInput input)
 	output.uv = input.uv;
 	//output.normal = input.normal;
 	output.normal = normalize(mul(input.normal, (float3x3)world));
-	output.tangent = input.tangent;
+	output.tangent = normalize(mul(input.tangent, (float3x3)world));
 	output.worldPos = mul(float4(input.pos, 1.0f), world).xyz;
 	return output;
 }
