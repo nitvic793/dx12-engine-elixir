@@ -65,10 +65,10 @@ void DeferredRenderer::SetGBUfferPSO(ID3D12GraphicsCommandList* command, Camera*
 
 void DeferredRenderer::SetLightPassPSO(ID3D12GraphicsCommandList * command, const PixelConstantBuffer & pixelCb)
 {
-	
+
 	/*for (int i = 0; i < numRTV; i++)
 		command->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(gBufferTextures[i], D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_GENERIC_READ));*/
-	//command->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(depthStencilTexture, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_GENERIC_READ));
+		//command->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(depthStencilTexture, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_GENERIC_READ));
 	command->SetPipelineState(dirLightPassPSO);
 
 	ID3D12DescriptorHeap* ppHeap2[] = { pixelCbHeap.pDescriptorHeap.Get() };
@@ -84,10 +84,10 @@ void DeferredRenderer::SetLightShapePassPSO(ID3D12GraphicsCommandList * command,
 	for (int i = 0; i < numRTV; i++)
 		command->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(gBufferTextures[i], D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_GENERIC_READ));
 
-	command->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(gBufferTextures[numRTV-1], D3D12_RESOURCE_STATE_GENERIC_READ, D3D12_RESOURCE_STATE_RENDER_TARGET));
+	command->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(gBufferTextures[numRTV - 1], D3D12_RESOURCE_STATE_GENERIC_READ, D3D12_RESOURCE_STATE_RENDER_TARGET));
 
-	command->ClearRenderTargetView(rtvHeap.handleCPU(numRTV-1), mClearColor, 0, nullptr);
-	command->OMSetRenderTargets(1, &rtvHeap.handleCPU(numRTV-1), true, nullptr);
+	command->ClearRenderTargetView(rtvHeap.handleCPU(numRTV - 1), mClearColor, 0, nullptr);
+	command->OMSetRenderTargets(1, &rtvHeap.handleCPU(numRTV - 1), true, nullptr);
 	command->SetPipelineState(shapeLightPassPSO);
 
 	ID3D12DescriptorHeap* ppHeap2[] = { pixelCbHeap.pDescriptorHeap.Get() };
@@ -112,7 +112,13 @@ void DeferredRenderer::Draw(ID3D12GraphicsCommandList* commandList, std::vector<
 		commandList->SetGraphicsRootDescriptorTable(2, e->GetMaterial()->GetGPUDescriptorHandle());
 
 		commandList->SetDescriptorHeaps(1, ppHeaps);
-		auto cb = ConstantBuffer{ e->GetWorldViewProjectionTransposed(camera->GetProjectionMatrix(), camera->GetViewMatrix()), e->GetWorldMatrixTransposed() };
+		auto cb = ConstantBuffer
+		{
+			e->GetWorldViewProjectionTransposed(camera->GetProjectionMatrix(), camera->GetViewMatrix()),
+			e->GetWorldMatrixTransposed(),
+			camera->GetViewMatrixTransposed(),
+			camera->GetProjectionMatrixTransposed()
+		};
 		cbWrapper.CopyData(&cb, sizeof(ConstantBuffer), index);
 		commandList->SetGraphicsRootDescriptorTable(0, cbHeap.handleGPU(index));
 

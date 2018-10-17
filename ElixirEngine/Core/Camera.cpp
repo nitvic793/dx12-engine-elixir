@@ -85,6 +85,22 @@ const XMFLOAT4X4 & Camera::GetInverseProjectionViewMatrix()
 	return inverseProjectionView;
 }
 
+XMFLOAT4X4 Camera::GetViewMatrixTransposed()
+{
+	auto mat = XMLoadFloat4x4(&viewMatrix);
+	XMFLOAT4X4 viewT;
+	XMStoreFloat4x4(&viewT, XMMatrixTranspose(mat));
+	return viewT;
+}
+
+XMFLOAT4X4 Camera::GetProjectionMatrixTransposed()
+{
+	auto mat = XMLoadFloat4x4(&projectionMatrix);
+	XMFLOAT4X4 projectionT;
+	XMStoreFloat4x4(&projectionT, XMMatrixTranspose(mat));
+	return projectionT;
+}
+
 void Camera::Rotate(float x, float y)
 {
 	rotationX += x;// *XM_PIDIV2;

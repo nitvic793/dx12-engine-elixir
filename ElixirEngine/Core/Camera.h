@@ -20,6 +20,10 @@ public:
 	const XMFLOAT4X4& GetViewMatrix();
 	const XMFLOAT4X4& GetProjectionMatrix();
 	const XMFLOAT4X4& GetInverseProjectionViewMatrix();
+
+	XMFLOAT4X4 GetViewMatrixTransposed();
+	XMFLOAT4X4 GetProjectionMatrixTransposed();
+
 	void Rotate(float x, float y);
 	void SetProjectionMatrix(float width, float height);
 	Camera(float width, float height);

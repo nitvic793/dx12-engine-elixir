@@ -22,6 +22,8 @@ void Game::InitializeAssets()
 	ResourceUploadBatch uploadBatch(device);
 	uploadBatch.Begin();
 	CreateDDSTextureFromFile(device, uploadBatch, L"../../Assets/skybox2.dds", &skyboxTexture);
+	CreateDDSTextureFromFile(device, uploadBatch, L"../../Assets/skybox2IR.dds", &skyboxIRTexture);
+	CreateWICTextureFromFile(device, uploadBatch, L"../../Assets/ibl_brdf_lut.png", &brdfLutTexture);
 	//CreateWICTextureFromFile(device, uploadBatch, L"../../Assets/Textures/scratched_albedo.png", &textureBuffer, false);
 	//CreateWICTextureFromFile(device, uploadBatch, L"../../Assets/Textures/scratched_normals.png", &normalTexture, true);
 	//CreateWICTextureFromFile(device, uploadBatch, L"../../Assets/Textures/scratched_roughness.png", &roughnessTexture, true);
@@ -74,6 +76,8 @@ void Game::InitializeAssets()
 	);
 
 	deferredRenderer->SetSRV(skyboxTexture, DXGI_FORMAT_B8G8R8X8_UNORM, 3 * MATERIAL_COUNT);
+	deferredRenderer->SetSRV(skyboxIRTexture, DXGI_FORMAT_B8G8R8X8_UNORM, 3 * MATERIAL_COUNT + 1);
+	deferredRenderer->SetSRV(brdfLutTexture, DXGI_FORMAT_R8G8B8A8_UNORM, 3 * MATERIAL_COUNT + 2);
 
 	entity1->SetMaterial(scratchedMaterial);
 	entity2->SetMaterial(woodenMaterial);
@@ -181,6 +185,8 @@ Game::~Game()
 	delete cobblestoneMaterial;
 
 	skyboxTexture->Release();
+	skyboxIRTexture->Release();
+	brdfLutTexture->Release();
 
 	//textureBuffer->Release();
 	//normalTexture->Release();

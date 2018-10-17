@@ -14,6 +14,7 @@
 #include <wincodec.h>
 #include "WICTextureLoader.h"
 #include "DDSTextureLoader.h"
+#include "DirectXTex.h"
 #include "ResourceUploadBatch.h"
 #include "DirectXHelpers.h"
 

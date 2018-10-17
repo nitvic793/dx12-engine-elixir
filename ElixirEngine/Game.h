@@ -10,6 +10,8 @@ protected:
 	ID3D12Resource* metalnessTexture;
 
 	ID3D12Resource* skyboxTexture;
+	ID3D12Resource* skyboxIRTexture;
+	ID3D12Resource* brdfLutTexture;
 
 	Mesh* sphereMesh;
 	Mesh* cubeMesh;
