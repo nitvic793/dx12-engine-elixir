@@ -100,7 +100,7 @@ class DeferredRenderer
 public:
 	DeferredRenderer(ID3D12Device *dxDevice, int width, int height);
 	void ResetRenderTargetStates(ID3D12GraphicsCommandList* command);
-	void SetSRV(ID3D12Resource* textureSRV, DXGI_FORMAT format, int index);
+	void SetSRV(ID3D12Resource* textureSRV, DXGI_FORMAT format, int index, bool isTextureCube = false);
 	void Initialize(ID3D12GraphicsCommandList* command);
 	void SetGBUfferPSO(ID3D12GraphicsCommandList* command, Camera* camera, const PixelConstantBuffer& pixelCb);
 	void SetLightPassPSO(ID3D12GraphicsCommandList* command, const PixelConstantBuffer& pixelCb);

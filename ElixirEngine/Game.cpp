@@ -9,7 +9,7 @@ void Game::InitializeAssets()
 	entity2 = new Entity();
 	entity3 = new Entity();
 	sphereMesh = new Mesh("../../Assets/sphere.obj", device, commandList);
-	cubeMesh = new Mesh("../../Assets/cube.obj", device, commandList);
+	cubeMesh = new Mesh("../../Assets/torus.obj", device, commandList);
 	entity1->SetMesh(cubeMesh);
 	entity2->SetMesh(sphereMesh);
 	entity3->SetMesh(sphereMesh);
@@ -18,10 +18,10 @@ void Game::InitializeAssets()
 	pixelCb.light.DiffuseColor = XMFLOAT4(0.6f, 0.6f, 0.6f, 0.f);
 	pixelCb.light.Direction = XMFLOAT3(0.f, 0.f, 1.f);
 	pixelCb.pointLight = PointLight{ {0.1f, 0.4f, 0.1f, 0.f} , {0.0f, 2.f, 0.f}, 10.f };
-
+	bool isCubeMap;// = true;
 	ResourceUploadBatch uploadBatch(device);
 	uploadBatch.Begin();
-	CreateDDSTextureFromFile(device, uploadBatch, L"../../Assets/skybox1.dds", &skyboxTexture);
+	CreateDDSTextureFromFile(device, uploadBatch, L"../../Assets/skybox2.dds", &skyboxTexture, false, 0Ui64, nullptr, &isCubeMap);
 	CreateDDSTextureFromFile(device, uploadBatch, L"../../Assets/skybox2IR.dds", &skyboxIRTexture);
 	CreateWICTextureFromFile(device, uploadBatch, L"../../Assets/ibl_brdf_lut.png", &brdfLutTexture);
 	//CreateWICTextureFromFile(device, uploadBatch, L"../../Assets/Textures/scratched_albedo.png", &textureBuffer, false);
@@ -75,7 +75,7 @@ void Game::InitializeAssets()
 		2 * MATERIAL_COUNT
 	);
 
-	deferredRenderer->SetSRV(skyboxTexture, DXGI_FORMAT_B8G8R8X8_UNORM, 3 * MATERIAL_COUNT);
+	deferredRenderer->SetSRV(skyboxTexture, DXGI_FORMAT_B8G8R8X8_UNORM, 3 * MATERIAL_COUNT, true);
 	deferredRenderer->SetSRV(skyboxIRTexture, DXGI_FORMAT_B8G8R8X8_UNORM, 3 * MATERIAL_COUNT + 1);
 	deferredRenderer->SetSRV(brdfLutTexture, DXGI_FORMAT_R8G8B8A8_UNORM, 3 * MATERIAL_COUNT + 2);
 

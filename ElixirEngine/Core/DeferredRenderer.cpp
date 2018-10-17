@@ -16,13 +16,20 @@ void DeferredRenderer::ResetRenderTargetStates(ID3D12GraphicsCommandList* comman
 		command->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(gBufferTextures[i], D3D12_RESOURCE_STATE_GENERIC_READ, D3D12_RESOURCE_STATE_RENDER_TARGET));
 }
 
-void DeferredRenderer::SetSRV(ID3D12Resource* textureSRV, DXGI_FORMAT format, int index)
+void DeferredRenderer::SetSRV(ID3D12Resource* textureSRV, DXGI_FORMAT format, int index, bool isTextureCube)
 {
 	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
 	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
 	srvDesc.Format = format;
 	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+
+	if (isTextureCube)
+	{
+		srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURECUBE;
+	}
+	
 	srvDesc.Texture2D.MipLevels = 1;
+	
 	//device->CreateShaderResourceView(textureSRV, &srvDesc, srvHeap.pDescriptorHeap.Get()->GetCPUDescriptorHandleForHeapStart());
 	device->CreateShaderResourceView(textureSRV, &srvDesc, srvHeap.handleCPU(index));
 }
