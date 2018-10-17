@@ -139,6 +139,8 @@ void Game::Draw()
 	deferredRenderer->SetLightPassPSO(commandList, pixelCb);
 	deferredRenderer->DrawLightPass(commandList);
 
+	//deferredRenderer->DrawSkybox(commandList, rtvHandle, 3 * MATERIAL_COUNT);
+
 	deferredRenderer->ResetRenderTargetStates(commandList);
 }
 

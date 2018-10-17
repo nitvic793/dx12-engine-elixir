@@ -49,6 +49,7 @@ class DeferredRenderer
 	ID3D12PipelineState* deferredPSO;
 	ID3D12PipelineState* dirLightPassPSO;
 	ID3D12PipelineState* shapeLightPassPSO;
+	ID3D12PipelineState* skyboxPSO;
 
 	CDescriptorHeapWrapper rtvHeap;
 	CDescriptorHeapWrapper dsvHeap;
@@ -67,12 +68,13 @@ class DeferredRenderer
 	ID3D12Resource *lightCB;
 	ID3D12Resource *worldViewCB;
 	Mesh* sphereMesh;
+	Mesh* cubeMesh;
 
 	DXGI_FORMAT mDsvFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
 	DXGI_FORMAT mRtvFormat[numRTV] = {
 		DXGI_FORMAT_R11G11B10_FLOAT,
 		DXGI_FORMAT_R8G8B8A8_SNORM,
-		DXGI_FORMAT_R8G8B8A8_UNORM, 
+		DXGI_FORMAT_R8G8B8A8_UNORM,
 		DXGI_FORMAT_R11G11B10_FLOAT,
 		DXGI_FORMAT_R8_UNORM,
 		DXGI_FORMAT_R8G8B8A8_UNORM
@@ -89,6 +91,7 @@ class DeferredRenderer
 	void CreateCB();
 	void CreateViews();
 	void CreatePSO();
+	void CreateSkyboxPSO();
 	void CreateLightPassPSO();
 	void CreateRTV();
 	void CreateDSV();
@@ -103,6 +106,7 @@ public:
 	void SetLightPassPSO(ID3D12GraphicsCommandList* command, const PixelConstantBuffer& pixelCb);
 	void SetLightShapePassPSO(ID3D12GraphicsCommandList* command, const PixelConstantBuffer& pixelCb);
 	void Draw(ID3D12GraphicsCommandList* commandList, std::vector<Entity*> entities);
+	void DrawSkybox(ID3D12GraphicsCommandList* commandList, D3D12_CPU_DESCRIPTOR_HANDLE &rtvHandle, int skyboxIndex);
 	void DrawLightPass(ID3D12GraphicsCommandList* commandList);
 	void DrawLightShapePass(ID3D12GraphicsCommandList* commandList, const PixelConstantBuffer & pixelCb);
 	void UpdateConstantBuffer(const PixelConstantBuffer& pixelBuffer, ID3D12GraphicsCommandList* command);

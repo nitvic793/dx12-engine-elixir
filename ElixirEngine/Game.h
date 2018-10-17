@@ -13,15 +13,15 @@ protected:
 	ID3D12Resource* skyboxIRTexture;
 	ID3D12Resource* brdfLutTexture;
 
-	Mesh* sphereMesh;
-	Mesh* cubeMesh;
-	Camera* camera;
-	Entity* entity1;
-	Entity* entity2;
-	Entity* entity3;
-	Material* scratchedMaterial;
-	Material* woodenMaterial;
-	Material* cobblestoneMaterial;
+	Mesh*		sphereMesh;
+	Mesh*		cubeMesh;
+	Camera*		camera;
+	Entity*		entity1;
+	Entity*		entity2;
+	Entity*		entity3;
+	Material*	scratchedMaterial;
+	Material*	woodenMaterial;
+	Material*	cobblestoneMaterial;
 
 	POINT prevMousePos;
 
