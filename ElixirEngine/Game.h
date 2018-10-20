@@ -19,9 +19,11 @@ protected:
 	Entity*		entity1;
 	Entity*		entity2;
 	Entity*		entity3;
+	Entity*		entity4;
 	Material*	scratchedMaterial;
 	Material*	woodenMaterial;
 	Material*	cobblestoneMaterial;
+	Material*	bronzeMaterial;
 
 	POINT prevMousePos;
 

@@ -8,16 +8,18 @@ void Game::InitializeAssets()
 	entity1 = new Entity();
 	entity2 = new Entity();
 	entity3 = new Entity();
+	entity4 = new Entity();
 	sphereMesh = new Mesh("../../Assets/sphere.obj", device, commandList);
 	cubeMesh = new Mesh("../../Assets/torus.obj", device, commandList);
-	entity1->SetMesh(cubeMesh);
+	entity1->SetMesh(sphereMesh);
 	entity2->SetMesh(sphereMesh);
 	entity3->SetMesh(sphereMesh);
+	entity4->SetMesh(sphereMesh);
 
 	pixelCb.light.AmbientColor = XMFLOAT4(0.1f, 0.1f, 0.1f, 0);
 	pixelCb.light.DiffuseColor = XMFLOAT4(0.1f, 0.1f, 0.1f, 0.f);
 	pixelCb.light.Direction = XMFLOAT3(-1.f, 0.f, 1.f);
-	pixelCb.pointLight = PointLight{ {0.1f, 0.5f, 0.1f, 0.f} , {0.0f, 2.f, 0.f}, 10.f };
+	pixelCb.pointLight = PointLight{ {0.1f, 0.5f, 0.1f, 0.f} , {0.0f, 2.f, 0.f}, 0.f };
 
 	ResourceUploadBatch uploadBatch(device);
 	uploadBatch.Begin();
@@ -29,17 +31,17 @@ void Game::InitializeAssets()
 
 	//auto image = std::make_unique<ScratchImage>();
 	//LoadFromHDRFile(L"../../Assets/HDR/GravelPlaza_Env.hdr", nullptr, *image);
-	
+
 	scratchedMaterial = new Material(
-		deferredRenderer->GetSRVHeap(), 
-		{ 
+		deferredRenderer->GetSRVHeap(),
+		{
 			L"../../Assets/Textures/scratched_albedo.png" ,
 			L"../../Assets/Textures/scratched_normals.png" ,
 			L"../../Assets/Textures/scratched_roughness.png" ,
-			L"../../Assets/Textures/scratched_metal.png" 
+			L"../../Assets/Textures/scratched_metal.png"
 		},
-		device, 
-		commandQueue, 
+		device,
+		commandQueue,
 		0
 	);
 
@@ -69,15 +71,29 @@ void Game::InitializeAssets()
 		2 * MATERIAL_COUNT
 	);
 
+	bronzeMaterial = new Material(
+		deferredRenderer->GetSRVHeap(),
+		{
+			L"../../Assets/Textures/bronze_albedo.png" ,
+			L"../../Assets/Textures/bronze_normals.png" ,
+			L"../../Assets/Textures/bronze_roughness.png" ,
+			L"../../Assets/Textures/bronze_metal.png"
+		},
+		device,
+		commandQueue,
+		3 * MATERIAL_COUNT
+	);
+
 	deferredRenderer->SetIBLTextures(skyboxIRTexture, brdfLutTexture);
 
-	deferredRenderer->SetSRV(skyboxTexture, DXGI_FORMAT_B8G8R8X8_UNORM, 3 * MATERIAL_COUNT, true);
-	deferredRenderer->SetSRV(skyboxIRTexture, DXGI_FORMAT_B8G8R8X8_UNORM, 3 * MATERIAL_COUNT + 1, true);
-	deferredRenderer->SetSRV(brdfLutTexture, DXGI_FORMAT_R8G8B8A8_UNORM, 3 * MATERIAL_COUNT + 2);
+	deferredRenderer->SetSRV(skyboxTexture, DXGI_FORMAT_B8G8R8X8_UNORM, 4 * MATERIAL_COUNT, true);
+	deferredRenderer->SetSRV(skyboxIRTexture, DXGI_FORMAT_B8G8R8X8_UNORM, 4 * MATERIAL_COUNT + 1, true);
+	deferredRenderer->SetSRV(brdfLutTexture, DXGI_FORMAT_R8G8B8A8_UNORM, 4 * MATERIAL_COUNT + 2);
 
 	entity1->SetMaterial(scratchedMaterial);
 	entity2->SetMaterial(woodenMaterial);
 	entity3->SetMaterial(cobblestoneMaterial);
+	entity4->SetMaterial(bronzeMaterial);
 }
 
 Game::Game(HINSTANCE hInstance, int ShowWnd, int width, int height, bool fullscreen) :
@@ -121,7 +137,12 @@ void Game::Draw()
 
 	// draw
 	deferredRenderer->SetGBUfferPSO(commandList, camera, pixelCb);
-	deferredRenderer->Draw(commandList, { entity1, entity2, entity3 });
+	deferredRenderer->Draw(commandList, {
+		entity1,
+		entity2,
+		entity3,
+		entity4}
+	);
 
 	deferredRenderer->SetLightShapePassPSO(commandList, pixelCb);
 	deferredRenderer->DrawLightShapePass(commandList, pixelCb);
@@ -132,7 +153,7 @@ void Game::Draw()
 	deferredRenderer->SetLightPassPSO(commandList, pixelCb);
 	deferredRenderer->DrawLightPass(commandList);
 
-	deferredRenderer->DrawSkybox(commandList, rtvHandle, 3 * MATERIAL_COUNT);
+	deferredRenderer->DrawSkybox(commandList, rtvHandle, 4 * MATERIAL_COUNT);
 
 	deferredRenderer->ResetRenderTargetStates(commandList);
 }
@@ -175,9 +196,11 @@ Game::~Game()
 	delete entity1;
 	delete entity2;
 	delete entity3;
+	delete entity4;
 	delete scratchedMaterial;
 	delete woodenMaterial;
 	delete cobblestoneMaterial;
+	delete bronzeMaterial;
 
 	skyboxTexture->Release();
 	skyboxIRTexture->Release();

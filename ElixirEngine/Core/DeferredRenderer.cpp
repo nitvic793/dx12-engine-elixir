@@ -148,7 +148,7 @@ void DeferredRenderer::Draw(ID3D12GraphicsCommandList* commandList, std::vector<
 			camera->GetViewMatrixTransposed(),
 			camera->GetProjectionMatrixTransposed()
 		};
-		cbWrapper.CopyData(&cb, sizeof(ConstantBuffer), index);
+		cbWrapper.CopyData(&cb, ConstantBufferPerObjectAlignedSize, index);
 		commandList->SetGraphicsRootDescriptorTable(0, cbHeap.handleGPU(index));
 
 		Draw(e->GetMesh(), cb, commandList);
@@ -159,6 +159,7 @@ void DeferredRenderer::Draw(ID3D12GraphicsCommandList* commandList, std::vector<
 
 void DeferredRenderer::DrawSkybox(ID3D12GraphicsCommandList * commandList, D3D12_CPU_DESCRIPTOR_HANDLE &rtvHandle, int skyboxIndex)
 {
+	int ConstantBufferPerObjectAlignedSize = (sizeof(ConstantBuffer) + 255) & ~255;
 	commandList->SetPipelineState(skyboxPSO);
 	commandList->OMSetRenderTargets(1, &rtvHandle, true, &dsvHeap.hCPUHeapStart);
 	ID3D12DescriptorHeap* ppHeaps[] = { cbHeap.pDescriptorHeap.Get() };
@@ -176,7 +177,8 @@ void DeferredRenderer::DrawSkybox(ID3D12GraphicsCommandList * commandList, D3D12
 	commandList->SetDescriptorHeaps(1, ppSrvHeaps);
 	commandList->SetGraphicsRootDescriptorTable(2, srvHeap.handleGPU(skyboxIndex)); //Set skybox texture
 	commandList->SetDescriptorHeaps(1, ppHeaps);
-	cbWrapper.CopyData(&cb, sizeof(ConstantBuffer), constBufferIndex);
+	
+	cbWrapper.CopyData(&cb, ConstantBufferPerObjectAlignedSize, constBufferIndex);
 	commandList->SetGraphicsRootDescriptorTable(0, cbHeap.handleGPU(constBufferIndex)); // set constant buffer with view and projection matrices
 	constBufferIndex++;
 	Draw(cubeMesh, cb, commandList);
@@ -211,7 +213,7 @@ void DeferredRenderer::DrawLightShapePass(ID3D12GraphicsCommandList * commandLis
 	float range = pixelCb.pointLight.Range;
 	e.SetScale(XMFLOAT3(range, range, range));
 	auto cb = ConstantBuffer{ e.GetWorldViewProjectionTransposed(camera->GetProjectionMatrix(), camera->GetViewMatrix()), e.GetWorldMatrixTransposed() };
-	cbWrapper.CopyData(&cb, sizeof(ConstantBuffer), constBufferIndex);
+	cbWrapper.CopyData(&cb, ConstantBufferPerObjectAlignedSize, constBufferIndex);
 	commandList->SetGraphicsRootDescriptorTable(0, cbHeap.handleGPU(constBufferIndex));
 	Draw(e.GetMesh(), cb, commandList);
 	constBufferIndex++;
@@ -274,15 +276,15 @@ void DeferredRenderer::CreateCB()
 void DeferredRenderer::CreateViews()
 {
 	gBufferHeap.Create(device, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 32, true);
-	cbHeap.Create(device, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 10, true);
-	pixelCbHeap.Create(device, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 10, true);
+	cbHeap.Create(device, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 32, true);
+	pixelCbHeap.Create(device, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 32, true);
 
 	//Camera CBV
 	D3D12_CONSTANT_BUFFER_VIEW_DESC	descBuffer;
 	descBuffer.BufferLocation = worldViewCB->GetGPUVirtualAddress();
 	descBuffer.SizeInBytes = ConstantBufferSize;
 
-	const int numCBsForNow = 5;
+	const int numCBsForNow = 32;
 	for (int i = 0; i < numCBsForNow; ++i)
 	{
 		descBuffer.BufferLocation = worldViewCB->GetGPUVirtualAddress() + i * ConstantBufferSize;
