@@ -173,6 +173,8 @@ bool Core::InitializeDirectX()
 
 void Core::InitializeResources()
 {
+	commandList->SetName(L"Default Command List");
+	commandQueue->SetName(L"Default Command Queue");
 	deferredRenderer = new DeferredRenderer(device, Width, Height);
 	deferredRenderer->Initialize(commandList);
 
@@ -415,10 +417,10 @@ void Core::Cleanup()
 
 	if (device)device->Release();
 	swapChain->Release();
-	commandQueue->Release();
+
 	rtvDescriptorHeap->Release();
 	commandList->Release();
-	delete deferredRenderer;
+	
 	for (int i = 0; i < frameBufferCount; ++i)
 	{
 		renderTargets[i]->Release();
@@ -435,7 +437,8 @@ void Core::Cleanup()
 	dsDescriptorHeap->Release();
 
 	//textureBufferUploadHeap->Release();
-
+	delete deferredRenderer;
+	commandQueue->Release();
 }
 
 void Core::WaitForPreviousFrame()

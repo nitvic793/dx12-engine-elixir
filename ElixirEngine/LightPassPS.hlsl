@@ -35,9 +35,10 @@ Texture2D gNormalTexture : register(t1);
 Texture2D gWorldPosTexture : register(t2);
 Texture2D gRoughnessTexture : register(t3);
 Texture2D gMetalnessTexture : register(t4);
-
 Texture2D gLightShapePass: register(t5);
 Texture2D gDepth: register(t6);
+TextureCube skyIrradianceTexture: register(t7);
+Texture2D brdfLUTTexture: register(t8);
 
 sampler basicSampler;
 
@@ -53,12 +54,12 @@ float4 main(VertexToPixel pIn) : SV_TARGET
 	float3 otherlights = gLightShapePass.Sample(basicSampler, pIn.uv).rgb;
 
 	float3 specColor = lerp(F0_NON_METAL.rrr, albedo.rgb, metal);
+	float3 irradiance = skyIrradianceTexture.Sample(basicSampler, normal).rgb;
 
-	float3 finalColor = DirLightPBR(dirLight, normalize(normal), worldPos, cameraPosition, roughness, metal, albedo, specColor);
-	//float3 lightValue = calculateDirectionalLight(normal, dirLight).xyz;
-	//float3 finalColor = lightValue * albedo;
+	float3 finalColor = DirLightPBR(dirLight, normalize(normal), worldPos, cameraPosition, roughness, metal, albedo, specColor, irradiance);
+	finalColor = finalColor / (finalColor + float3(1.f, 1.f, 1.f));
 	float3 totalColor = finalColor + otherlights;
-	float3 gammaCorrect = pow(totalColor, 1.0 / 2.2);
+	float3 gammaCorrect = pow(totalColor, 1.0 / 2.2); 
 	return float4(gammaCorrect, 1.0f);
 
 }

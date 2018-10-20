@@ -15,27 +15,21 @@ void Game::InitializeAssets()
 	entity3->SetMesh(sphereMesh);
 
 	pixelCb.light.AmbientColor = XMFLOAT4(0.1f, 0.1f, 0.1f, 0);
-	pixelCb.light.DiffuseColor = XMFLOAT4(0.6f, 0.6f, 0.6f, 0.f);
-	pixelCb.light.Direction = XMFLOAT3(0.f, 0.f, 1.f);
-	pixelCb.pointLight = PointLight{ {0.1f, 0.4f, 0.1f, 0.f} , {0.0f, 2.f, 0.f}, 10.f };
-	bool isCubeMap;// = true;
+	pixelCb.light.DiffuseColor = XMFLOAT4(0.1f, 0.1f, 0.1f, 0.f);
+	pixelCb.light.Direction = XMFLOAT3(-1.f, 0.f, 1.f);
+	pixelCb.pointLight = PointLight{ {0.1f, 0.5f, 0.1f, 0.f} , {0.0f, 2.f, 0.f}, 10.f };
+
 	ResourceUploadBatch uploadBatch(device);
 	uploadBatch.Begin();
-	CreateDDSTextureFromFile(device, uploadBatch, L"../../Assets/skybox2.dds", &skyboxTexture, false, 0Ui64, nullptr, &isCubeMap);
+	CreateDDSTextureFromFile(device, uploadBatch, L"../../Assets/skybox2.dds", &skyboxTexture);
 	CreateDDSTextureFromFile(device, uploadBatch, L"../../Assets/skybox2IR.dds", &skyboxIRTexture);
 	CreateWICTextureFromFile(device, uploadBatch, L"../../Assets/ibl_brdf_lut.png", &brdfLutTexture);
-	//CreateWICTextureFromFile(device, uploadBatch, L"../../Assets/Textures/scratched_albedo.png", &textureBuffer, false);
-	//CreateWICTextureFromFile(device, uploadBatch, L"../../Assets/Textures/scratched_normals.png", &normalTexture, true);
-	//CreateWICTextureFromFile(device, uploadBatch, L"../../Assets/Textures/scratched_roughness.png", &roughnessTexture, true);
-	//CreateWICTextureFromFile(device, uploadBatch, L"../../Assets/Textures/scratched_metal.png", &metalnessTexture, true);
 	auto uploadOperation = uploadBatch.End(commandQueue);
 	uploadOperation.wait();
 
-	/*CreateShaderResourceView(device, textureBuffer, deferredRenderer->GetSRVHeap().handleCPU(0));
-	CreateShaderResourceView(device, normalTexture, deferredRenderer->GetSRVHeap().handleCPU(1));
-	CreateShaderResourceView(device, roughnessTexture, deferredRenderer->GetSRVHeap().handleCPU(2));
-	CreateShaderResourceView(device, metalnessTexture, deferredRenderer->GetSRVHeap().handleCPU(3));*/
-
+	//auto image = std::make_unique<ScratchImage>();
+	//LoadFromHDRFile(L"../../Assets/HDR/GravelPlaza_Env.hdr", nullptr, *image);
+	
 	scratchedMaterial = new Material(
 		deferredRenderer->GetSRVHeap(), 
 		{ 
@@ -75,18 +69,15 @@ void Game::InitializeAssets()
 		2 * MATERIAL_COUNT
 	);
 
+	deferredRenderer->SetIBLTextures(skyboxIRTexture, brdfLutTexture);
+
 	deferredRenderer->SetSRV(skyboxTexture, DXGI_FORMAT_B8G8R8X8_UNORM, 3 * MATERIAL_COUNT, true);
-	deferredRenderer->SetSRV(skyboxIRTexture, DXGI_FORMAT_B8G8R8X8_UNORM, 3 * MATERIAL_COUNT + 1);
+	deferredRenderer->SetSRV(skyboxIRTexture, DXGI_FORMAT_B8G8R8X8_UNORM, 3 * MATERIAL_COUNT + 1, true);
 	deferredRenderer->SetSRV(brdfLutTexture, DXGI_FORMAT_R8G8B8A8_UNORM, 3 * MATERIAL_COUNT + 2);
 
 	entity1->SetMaterial(scratchedMaterial);
 	entity2->SetMaterial(woodenMaterial);
 	entity3->SetMaterial(cobblestoneMaterial);
-
-	//deferredRenderer->SetSRV(textureBuffer, DXGI_FORMAT_R8G8B8A8_UNORM, 0);
-	//deferredRenderer->SetSRV(normalTexture, DXGI_FORMAT_B8G8R8A8_UNORM, 1);
-	//deferredRenderer->SetSRV(roughnessTexture, DXGI_FORMAT_R8G8B8A8_UNORM, 2);
-	//deferredRenderer->SetSRV(metalnessTexture, DXGI_FORMAT_R8G8B8A8_UNORM, 3);
 }
 
 Game::Game(HINSTANCE hInstance, int ShowWnd, int width, int height, bool fullscreen) :

@@ -1,0 +1,46 @@
+[Header]
+ICOfile = "GravelPlaza_thumb.jpg"
+PREVIEWfile = "GravelPlaza_preview.jpg"
+Name = "Chiricahua Plaza"
+Author = "Blochi"
+Location = "Arizona"
+Comment = "Sunny day at Chiricahua National Park, on a ledge with big rock columns and many clouds."
+GEOlat = 32.0026206969444470
+GEOlong = -109.3222808838888800
+Link = "http://www.hdrlabs.com/sibl/archive.html"
+Date = "2010:05:17"
+Time = "14:17:49"
+Height = 1.600000
+North = 0.1
+
+[Background]
+BGfile = "GravelPlaza_8k.jpg"
+BGmap = 1
+BGu = 0.000000
+BGv = 0.000000
+BGheight = 4096
+
+[Enviroment]
+EVfile = "GravelPlaza_Env.hdr"
+EVmap = 1
+EVu = 0.000000
+EVv = 0.000000
+EVheight = 180
+EVmulti = 1.000000
+EVgamma = 1.800000
+
+[Reflection]
+REFfile = "GravelPlaza_REF.hdr"
+REFmap = 1
+REFu = 0.000000
+REFv = 0.000000
+REFheight = 1600
+REFmulti = 1.000000
+REFgamma = 1.800000
+
+[Sun]
+SUNcolor = 255,250,230
+SUNmulti = 1.000000
+SUNu = 0.660000
+SUNv = 0.180000
+
