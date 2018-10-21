@@ -103,6 +103,7 @@ public:
 	void SetSRV(ID3D12Resource* textureSRV, DXGI_FORMAT format, int index, bool isTextureCube = false);
 	void SetIBLTextures(ID3D12Resource* irradianceTextureCube, ID3D12Resource* brdfLUTTexture);
 	void Initialize(ID3D12GraphicsCommandList* command);
+	void GeneratePreFilterEnvironmentMap(int envTextureIndex);
 	void SetGBUfferPSO(ID3D12GraphicsCommandList* command, Camera* camera, const PixelConstantBuffer& pixelCb);
 	void SetLightPassPSO(ID3D12GraphicsCommandList* command, const PixelConstantBuffer& pixelCb);
 	void SetLightShapePassPSO(ID3D12GraphicsCommandList* command, const PixelConstantBuffer& pixelCb);

@@ -67,6 +67,40 @@ void DeferredRenderer::Initialize(ID3D12GraphicsCommandList* command)
 	cubeMesh = new Mesh("../../Assets/cube.obj", device, command);
 }
 
+void DeferredRenderer::GeneratePreFilterEnvironmentMap(int envTextureIndex)
+{
+	CDescriptorHeapWrapper preFilterRTVHeap;
+	preFilterRTVHeap.Create(device, D3D12_DESCRIPTOR_HEAP_TYPE_RTV, 6);
+
+	D3D12_VIEWPORT viewport;
+	D3D12_RECT scissorRect;
+
+	viewport.TopLeftX = 0;
+	viewport.TopLeftY = 0;
+	viewport.Width = 64.f;
+	viewport.Height = 64.f;
+	viewport.MinDepth = 0.0f;
+	viewport.MaxDepth = 1.0f;
+
+	scissorRect.left = 0;
+	scissorRect.top = 0;
+	scissorRect.right = 64L;
+	scissorRect.bottom = 64L;
+
+	D3D12_RESOURCE_DESC resourceDesc;
+	ZeroMemory(&resourceDesc, sizeof(resourceDesc));
+	resourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE3D;
+	resourceDesc.Alignment = 0;
+	resourceDesc.SampleDesc.Count = 1;
+	resourceDesc.SampleDesc.Quality = 0;
+	resourceDesc.MipLevels = 1;
+	resourceDesc.DepthOrArraySize = 1;
+	resourceDesc.Width = viewportWidth;
+	resourceDesc.Height = viewportHeight;
+	resourceDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
+	resourceDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
+}
+
 void DeferredRenderer::SetGBUfferPSO(ID3D12GraphicsCommandList* command, Camera* camera, const PixelConstantBuffer& pixelCb)
 {
 	ID3D12DescriptorHeap* ppHeaps[] = { srvHeap.pDescriptorHeap.Get() };
@@ -441,7 +475,6 @@ void DeferredRenderer::CreateRTV()
 	resourceDesc.SampleDesc.Count = 1;
 	resourceDesc.SampleDesc.Quality = 0;
 	resourceDesc.MipLevels = 1;
-
 	resourceDesc.DepthOrArraySize = 1;
 	resourceDesc.Width = viewportWidth;
 	resourceDesc.Height = viewportHeight;
