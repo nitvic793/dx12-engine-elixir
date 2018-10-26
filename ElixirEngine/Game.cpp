@@ -19,7 +19,7 @@ void Game::InitializeAssets()
 	pixelCb.light.AmbientColor = XMFLOAT4(0.1f, 0.1f, 0.1f, 0);
 	pixelCb.light.DiffuseColor = XMFLOAT4(0.1f, 0.1f, 0.1f, 0.f);
 	pixelCb.light.Direction = XMFLOAT3(-1.f, 0.f, 1.f);
-	pixelCb.pointLight = PointLight{ {0.1f, 0.5f, 0.1f, 0.f} , {0.0f, 2.f, 0.f}, 0.f };
+	pixelCb.pointLight = PointLight{ {0.2f, 0.2f, 0.2f, 0.f} , {0.0f, 2.f, 0.f}, 10.f };
 
 	ResourceUploadBatch uploadBatch(device);
 	uploadBatch.Begin();
@@ -90,6 +90,8 @@ void Game::InitializeAssets()
 	deferredRenderer->SetSRV(skyboxIRTexture, DXGI_FORMAT_B8G8R8X8_UNORM, 4 * MATERIAL_COUNT + 1, true);
 	deferredRenderer->SetSRV(brdfLutTexture, DXGI_FORMAT_R8G8B8A8_UNORM, 4 * MATERIAL_COUNT + 2);
 
+	deferredRenderer->GeneratePreFilterEnvironmentMap(commandList, 4 * MATERIAL_COUNT);
+
 	entity1->SetMaterial(scratchedMaterial);
 	entity2->SetMaterial(woodenMaterial);
 	entity3->SetMaterial(cobblestoneMaterial);
@@ -115,8 +117,8 @@ void Game::Update()
 	entity1->SetPosition(pos);
 	entity2->SetPosition(XMFLOAT3(2, 0, 2));
 	entity3->SetPosition(XMFLOAT3(0, 0, 5));
-	float rotX = 2 * sin(totalTime);
-	entity1->SetRotation(XMFLOAT3(rotX, rotX, 0));
+	/*float rotX = 2 * sin(totalTime);
+	entity1->SetRotation(XMFLOAT3(rotX, rotX, 0));*/
 }
 
 void Game::Draw()
@@ -141,7 +143,7 @@ void Game::Draw()
 		entity1,
 		entity2,
 		entity3,
-		entity4}
+		entity4 }
 	);
 
 	deferredRenderer->SetLightShapePassPSO(commandList, pixelCb);

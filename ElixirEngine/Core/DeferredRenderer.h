@@ -102,15 +102,18 @@ public:
 	void ResetRenderTargetStates(ID3D12GraphicsCommandList* command);
 	void SetSRV(ID3D12Resource* textureSRV, DXGI_FORMAT format, int index, bool isTextureCube = false);
 	void SetIBLTextures(ID3D12Resource* irradianceTextureCube, ID3D12Resource* brdfLUTTexture);
+
 	void Initialize(ID3D12GraphicsCommandList* command);
-	void GeneratePreFilterEnvironmentMap(int envTextureIndex);
+	void GeneratePreFilterEnvironmentMap(ID3D12GraphicsCommandList* command, int envTextureIndex);
 	void SetGBUfferPSO(ID3D12GraphicsCommandList* command, Camera* camera, const PixelConstantBuffer& pixelCb);
 	void SetLightPassPSO(ID3D12GraphicsCommandList* command, const PixelConstantBuffer& pixelCb);
 	void SetLightShapePassPSO(ID3D12GraphicsCommandList* command, const PixelConstantBuffer& pixelCb);
+
 	void Draw(ID3D12GraphicsCommandList* commandList, std::vector<Entity*> entities);
 	void DrawSkybox(ID3D12GraphicsCommandList* commandList, D3D12_CPU_DESCRIPTOR_HANDLE &rtvHandle, int skyboxIndex);
 	void DrawLightPass(ID3D12GraphicsCommandList* commandList);
 	void DrawLightShapePass(ID3D12GraphicsCommandList* commandList, const PixelConstantBuffer & pixelCb);
+
 	void UpdateConstantBuffer(const PixelConstantBuffer& pixelBuffer, ID3D12GraphicsCommandList* command);
 	void UpdateConstantBufferPerObject(ConstantBuffer& buffer, int index);
 	CDescriptorHeapWrapper& GetSRVHeap();

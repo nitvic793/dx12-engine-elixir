@@ -27,9 +27,9 @@ void DeferredRenderer::SetSRV(ID3D12Resource* textureSRV, DXGI_FORMAT format, in
 	{
 		srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURECUBE;
 	}
-	
+
 	srvDesc.Texture2D.MipLevels = 1;
-	
+
 	//device->CreateShaderResourceView(textureSRV, &srvDesc, srvHeap.pDescriptorHeap.Get()->GetCPUDescriptorHandleForHeapStart());
 	device->CreateShaderResourceView(textureSRV, &srvDesc, srvHeap.handleCPU(index));
 }
@@ -67,10 +67,18 @@ void DeferredRenderer::Initialize(ID3D12GraphicsCommandList* command)
 	cubeMesh = new Mesh("../../Assets/cube.obj", device, command);
 }
 
-void DeferredRenderer::GeneratePreFilterEnvironmentMap(int envTextureIndex)
+void DeferredRenderer::GeneratePreFilterEnvironmentMap(ID3D12GraphicsCommandList* command, int envTextureIndex)
 {
+	XMFLOAT3 position = XMFLOAT3(0, 0, 0);
+	XMFLOAT4X4 camViewMatrix;
+	XMFLOAT4X4 camProjMatrix;
+	XMVECTOR tar[] = { XMVectorSet(1, 0, 0, 0), XMVectorSet(-1, 0, 0, 0), XMVectorSet(0, 1, 0, 0), XMVectorSet(0, -1, 0, 0), XMVectorSet(0, 0, 1, 0), XMVectorSet(0, 0, -1, 0) };
+	XMVECTOR up[] = { XMVectorSet(0, 1, 0, 0), XMVectorSet(0, 1, 0, 0), XMVectorSet(0, 0, -1, 0), XMVectorSet(0, 0, 1, 0), XMVectorSet(0, 1, 0, 0), XMVectorSet(0, 1, 0, 0) };
+
+	ID3D12Resource* prefilterTexture;
 	CDescriptorHeapWrapper preFilterRTVHeap;
 	preFilterRTVHeap.Create(device, D3D12_DESCRIPTOR_HEAP_TYPE_RTV, 6);
+	int maxMipLevels = 5;
 
 	D3D12_VIEWPORT viewport;
 	D3D12_RECT scissorRect;
@@ -89,16 +97,79 @@ void DeferredRenderer::GeneratePreFilterEnvironmentMap(int envTextureIndex)
 
 	D3D12_RESOURCE_DESC resourceDesc;
 	ZeroMemory(&resourceDesc, sizeof(resourceDesc));
-	resourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE3D;
+	resourceDesc.Dimension = D3D12_RESOURCE_DIMENSION::D3D12_RESOURCE_DIMENSION_TEXTURE2D;
 	resourceDesc.Alignment = 0;
 	resourceDesc.SampleDesc.Count = 1;
 	resourceDesc.SampleDesc.Quality = 0;
-	resourceDesc.MipLevels = 1;
-	resourceDesc.DepthOrArraySize = 1;
-	resourceDesc.Width = viewportWidth;
-	resourceDesc.Height = viewportHeight;
+	resourceDesc.MipLevels = maxMipLevels;
+	resourceDesc.DepthOrArraySize = 6;
+	resourceDesc.Width = 256;
+	resourceDesc.Height = 256;
 	resourceDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
 	resourceDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
+	resourceDesc.Format = DXGI_FORMAT::DXGI_FORMAT_R16G16B16A16_FLOAT;
+
+
+	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+	srvDesc.Format = DXGI_FORMAT_R16G16B16A16_FLOAT;
+	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURECUBE;
+	srvDesc.TextureCube.MipLevels = maxMipLevels;
+	srvDesc.TextureCube.MostDetailedMip = 0;
+
+	D3D12_CLEAR_VALUE clearVal;
+	clearVal.Color[0] = mClearColor[0];
+	clearVal.Color[1] = mClearColor[1];
+	clearVal.Color[2] = mClearColor[2];
+	clearVal.Color[3] = mClearColor[3];
+	clearVal.Format = DXGI_FORMAT::DXGI_FORMAT_R16G16B16A16_FLOAT;
+
+	CD3DX12_HEAP_PROPERTIES heapProperty(D3D12_HEAP_TYPE_DEFAULT);
+	device->CreateCommittedResource(&heapProperty, D3D12_HEAP_FLAG_NONE, &resourceDesc, D3D12_RESOURCE_STATE_RENDER_TARGET, &clearVal, IID_PPV_ARGS(&prefilterTexture));
+
+	D3D12_RENDER_TARGET_VIEW_DESC rtvDesc = {};
+	ZeroMemory(&rtvDesc, sizeof(rtvDesc));
+	rtvDesc.Texture2DArray.ArraySize = 1;
+	rtvDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2DARRAY;
+	rtvDesc.Format = DXGI_FORMAT_R16G16B16A16_FLOAT;
+
+	device->CreateShaderResourceView(prefilterTexture, &srvDesc, srvHeap.handleCPU(4 * MATERIAL_COUNT + 3)); //Need to change the CPU Handle index
+	for (int mip = 0; mip < maxMipLevels; ++mip)
+	{
+		float mipWidth = 256 * pow(0.5, mip);
+		float mipHeight = 256 * pow(0.5, mip);
+		rtvDesc.Texture2DArray.MipSlice = mip;
+
+		viewport.Width = mipWidth;
+		viewport.Height = mipHeight;
+
+		scissorRect.bottom = mipHeight;
+		scissorRect.right = mipWidth;
+
+		float roughness = (float)mip / (float)(maxMipLevels - 1);
+
+		for (int i = 0; i < 6; ++i)
+		{
+			rtvDesc.Texture2DArray.FirstArraySlice = i;
+			device->CreateRenderTargetView(prefilterTexture, &rtvDesc, preFilterRTVHeap.handleCPU(i));
+			// Camera
+			XMVECTOR dir = XMVector3Rotate(tar[i], XMQuaternionIdentity());
+			XMMATRIX view = DirectX::XMMatrixLookToLH(XMLoadFloat3(&position), dir, up[i]);
+			XMStoreFloat4x4(&camViewMatrix, DirectX::XMMatrixTranspose(view));
+
+			XMMATRIX P = DirectX::XMMatrixPerspectiveFovLH(0.5f * XM_PI, 1.0f, 0.1f, 100.0f);
+			XMStoreFloat4x4(&camProjMatrix, DirectX::XMMatrixTranspose(P));
+
+			command->OMSetRenderTargets(0, &preFilterRTVHeap.handleCPU(i), true, nullptr);
+			command->RSSetViewports(1, &viewport);
+			command->ClearRenderTargetView(preFilterRTVHeap.handleCPU(i), mClearColor, 0, nullptr);
+
+
+		}
+	}
+
+	preFilterRTVHeap.pDescriptorHeap->Release();
+	//prefilterTexture->Release();
 }
 
 void DeferredRenderer::SetGBUfferPSO(ID3D12GraphicsCommandList* command, Camera* camera, const PixelConstantBuffer& pixelCb)
@@ -211,7 +282,7 @@ void DeferredRenderer::DrawSkybox(ID3D12GraphicsCommandList * commandList, D3D12
 	commandList->SetDescriptorHeaps(1, ppSrvHeaps);
 	commandList->SetGraphicsRootDescriptorTable(2, srvHeap.handleGPU(skyboxIndex)); //Set skybox texture
 	commandList->SetDescriptorHeaps(1, ppHeaps);
-	
+
 	cbWrapper.CopyData(&cb, ConstantBufferPerObjectAlignedSize, constBufferIndex);
 	commandList->SetGraphicsRootDescriptorTable(0, cbHeap.handleGPU(constBufferIndex)); // set constant buffer with view and projection matrices
 	constBufferIndex++;
