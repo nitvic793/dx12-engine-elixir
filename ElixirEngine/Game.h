@@ -12,6 +12,7 @@ protected:
 	ID3D12Resource* skyboxTexture;
 	ID3D12Resource* skyboxIRTexture;
 	ID3D12Resource* brdfLutTexture;
+	ID3D12Resource* skyboxPreFilter;
 
 	Mesh*		sphereMesh;
 	Mesh*		cubeMesh;

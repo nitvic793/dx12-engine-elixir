@@ -39,8 +39,24 @@ Texture2D gLightShapePass: register(t5);
 Texture2D gDepth: register(t6);
 TextureCube skyIrradianceTexture: register(t7);
 Texture2D brdfLUTTexture: register(t8);
+TextureCube skyPrefilterTexture: register(t9);
 
 sampler basicSampler;
+
+float3 PrefilteredColor(float3 viewDir, float3 normal, float roughness)
+{
+	const float MAX_REF_LOD = 4.0f;
+	float3 R = reflect(-viewDir, normal);
+	return skyPrefilterTexture.SampleLevel(basicSampler, R, roughness * MAX_REF_LOD).rgb;
+}
+
+float2 BrdfLUT(float3 normal, float3 viewDir, float roughness)
+{
+	float NdotV = dot(normal, viewDir);
+	NdotV = max(NdotV, 0.0f);
+	float2 uv = float2(NdotV, roughness);
+	return brdfLUTTexture.Sample(basicSampler, uv).rg;
+}
 
 float4 main(VertexToPixel pIn) : SV_TARGET
 {
@@ -51,12 +67,17 @@ float4 main(VertexToPixel pIn) : SV_TARGET
 	float roughness = gRoughnessTexture.Sample(basicSampler, pIn.uv).r;
 	float metal = gMetalnessTexture.Sample(basicSampler, pIn.uv).r;
 
+	float3 viewDir = normalize(cameraPosition - worldPos);
+	float3 prefilter = PrefilteredColor(viewDir, normal, roughness);
+	float2 brdf = BrdfLUT(normal, viewDir, roughness);
 	float3 otherlights = gLightShapePass.Sample(basicSampler, pIn.uv).rgb;
 
 	float3 specColor = lerp(F0_NON_METAL.rrr, albedo.rgb, metal);
 	float3 irradiance = skyIrradianceTexture.Sample(basicSampler, normal).rgb;
 
-	float3 finalColor = DirLightPBR(dirLight, normalize(normal), worldPos, cameraPosition, roughness, metal, albedo, specColor, irradiance);
+	float3 finalColor = DirLightPBR(dirLight, normalize(normal), worldPos, 
+		cameraPosition, roughness, metal, albedo, 
+		specColor, irradiance, prefilter, brdf);
 	finalColor = finalColor / (finalColor + float3(1.f, 1.f, 1.f));
 	float3 totalColor = finalColor + otherlights;
 	float3 gammaCorrect = pow(totalColor, 1.0 / 2.2); 

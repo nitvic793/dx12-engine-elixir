@@ -23,9 +23,10 @@ void Game::InitializeAssets()
 
 	ResourceUploadBatch uploadBatch(device);
 	uploadBatch.Begin();
-	CreateDDSTextureFromFile(device, uploadBatch, L"../../Assets/skybox3.dds", &skyboxTexture);
-	CreateDDSTextureFromFile(device, uploadBatch, L"../../Assets/skybox3IR.dds", &skyboxIRTexture);
-	CreateWICTextureFromFile(device, uploadBatch, L"../../Assets/ibl_brdf_lut.png", &brdfLutTexture);
+	CreateDDSTextureFromFile(device, uploadBatch, L"../../Assets/envEnvHDR.dds", &skyboxTexture);
+	CreateDDSTextureFromFile(device, uploadBatch, L"../../Assets/envDiffuseHDR.dds", &skyboxIRTexture);
+	CreateDDSTextureFromFile(device, uploadBatch, L"../../Assets/envBrdf.dds", &brdfLutTexture);
+	CreateDDSTextureFromFile(device, uploadBatch, L"../../Assets/envSpecularHDR.dds", &skyboxPreFilter);
 	auto uploadOperation = uploadBatch.End(commandQueue);
 	uploadOperation.wait();
 
@@ -35,10 +36,10 @@ void Game::InitializeAssets()
 	scratchedMaterial = new Material(
 		deferredRenderer->GetSRVHeap(),
 		{
-			L"../../Assets/Textures/scratched_albedo.png" ,
-			L"../../Assets/Textures/scratched_normals.png" ,
-			L"../../Assets/Textures/scratched_roughness.png" ,
-			L"../../Assets/Textures/scratched_metal.png"
+			L"../../Assets/Textures/floor_albedo.png" ,
+			L"../../Assets/Textures/floor_normals.png" ,
+			L"../../Assets/Textures/floor_roughness.png" ,
+			L"../../Assets/Textures/floor_metal.png"
 		},
 		device,
 		commandQueue,
@@ -84,11 +85,12 @@ void Game::InitializeAssets()
 		3 * MATERIAL_COUNT
 	);
 
-	deferredRenderer->SetIBLTextures(skyboxIRTexture, brdfLutTexture);
+	deferredRenderer->SetIBLTextures(skyboxIRTexture, skyboxPreFilter, brdfLutTexture);
 
-	deferredRenderer->SetSRV(skyboxTexture, DXGI_FORMAT_B8G8R8X8_UNORM, 4 * MATERIAL_COUNT, true);
-	deferredRenderer->SetSRV(skyboxIRTexture, DXGI_FORMAT_B8G8R8X8_UNORM, 4 * MATERIAL_COUNT + 1, true);
-	deferredRenderer->SetSRV(brdfLutTexture, DXGI_FORMAT_R8G8B8A8_UNORM, 4 * MATERIAL_COUNT + 2);
+	deferredRenderer->SetSRV(skyboxTexture, DXGI_FORMAT_R32G32B32A32_FLOAT, 4 * MATERIAL_COUNT, true);
+	deferredRenderer->SetSRV(skyboxIRTexture, DXGI_FORMAT_R32G32B32A32_FLOAT, 4 * MATERIAL_COUNT + 1, true);
+	deferredRenderer->SetSRV(brdfLutTexture, DXGI_FORMAT_R32G32B32A32_FLOAT, 4 * MATERIAL_COUNT + 2);
+	deferredRenderer->SetSRV(skyboxPreFilter, DXGI_FORMAT_R32G32B32A32_FLOAT, 4 * MATERIAL_COUNT + 3);
 
 	//deferredRenderer->GeneratePreFilterEnvironmentMap(commandList, 4 * MATERIAL_COUNT);
 
@@ -110,8 +112,11 @@ void Game::Initialize()
 	EndInitialization();
 }
 
+float CurrentTime = 0.f;
+
 void Game::Update()
 {
+	CurrentTime += deltaTime;
 	camera->Update(deltaTime);
 	auto pos = XMFLOAT3(-2, 0, 2);
 	entity1->SetPosition(pos);
@@ -123,7 +128,7 @@ void Game::Update()
 
 void Game::Draw()
 {
-	deferredRenderer->GeneratePreFilterEnvironmentMap(commandList, 4 * MATERIAL_COUNT); // Remove once done.
+	//deferredRenderer->GeneratePreFilterEnvironmentMap(commandList, 4 * MATERIAL_COUNT); // Remove once done.
 	CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(rtvDescriptorHeap->GetCPUDescriptorHandleForHeapStart(), frameIndex, rtvDescriptorSize);
 	CD3DX12_CPU_DESCRIPTOR_HANDLE dsvHandle(dsDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
 	commandList->OMSetRenderTargets(1, &rtvHandle, FALSE, &dsvHandle);

@@ -2,6 +2,11 @@
 #include "ShaderManager.h"
 #include "Vertex.h"
 
+struct PrefilterPixelConstBuffer
+{
+	float roughness;
+};
+
 DeferredRenderer::DeferredRenderer(ID3D12Device* dxDevice, int width, int height) :
 	device(dxDevice),
 	viewportHeight(height),
@@ -36,22 +41,29 @@ void DeferredRenderer::SetSRV(ID3D12Resource* textureSRV, DXGI_FORMAT format, in
 	device->CreateShaderResourceView(textureSRV, &srvDesc, srvHeap.handleCPU(index));
 }
 
-void DeferredRenderer::SetIBLTextures(ID3D12Resource* irradianceTextureCube, ID3D12Resource* brdfLUTTexture)
+void DeferredRenderer::SetIBLTextures(ID3D12Resource* irradianceTextureCube, ID3D12Resource* prefilterTextureCube, ID3D12Resource* brdfLUTTexture)
 {
 	int irradianceIndex = numRTV + 1;
 	int brdfTextureIndex = numRTV + 2;
+	int prefilterIndex = numRTV + 3;
 
 	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
 	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-	srvDesc.Format = DXGI_FORMAT_B8G8R8X8_UNORM;
+	srvDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
 	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURECUBE;
 	srvDesc.Texture2D.MipLevels = 1;
 
 	device->CreateShaderResourceView(irradianceTextureCube, &srvDesc, gBufferHeap.handleCPU(irradianceIndex));
+	
 
 	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-	srvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+	srvDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
 	device->CreateShaderResourceView(brdfLUTTexture, &srvDesc, gBufferHeap.handleCPU(brdfTextureIndex));
+
+	srvDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
+	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURECUBE;
+	srvDesc.Texture2D.MipLevels = 5;
+	device->CreateShaderResourceView(prefilterTextureCube, &srvDesc, gBufferHeap.handleCPU(prefilterIndex));
 }
 
 void DeferredRenderer::Initialize(ID3D12GraphicsCommandList* command)
@@ -357,28 +369,30 @@ void DeferredRenderer::CreateCB()
 	resourceDesc.MipLevels = 1;
 	resourceDesc.Format = DXGI_FORMAT_UNKNOWN;
 	resourceDesc.DepthOrArraySize = 1;
-	resourceDesc.Width = 1024 * 64;
+	resourceDesc.Width = 1024 * 128;
 	resourceDesc.Height = 1;
 	resourceDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
 
 	device->CreateCommittedResource(&heapProperty, D3D12_HEAP_FLAG_NONE, &resourceDesc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(&worldViewCB));
 
-	resourceDesc.Width = 1024 * 64;
+	resourceDesc.Width = 1024 * 128;
 	device->CreateCommittedResource(&heapProperty, D3D12_HEAP_FLAG_NONE, &resourceDesc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(&lightCB));
 }
 
 void DeferredRenderer::CreateViews()
 {
 	gBufferHeap.Create(device, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 32, true);
-	cbHeap.Create(device, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 32, true);
-	pixelCbHeap.Create(device, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 32, true);
+
+	const int numCBsForNow = 32;
+	cbHeap.Create(device, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, numCBsForNow, true);
+	pixelCbHeap.Create(device, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, numCBsForNow, true);
 
 	//Camera CBV
 	D3D12_CONSTANT_BUFFER_VIEW_DESC	descBuffer;
 	descBuffer.BufferLocation = worldViewCB->GetGPUVirtualAddress();
 	descBuffer.SizeInBytes = ConstantBufferSize;
 
-	const int numCBsForNow = 32;
+
 	for (int i = 0; i < numCBsForNow; ++i)
 	{
 		descBuffer.BufferLocation = worldViewCB->GetGPUVirtualAddress() + i * ConstantBufferSize;
@@ -531,7 +545,7 @@ void DeferredRenderer::CreatePrefilterResources(ID3D12GraphicsCommandList* comma
 	rtvDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2DARRAY;
 	rtvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
 
-	int srvIndex = 4 * MATERIAL_COUNT + 3;
+	int srvIndex = 4 * MATERIAL_COUNT + 4;
 	//Need to change the CPU Handle index
 
 	for (int mip = 0; mip < maxMipLevels; ++mip)
@@ -760,7 +774,7 @@ void DeferredRenderer::CreateRootSignature()
 	//light dependent CBV
 	range[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0);
 	//G-Buffer inputs
-	range[2].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 8, 0);
+	range[2].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 10, 0);
 
 	CD3DX12_ROOT_PARAMETER rootParameters[3];
 	rootParameters[0].InitAsDescriptorTable(1, &range[0], D3D12_SHADER_VISIBILITY_VERTEX);
