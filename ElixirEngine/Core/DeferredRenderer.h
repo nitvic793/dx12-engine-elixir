@@ -43,6 +43,7 @@ class DeferredRenderer
 	int constBufferIndex = 0;
 	ID3D12RootSignature* rootSignature;
 
+	bool rtvCreated[6];
 	ID3D12Resource* gBufferTextures[numRTV];
 	ID3D12Resource* depthStencilTexture;
 

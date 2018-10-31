@@ -56,6 +56,7 @@ void DeferredRenderer::SetIBLTextures(ID3D12Resource* irradianceTextureCube, ID3
 
 void DeferredRenderer::Initialize(ID3D12GraphicsCommandList* command)
 {
+	memset(&rtvCreated, 0, 6 * sizeof(bool));
 	CreateCB();
 	CreateViews();
 	CreateRootSignature();
@@ -74,7 +75,7 @@ void DeferredRenderer::Initialize(ID3D12GraphicsCommandList* command)
 void DeferredRenderer::GeneratePreFilterEnvironmentMap(ID3D12GraphicsCommandList* command, int envTextureIndex)
 {
 	//	TODO: Needs depth stencil state
-	//	TODO: State resource transition for vertex and constant buffer? Check D3D12 error message.
+	// TODO: Separate Initialization code for Prefilter Env Map
 	XMFLOAT3 position = XMFLOAT3(0, 0, 0);
 	XMFLOAT4X4 camViewMatrix;
 	XMFLOAT4X4 camProjMatrix;
@@ -162,7 +163,11 @@ void DeferredRenderer::GeneratePreFilterEnvironmentMap(ID3D12GraphicsCommandList
 		for (int i = 0; i < 6; ++i)
 		{
 			rtvDesc.Texture2DArray.FirstArraySlice = i;
-			device->CreateRenderTargetView(prefilterTexture, &rtvDesc, preFilterRTVHeap.handleCPU(i));
+			if (!rtvCreated[i])
+			{
+				//rtvCreated[i] = true;
+				device->CreateRenderTargetView(prefilterTexture, &rtvDesc, preFilterRTVHeap.handleCPU(i)); //Memory Leak, don't create here. Create in init code
+			}
 			// Camera
 			XMVECTOR dir = XMVector3Rotate(tar[i], XMQuaternionIdentity());
 			XMMATRIX view = DirectX::XMMatrixLookToLH(XMLoadFloat3(&position), dir, up[i]);
@@ -173,7 +178,7 @@ void DeferredRenderer::GeneratePreFilterEnvironmentMap(ID3D12GraphicsCommandList
 			XMFLOAT4X4 identity;
 			XMStoreFloat4x4(&identity, XMMatrixTranspose(XMMatrixIdentity()));
 
-			command->OMSetRenderTargets(0, &preFilterRTVHeap.handleCPU(i), true, nullptr);
+			command->OMSetRenderTargets(0, &preFilterRTVHeap.handleCPU(i), true, &dsvHeap.handleCPU(0));
 			command->RSSetViewports(1, &viewport);
 			command->RSSetScissorRects(1, &scissorRect);
 			command->ClearRenderTargetView(preFilterRTVHeap.handleCPU(i), mClearColor, 0, nullptr);
@@ -493,7 +498,7 @@ void DeferredRenderer::CreatePrefilterEnvironmentPSO()
 
 	auto rasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
 	rasterizerState.DepthClipEnable = true;
-	rasterizerState.CullMode = D3D12_CULL_MODE_FRONT;
+	rasterizerState.CullMode = D3D12_CULL_MODE_NONE;
 	rasterizerState.FillMode = D3D12_FILL_MODE_SOLID;
 
 	descPipelineState.VS = ShaderManager::LoadShader(L"SkyboxVS.cso");
