@@ -46,6 +46,7 @@ class DeferredRenderer
 	bool rtvCreated[6];
 	ID3D12Resource* gBufferTextures[numRTV];
 	ID3D12Resource* depthStencilTexture;
+	ID3D12Resource* prefilterTexture;
 
 	ID3D12PipelineState* deferredPSO;
 	ID3D12PipelineState* dirLightPassPSO;
@@ -53,6 +54,7 @@ class DeferredRenderer
 	ID3D12PipelineState* skyboxPSO;
 	ID3D12PipelineState* prefilterEnvMapPSO;
 
+	CDescriptorHeapWrapper prefilterRTVHeap;
 	CDescriptorHeapWrapper rtvHeap;
 	CDescriptorHeapWrapper dsvHeap;
 	CDescriptorHeapWrapper srvHeap;
@@ -94,6 +96,7 @@ class DeferredRenderer
 	void CreateViews();
 	void CreatePSO();
 	void CreatePrefilterEnvironmentPSO();
+	void CreatePrefilterResources(ID3D12GraphicsCommandList* command);
 	void CreateSkyboxPSO();
 	void CreateLightPassPSO();
 	void CreateRTV();
