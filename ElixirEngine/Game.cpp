@@ -23,8 +23,8 @@ void Game::InitializeAssets()
 
 	ResourceUploadBatch uploadBatch(device);
 	uploadBatch.Begin();
-	CreateDDSTextureFromFile(device, uploadBatch, L"../../Assets/skybox2.dds", &skyboxTexture);
-	CreateDDSTextureFromFile(device, uploadBatch, L"../../Assets/skybox2IR.dds", &skyboxIRTexture);
+	CreateDDSTextureFromFile(device, uploadBatch, L"../../Assets/skybox3.dds", &skyboxTexture);
+	CreateDDSTextureFromFile(device, uploadBatch, L"../../Assets/skybox3IR.dds", &skyboxIRTexture);
 	CreateWICTextureFromFile(device, uploadBatch, L"../../Assets/ibl_brdf_lut.png", &brdfLutTexture);
 	auto uploadOperation = uploadBatch.End(commandQueue);
 	uploadOperation.wait();

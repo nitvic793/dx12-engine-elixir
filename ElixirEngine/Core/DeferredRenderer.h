@@ -50,6 +50,7 @@ class DeferredRenderer
 	ID3D12PipelineState* dirLightPassPSO;
 	ID3D12PipelineState* shapeLightPassPSO;
 	ID3D12PipelineState* skyboxPSO;
+	ID3D12PipelineState* prefilterEnvMapPSO;
 
 	CDescriptorHeapWrapper rtvHeap;
 	CDescriptorHeapWrapper dsvHeap;
@@ -91,6 +92,7 @@ class DeferredRenderer
 	void CreateCB();
 	void CreateViews();
 	void CreatePSO();
+	void CreatePrefilterEnvironmentPSO();
 	void CreateSkyboxPSO();
 	void CreateLightPassPSO();
 	void CreateRTV();

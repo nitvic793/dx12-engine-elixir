@@ -14,6 +14,8 @@ void DeferredRenderer::ResetRenderTargetStates(ID3D12GraphicsCommandList* comman
 {
 	for (int i = 0; i < numRTV; i++)
 		command->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(gBufferTextures[i], D3D12_RESOURCE_STATE_GENERIC_READ, D3D12_RESOURCE_STATE_RENDER_TARGET));
+
+	constBufferIndex = 0;
 }
 
 void DeferredRenderer::SetSRV(ID3D12Resource* textureSRV, DXGI_FORMAT format, int index, bool isTextureCube)
@@ -57,9 +59,11 @@ void DeferredRenderer::Initialize(ID3D12GraphicsCommandList* command)
 	CreateCB();
 	CreateViews();
 	CreateRootSignature();
+
 	CreatePSO();
 	CreateSkyboxPSO();
 	CreateLightPassPSO();
+	CreatePrefilterEnvironmentPSO();
 
 	CreateRTV();
 	CreateDSV();
@@ -69,6 +73,8 @@ void DeferredRenderer::Initialize(ID3D12GraphicsCommandList* command)
 
 void DeferredRenderer::GeneratePreFilterEnvironmentMap(ID3D12GraphicsCommandList* command, int envTextureIndex)
 {
+	//	TODO: Needs depth stencil state
+	//	TODO: State resource transition for vertex and constant buffer? Check D3D12 error message.
 	XMFLOAT3 position = XMFLOAT3(0, 0, 0);
 	XMFLOAT4X4 camViewMatrix;
 	XMFLOAT4X4 camProjMatrix;
@@ -133,11 +139,16 @@ void DeferredRenderer::GeneratePreFilterEnvironmentMap(ID3D12GraphicsCommandList
 	rtvDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2DARRAY;
 	rtvDesc.Format = DXGI_FORMAT_R16G16B16A16_FLOAT;
 
-	device->CreateShaderResourceView(prefilterTexture, &srvDesc, srvHeap.handleCPU(4 * MATERIAL_COUNT + 3)); //Need to change the CPU Handle index
+	int srvIndex = 4 * MATERIAL_COUNT + 3;
+	device->CreateShaderResourceView(prefilterTexture, &srvDesc, srvHeap.handleCPU(srvIndex)); //Need to change the CPU Handle index
+	command->SetGraphicsRootSignature(rootSignature);
+	command->SetPipelineState(prefilterEnvMapPSO);
+	command->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
 	for (int mip = 0; mip < maxMipLevels; ++mip)
 	{
-		float mipWidth = 256 * pow(0.5, mip);
-		float mipHeight = 256 * pow(0.5, mip);
+		float mipWidth = 256 * pow(0.5f, mip);
+		float mipHeight = 256 * pow(0.5f, mip);
 		rtvDesc.Texture2DArray.MipSlice = mip;
 
 		viewport.Width = mipWidth;
@@ -147,7 +158,7 @@ void DeferredRenderer::GeneratePreFilterEnvironmentMap(ID3D12GraphicsCommandList
 		scissorRect.right = mipWidth;
 
 		float roughness = (float)mip / (float)(maxMipLevels - 1);
-
+		constBufferIndex = 0;
 		for (int i = 0; i < 6; ++i)
 		{
 			rtvDesc.Texture2DArray.FirstArraySlice = i;
@@ -159,16 +170,35 @@ void DeferredRenderer::GeneratePreFilterEnvironmentMap(ID3D12GraphicsCommandList
 
 			XMMATRIX P = DirectX::XMMatrixPerspectiveFovLH(0.5f * XM_PI, 1.0f, 0.1f, 100.0f);
 			XMStoreFloat4x4(&camProjMatrix, DirectX::XMMatrixTranspose(P));
+			XMFLOAT4X4 identity;
+			XMStoreFloat4x4(&identity, XMMatrixTranspose(XMMatrixIdentity()));
 
 			command->OMSetRenderTargets(0, &preFilterRTVHeap.handleCPU(i), true, nullptr);
 			command->RSSetViewports(1, &viewport);
+			command->RSSetScissorRects(1, &scissorRect);
 			command->ClearRenderTargetView(preFilterRTVHeap.handleCPU(i), mClearColor, 0, nullptr);
 
+			ID3D12DescriptorHeap* ppSrvHeaps[] = { srvHeap.pDescriptorHeap.Get() };
+			ID3D12DescriptorHeap* ppCbHeaps[] = { cbHeap.pDescriptorHeap.Get() };
 
+			auto cb = ConstantBuffer{
+				identity,
+				identity,
+				camViewMatrix,
+				camProjMatrix
+			};
+
+			cbWrapper.CopyData(&cb, ConstantBufferSize, i);
+			command->SetDescriptorHeaps(1, ppCbHeaps);
+			command->SetGraphicsRootDescriptorTable(0, cbHeap.handleGPU(i));
+			command->SetDescriptorHeaps(1, ppSrvHeaps);
+			command->SetGraphicsRootDescriptorTable(2, srvHeap.handleGPU(envTextureIndex));
+			Draw(cubeMesh, cb, command);
+			constBufferIndex++;
 		}
 	}
 
-	preFilterRTVHeap.pDescriptorHeap->Release();
+	//preFilterRTVHeap.pDescriptorHeap->Release();
 	//prefilterTexture->Release();
 }
 
@@ -259,7 +289,7 @@ void DeferredRenderer::Draw(ID3D12GraphicsCommandList* commandList, std::vector<
 		Draw(e->GetMesh(), cb, commandList);
 		index++;
 	}
-	constBufferIndex = index;
+	constBufferIndex += index;
 }
 
 void DeferredRenderer::DrawSkybox(ID3D12GraphicsCommandList * commandList, D3D12_CPU_DESCRIPTOR_HANDLE &rtvHandle, int skyboxIndex)
@@ -441,6 +471,47 @@ void DeferredRenderer::CreatePSO()
 	descPipelineState.DSVFormat = mDsvFormat;
 	descPipelineState.SampleDesc.Count = 1;
 	device->CreateGraphicsPipelineState(&descPipelineState, IID_PPV_ARGS(&deferredPSO));
+}
+
+void DeferredRenderer::CreatePrefilterEnvironmentPSO()
+{
+	// Almost same as skybox PSO except the pixel shader is for prefilter env map.
+	D3D12_INPUT_ELEMENT_DESC inputLayout[] =
+	{
+		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+		{ "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 20, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+		{ "TANGENT", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 32, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
+	};
+
+	D3D12_GRAPHICS_PIPELINE_STATE_DESC descPipelineState;
+	ZeroMemory(&descPipelineState, sizeof(descPipelineState));
+	auto depthStencilState = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
+	depthStencilState.DepthEnable = true;
+	depthStencilState.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
+	depthStencilState.DepthFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;
+
+	auto rasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
+	rasterizerState.DepthClipEnable = true;
+	rasterizerState.CullMode = D3D12_CULL_MODE_FRONT;
+	rasterizerState.FillMode = D3D12_FILL_MODE_SOLID;
+
+	descPipelineState.VS = ShaderManager::LoadShader(L"SkyboxVS.cso");
+	descPipelineState.PS = ShaderManager::LoadShader(L"PrefilterEnvMapPS.cso");
+	descPipelineState.InputLayout.pInputElementDescs = inputLayout;
+	descPipelineState.InputLayout.NumElements = _countof(inputLayout);
+	descPipelineState.pRootSignature = rootSignature;
+	descPipelineState.DepthStencilState = depthStencilState;
+	descPipelineState.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
+	descPipelineState.RasterizerState = rasterizerState;
+	descPipelineState.SampleMask = UINT_MAX;
+	descPipelineState.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+	descPipelineState.NumRenderTargets = 1;
+	descPipelineState.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
+	descPipelineState.SampleDesc.Count = 1;
+	descPipelineState.DSVFormat = mDsvFormat;
+
+	device->CreateGraphicsPipelineState(&descPipelineState, IID_PPV_ARGS(&prefilterEnvMapPSO));
 }
 
 void DeferredRenderer::CreateSkyboxPSO()
@@ -690,6 +761,7 @@ DeferredRenderer::~DeferredRenderer()
 	dirLightPassPSO->Release();
 	shapeLightPassPSO->Release();
 	skyboxPSO->Release();
+	prefilterEnvMapPSO->Release();
 
 	rtvHeap.pDescriptorHeap->Release();
 	dsvHeap.pDescriptorHeap->Release();
