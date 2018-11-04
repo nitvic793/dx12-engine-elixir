@@ -410,6 +410,7 @@ void Core::Cleanup()
 		WaitForPreviousFrame();
 	}
 
+	delete deferredRenderer;
 	// get swapchain out of full screen before exiting
 	BOOL fs = false;
 	if (swapChain->GetFullscreenState(&fs, NULL))
@@ -435,10 +436,10 @@ void Core::Cleanup()
 	//indexBuffer->Release();
 	depthStencilBuffer->Release();
 	dsDescriptorHeap->Release();
-
-	//textureBufferUploadHeap->Release();
-	delete deferredRenderer;
 	commandQueue->Release();
+	//textureBufferUploadHeap->Release();
+
+
 }
 
 void Core::WaitForPreviousFrame()

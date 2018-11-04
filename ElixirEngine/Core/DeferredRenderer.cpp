@@ -653,6 +653,7 @@ void DeferredRenderer::CreateLightPassPSO()
 	descPipelineState.PS = ShaderManager::LoadShader(L"LightShapePassPS.cso");
 	descPipelineState.InputLayout.pInputElementDescs = inputLayout;
 	descPipelineState.RasterizerState = rasterizer;
+	descPipelineState.RTVFormats[0] = DXGI_FORMAT_R32G32B32A32_FLOAT;
 	descPipelineState.InputLayout.NumElements = _countof(inputLayout);
 	device->CreateGraphicsPipelineState(&descPipelineState, IID_PPV_ARGS(&shapeLightPassPSO));
 

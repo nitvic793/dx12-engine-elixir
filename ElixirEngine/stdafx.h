@@ -17,6 +17,7 @@
 #include "DirectXTex.h"
 #include "ResourceUploadBatch.h"
 #include "DirectXHelpers.h"
+#include <dxgidebug.h>
 
 using namespace DirectX;
 

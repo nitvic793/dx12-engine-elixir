@@ -213,7 +213,7 @@ Game::~Game()
 	skyboxTexture->Release();
 	skyboxIRTexture->Release();
 	brdfLutTexture->Release();
-
+	skyboxPreFilter->Release();
 	//textureBuffer->Release();
 	//normalTexture->Release();
 	//roughnessTexture->Release();
