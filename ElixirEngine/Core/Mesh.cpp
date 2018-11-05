@@ -192,7 +192,7 @@ void Mesh::Initialize(Vertex* vertices, UINT vertexCount, UINT * indices, UINT i
 	vertexBuffer->SetName(L"Vertex Buffer Resource Heap");
 
 	// create upload heap
-	ID3D12Resource* vBufferUploadHeap;
+	
 	device->CreateCommittedResource(
 		&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD), // upload heap
 		D3D12_HEAP_FLAG_NONE, // no flags
@@ -227,7 +227,6 @@ void Mesh::Initialize(Vertex* vertices, UINT vertexCount, UINT * indices, UINT i
 	indexBuffer->SetName(L"Index Buffer Resource Heap");
 
 	// create upload heap to upload index buffer
-	ID3D12Resource* iBufferUploadHeap;
 	device->CreateCommittedResource(
 		&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD), // upload heap
 		D3D12_HEAP_FLAG_NONE, // no flags
@@ -341,4 +340,7 @@ Mesh::~Mesh()
 {
 	vertexBuffer->Release();
 	indexBuffer->Release();
+
+	iBufferUploadHeap->Release();
+	vBufferUploadHeap->Release();
 }

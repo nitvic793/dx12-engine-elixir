@@ -48,15 +48,10 @@ protected:
 	ID3D12RootSignature* rootSignature; // root signature defines data shaders will access
 	D3D12_VIEWPORT viewport;
 	D3D12_RECT scissorRect; // the area to draw in. pixels outside that area will not be drawn onto
-	ID3D12Resource* vertexBuffer; 
-	D3D12_VERTEX_BUFFER_VIEW vertexBufferView;
-	ID3D12Resource* indexBuffer; 
-	D3D12_INDEX_BUFFER_VIEW indexBufferView; 
 	ID3D12Resource* depthStencilBuffer; 
 	ID3D12DescriptorHeap* dsDescriptorHeap; // heap for depth stencil buffer descriptor
 
 	ID3D12DescriptorHeap* mainDescriptorHeap;
-	ID3D12Resource* textureBufferUploadHeap;
 	ID3D12Resource* constantBufferUploadHeap[FRAMEBUFFERCOUNT]; // this is the memory on the gpu where our constant buffer will be placed.
 
 	double perfCounterSeconds;
@@ -72,12 +67,9 @@ protected:
 
 	void UpdateTimer();
 
-	ConstantBuffer cbPerObject; // this is the constant buffer data we will send to the gpu 
 	PixelConstantBuffer pixelCb;
 
 	DeferredRenderer* deferredRenderer;
-
-
 
 	int ConstantBufferPerObjectAlignedSize = (sizeof(ConstantBuffer) + 255) & ~255;
 

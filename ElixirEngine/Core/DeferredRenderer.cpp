@@ -68,7 +68,6 @@ void DeferredRenderer::SetIBLTextures(ID3D12Resource* irradianceTextureCube, ID3
 
 void DeferredRenderer::Initialize(ID3D12GraphicsCommandList* command)
 {
-	memset(&rtvCreated, 0, 6 * sizeof(bool));
 	CreateCB();
 	CreateViews();
 	CreateRootSignature();
@@ -823,6 +822,7 @@ DeferredRenderer::~DeferredRenderer()
 	shapeLightPassPSO->Release();
 	skyboxPSO->Release();
 	prefilterEnvMapPSO->Release();
+
 	prefilterRTVHeap.pDescriptorHeap->Release();
 	prefilterTexture->Release();
 	lightCB->Release();

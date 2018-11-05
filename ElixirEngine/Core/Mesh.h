@@ -6,6 +6,8 @@ class Mesh
 {
 	ID3D12Resource* vertexBuffer;
 	ID3D12Resource* indexBuffer;
+	ID3D12Resource* vBufferUploadHeap;
+	ID3D12Resource* iBufferUploadHeap;
 	UINT vBufferSize;
 	UINT iBufferSize;
 	ID3D12Device* device;
