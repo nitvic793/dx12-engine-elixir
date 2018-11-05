@@ -36,10 +36,22 @@ public:
 	}
 };
 
+enum GBufferRenderTargetOrder
+{
+	RTV_ORDER_ALBEDO = 0,
+	RTV_ORDER_NORMAL,
+	RTV_ORDER_WORLDPOS,
+	RTV_ORDER_ROUGHNESS,
+	RTV_ORDER_METALNESS,
+	RTV_ORDER_LIGHTSHAPE,
+	RTV_ORDER_QUAD,
+	RTV_ORDER_COUNT
+};
+
 class DeferredRenderer
 {
 	ID3D12Device *device;
-	const static int numRTV = 6;
+	const static int numRTV = 7;
 	int constBufferIndex = 0;
 	ID3D12RootSignature* rootSignature;
 
@@ -50,6 +62,7 @@ class DeferredRenderer
 	ID3D12PipelineState* deferredPSO;
 	ID3D12PipelineState* dirLightPassPSO;
 	ID3D12PipelineState* shapeLightPassPSO;
+	ID3D12PipelineState* screenQuadPSO;
 	ID3D12PipelineState* skyboxPSO;
 	ID3D12PipelineState* prefilterEnvMapPSO;
 
@@ -80,7 +93,8 @@ class DeferredRenderer
 		DXGI_FORMAT_R32G32B32A32_FLOAT, //WorldPos
 		DXGI_FORMAT_R11G11B10_FLOAT, //Roughness
 		DXGI_FORMAT_R8_UNORM, //Metalness
-		DXGI_FORMAT_R32G32B32A32_FLOAT //LightShape
+		DXGI_FORMAT_R32G32B32A32_FLOAT, //LightShape
+		DXGI_FORMAT_R32G32B32A32_FLOAT //Result
 	};
 	float mClearColor[4] = { 0.0,0.0f,0.0f,1.0f };
 	float mClearDepth = 1.0f;
@@ -98,6 +112,7 @@ class DeferredRenderer
 	void CreatePrefilterResources(ID3D12GraphicsCommandList* command);
 	void CreateSkyboxPSO();
 	void CreateLightPassPSO();
+	void CreateScreenQuadPSO();
 	void CreateRTV();
 	void CreateDSV();
 	void CreateRootSignature();
@@ -118,6 +133,7 @@ public:
 	void DrawSkybox(ID3D12GraphicsCommandList* commandList, D3D12_CPU_DESCRIPTOR_HANDLE &rtvHandle, int skyboxIndex);
 	void DrawLightPass(ID3D12GraphicsCommandList* commandList);
 	void DrawLightShapePass(ID3D12GraphicsCommandList* commandList, const PixelConstantBuffer & pixelCb);
+	void DrawResult(ID3D12GraphicsCommandList* commandList, D3D12_CPU_DESCRIPTOR_HANDLE &rtvHandle);
 
 	void UpdateConstantBuffer(const PixelConstantBuffer& pixelBuffer, ID3D12GraphicsCommandList* command);
 	void UpdateConstantBufferPerObject(ConstantBuffer& buffer, int index);

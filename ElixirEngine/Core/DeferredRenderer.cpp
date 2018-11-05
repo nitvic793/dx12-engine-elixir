@@ -43,6 +43,7 @@ void DeferredRenderer::SetSRV(ID3D12Resource* textureSRV, DXGI_FORMAT format, in
 
 void DeferredRenderer::SetIBLTextures(ID3D12Resource* irradianceTextureCube, ID3D12Resource* prefilterTextureCube, ID3D12Resource* brdfLUTTexture)
 {
+	// numRTV is reserved for Depth Target
 	int irradianceIndex = numRTV + 1;
 	int brdfTextureIndex = numRTV + 2;
 	int prefilterIndex = numRTV + 3;
@@ -75,6 +76,7 @@ void DeferredRenderer::Initialize(ID3D12GraphicsCommandList* command)
 	CreatePSO();
 	CreateSkyboxPSO();
 	CreateLightPassPSO();
+	CreateScreenQuadPSO();
 	CreatePrefilterEnvironmentPSO();
 
 	CreateRTV();
@@ -202,7 +204,11 @@ void DeferredRenderer::SetLightPassPSO(ID3D12GraphicsCommandList * command, cons
 	/*for (int i = 0; i < numRTV; i++)
 		command->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(gBufferTextures[i], D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_GENERIC_READ));*/
 		//command->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(depthStencilTexture, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_GENERIC_READ));
+	command->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(gBufferTextures[RTV_ORDER_QUAD], D3D12_RESOURCE_STATE_GENERIC_READ, D3D12_RESOURCE_STATE_RENDER_TARGET));
 	command->SetPipelineState(dirLightPassPSO);
+
+	//command->ClearRenderTargetView(rtvHeap.handleCPU(RTV_ORDER_QUAD), mClearColor, 0, nullptr);
+	command->OMSetRenderTargets(1, &rtvHeap.handleCPU(RTV_ORDER_QUAD), true, nullptr);
 
 	ID3D12DescriptorHeap* ppHeap2[] = { pixelCbHeap.pDescriptorHeap.Get() };
 	command->SetDescriptorHeaps(1, ppHeap2);
@@ -217,11 +223,11 @@ void DeferredRenderer::SetLightShapePassPSO(ID3D12GraphicsCommandList * command,
 	for (int i = 0; i < numRTV; i++)
 		command->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(gBufferTextures[i], D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_GENERIC_READ));
 
-	// (numRTV - 1)th texture and RTV is being used to store the light shape pass
-	command->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(gBufferTextures[numRTV - 1], D3D12_RESOURCE_STATE_GENERIC_READ, D3D12_RESOURCE_STATE_RENDER_TARGET));
+	// (numRTV - 2)th texture and RTV is being used to store the light shape pass
+	command->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(gBufferTextures[RTV_ORDER_LIGHTSHAPE], D3D12_RESOURCE_STATE_GENERIC_READ, D3D12_RESOURCE_STATE_RENDER_TARGET));
 
-	command->ClearRenderTargetView(rtvHeap.handleCPU(numRTV - 1), mClearColor, 0, nullptr);
-	command->OMSetRenderTargets(1, &rtvHeap.handleCPU(numRTV - 1), true, nullptr);
+	command->ClearRenderTargetView(rtvHeap.handleCPU(RTV_ORDER_LIGHTSHAPE), mClearColor, 0, nullptr);
+	command->OMSetRenderTargets(1, &rtvHeap.handleCPU(RTV_ORDER_LIGHTSHAPE), true, nullptr);
 	command->SetPipelineState(shapeLightPassPSO);
 
 	ID3D12DescriptorHeap* ppHeap2[] = { pixelCbHeap.pDescriptorHeap.Get() };
@@ -266,7 +272,8 @@ void DeferredRenderer::DrawSkybox(ID3D12GraphicsCommandList * commandList, D3D12
 {
 	int ConstantBufferPerObjectAlignedSize = (sizeof(ConstantBuffer) + 255) & ~255;
 	commandList->SetPipelineState(skyboxPSO);
-	commandList->OMSetRenderTargets(1, &rtvHandle, true, &dsvHeap.hCPUHeapStart);
+	//commandList->OMSetRenderTargets(1, &rtvHandle, true, &dsvHeap.hCPUHeapStart);
+	commandList->OMSetRenderTargets(1, &rtvHeap.handleCPU(RTV_ORDER_QUAD), true, &dsvHeap.hCPUHeapStart);
 	ID3D12DescriptorHeap* ppHeaps[] = { cbHeap.pDescriptorHeap.Get() };
 	ID3D12DescriptorHeap* ppSrvHeaps[] = { srvHeap.pDescriptorHeap.Get() };
 	XMFLOAT4X4 identity;
@@ -323,7 +330,20 @@ void DeferredRenderer::DrawLightShapePass(ID3D12GraphicsCommandList * commandLis
 	Draw(e.GetMesh(), cb, commandList);
 	constBufferIndex++;
 
-	commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(gBufferTextures[numRTV - 1], D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_GENERIC_READ));
+	//numRTV - 2 is the lightshape pass RTV
+	commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(gBufferTextures[RTV_ORDER_LIGHTSHAPE], D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_GENERIC_READ));
+}
+
+void DeferredRenderer::DrawResult(ID3D12GraphicsCommandList* commandList, D3D12_CPU_DESCRIPTOR_HANDLE & rtvHandle)
+{
+	commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(gBufferTextures[RTV_ORDER_QUAD], D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_GENERIC_READ));
+	commandList->ClearRenderTargetView(rtvHandle, mClearColor, 0, nullptr);
+	commandList->OMSetRenderTargets(1, &rtvHandle, true, nullptr);
+	commandList->SetPipelineState(screenQuadPSO);
+	ID3D12DescriptorHeap* ppHeaps[] = { gBufferHeap.pDescriptorHeap.Get() };
+	commandList->SetDescriptorHeaps(1, ppHeaps);
+	commandList->SetGraphicsRootDescriptorTable(2, gBufferHeap.handleGPU(RTV_ORDER_QUAD));
+	DrawLightPass(commandList); // Draws full screen quad with null vertex buffer.
 }
 
 void DeferredRenderer::Draw(Mesh * m, const ConstantBuffer & cb, ID3D12GraphicsCommandList* commandList)
@@ -601,7 +621,7 @@ void DeferredRenderer::CreateSkyboxPSO()
 	descPipelineState.SampleMask = UINT_MAX;
 	descPipelineState.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
 	descPipelineState.NumRenderTargets = 1;
-	descPipelineState.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
+	descPipelineState.RTVFormats[0] = DXGI_FORMAT_R32G32B32A32_FLOAT;
 	descPipelineState.SampleDesc.Count = 1;
 	descPipelineState.DSVFormat = mDsvFormat;
 
@@ -632,7 +652,7 @@ void DeferredRenderer::CreateLightPassPSO()
 	descPipelineState.SampleMask = UINT_MAX;
 	descPipelineState.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
 	descPipelineState.NumRenderTargets = 1;
-	descPipelineState.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
+	descPipelineState.RTVFormats[0] = DXGI_FORMAT_R32G32B32A32_FLOAT;
 	descPipelineState.SampleDesc.Count = 1;
 
 	device->CreateGraphicsPipelineState(&descPipelineState, IID_PPV_ARGS(&dirLightPassPSO));
@@ -656,6 +676,30 @@ void DeferredRenderer::CreateLightPassPSO()
 	descPipelineState.InputLayout.NumElements = _countof(inputLayout);
 	device->CreateGraphicsPipelineState(&descPipelineState, IID_PPV_ARGS(&shapeLightPassPSO));
 
+}
+
+void DeferredRenderer::CreateScreenQuadPSO()
+{
+	D3D12_GRAPHICS_PIPELINE_STATE_DESC descPipelineState;
+	ZeroMemory(&descPipelineState, sizeof(descPipelineState));
+
+	descPipelineState.VS = ShaderManager::LoadShader(L"ScreenQuadVS.cso");
+	descPipelineState.PS = ShaderManager::LoadShader(L"ScreenQuadPS.cso");
+	descPipelineState.InputLayout.pInputElementDescs = nullptr;
+	descPipelineState.InputLayout.NumElements = 0;// _countof(inputLayout);
+	descPipelineState.pRootSignature = rootSignature;
+	descPipelineState.DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
+	descPipelineState.DepthStencilState.DepthEnable = false;
+	descPipelineState.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
+	descPipelineState.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
+	descPipelineState.RasterizerState.DepthClipEnable = false;
+	descPipelineState.SampleMask = UINT_MAX;
+	descPipelineState.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+	descPipelineState.NumRenderTargets = 1;
+	descPipelineState.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
+	descPipelineState.SampleDesc.Count = 1;
+
+	device->CreateGraphicsPipelineState(&descPipelineState, IID_PPV_ARGS(&screenQuadPSO));
 }
 
 
@@ -762,8 +806,7 @@ void DeferredRenderer::CreateDSV()
 	descSRV.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
 	descSRV.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
 
-
-	device->CreateShaderResourceView(depthStencilTexture, &descSRV, gBufferHeap.handleCPU(6));
+	device->CreateShaderResourceView(depthStencilTexture, &descSRV, gBufferHeap.handleCPU(RTV_ORDER_COUNT));
 }
 
 void DeferredRenderer::CreateRootSignature()
@@ -774,7 +817,7 @@ void DeferredRenderer::CreateRootSignature()
 	//light dependent CBV
 	range[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0);
 	//G-Buffer inputs
-	range[2].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 10, 0);
+	range[2].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 12, 0);
 
 	CD3DX12_ROOT_PARAMETER rootParameters[3];
 	rootParameters[0].InitAsDescriptorTable(1, &range[0], D3D12_SHADER_VISIBILITY_VERTEX);
@@ -821,6 +864,7 @@ DeferredRenderer::~DeferredRenderer()
 	dirLightPassPSO->Release();
 	shapeLightPassPSO->Release();
 	skyboxPSO->Release();
+	screenQuadPSO->Release();
 	prefilterEnvMapPSO->Release();
 
 	prefilterRTVHeap.pDescriptorHeap->Release();

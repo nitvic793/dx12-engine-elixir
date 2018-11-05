@@ -155,13 +155,17 @@ void Game::Draw()
 	deferredRenderer->SetLightShapePassPSO(commandList, pixelCb);
 	deferredRenderer->DrawLightShapePass(commandList, pixelCb);
 
-	commandList->OMSetRenderTargets(1, &rtvHandle, true, nullptr);
-	commandList->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
+	
 
 	deferredRenderer->SetLightPassPSO(commandList, pixelCb);
 	deferredRenderer->DrawLightPass(commandList);
 
 	deferredRenderer->DrawSkybox(commandList, rtvHandle, 4 * MATERIAL_COUNT);
+
+	/*commandList->OMSetRenderTargets(1, &rtvHandle, true, nullptr);
+	commandList->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);*/
+
+	deferredRenderer->DrawResult(commandList, rtvHandle);
 
 	deferredRenderer->ResetRenderTargetStates(commandList);
 }
