@@ -24,22 +24,30 @@ void DeferredRenderer::ResetRenderTargetStates(ID3D12GraphicsCommandList* comman
 	constBufferIndex = 0;
 }
 
-void DeferredRenderer::SetSRV(ID3D12Resource* textureSRV, DXGI_FORMAT format, int index, bool isTextureCube)
+void DeferredRenderer::SetSRV(ID3D12Resource* textureSRV, int index, bool isTextureCube)
 {
-	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
-	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-	srvDesc.Format = format;
-	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+	CreateShaderResourceView(device, textureSRV, srvHeap.handleCPU(index), isTextureCube);
+}
 
-	if (isTextureCube)
+uint32_t DeferredRenderer::SetSRV(ID3D12Resource* textureSRV, bool isTextureCube)
+{
+	auto index = srvHeapIndex;
+	CreateShaderResourceView(device, textureSRV, srvHeap.handleCPU(index), isTextureCube);
+	srvHeapIndex++;
+	return index;
+}
+
+uint32_t DeferredRenderer::SetSRVs(ID3D12Resource** textureSRV, int textureCount, bool isTextureCube)
+{
+	auto index = srvHeapIndex;
+	auto heapIndexInc = srvHeapIndex;
+	for (int i = index; i < index + textureCount; ++i)
 	{
-		srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURECUBE;
+		CreateShaderResourceView(device, textureSRV[i], srvHeap.handleCPU(i), isTextureCube);
+		heapIndexInc++;
 	}
-
-	srvDesc.Texture2D.MipLevels = 1;
-
-	//device->CreateShaderResourceView(textureSRV, &srvDesc, srvHeap.pDescriptorHeap.Get()->GetCPUDescriptorHandleForHeapStart());
-	device->CreateShaderResourceView(textureSRV, &srvDesc, srvHeap.handleCPU(index));
+	srvHeapIndex = heapIndexInc;
+	return index;
 }
 
 void DeferredRenderer::SetIBLTextures(ID3D12Resource* irradianceTextureCube, ID3D12Resource* prefilterTextureCube, ID3D12Resource* brdfLUTTexture)
@@ -573,8 +581,8 @@ void DeferredRenderer::CreatePrefilterResources(ID3D12GraphicsCommandList* comma
 		viewport.Width = mipWidth;
 		viewport.Height = mipHeight;
 
-		scissorRect.bottom = mipHeight;
-		scissorRect.right = mipWidth;
+		scissorRect.bottom = (LONG)mipHeight;
+		scissorRect.right = (LONG)mipWidth;
 		for (int i = 0; i < 6; ++i)
 		{
 			rtvDesc.Texture2DArray.FirstArraySlice = i;

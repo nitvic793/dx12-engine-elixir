@@ -2,6 +2,8 @@
 #include "stdafx.h"
 #include "DirectXHelper.h"
 
+class DeferredRenderer;
+
 enum MaterialTextureType {
 	MATERIAL_ALBEDO = 0,
 	MATERIAL_NORMAL,
@@ -17,9 +19,10 @@ class Material
 	ID3D12Resource* roughnessTexture;
 	ID3D12Resource* metalnessTexture;
 	CDescriptorHeapWrapper descriptorHeap;
-	int startIndex;
+	uint32_t startIndex;
 public:
 	Material(CDescriptorHeapWrapper& heap, std::vector<std::wstring> textureList, ID3D12Device* device, ID3D12CommandQueue* commandQueue, int startIndex);
+	Material(DeferredRenderer* renderContext, std::vector<std::wstring> textureList, ID3D12Device* device, ID3D12CommandQueue* commandQueue);
 	D3D12_GPU_DESCRIPTOR_HANDLE GetGPUDescriptorHandle();
 	~Material();
 };

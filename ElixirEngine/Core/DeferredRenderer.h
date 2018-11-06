@@ -121,7 +121,9 @@ class DeferredRenderer
 public:
 	DeferredRenderer(ID3D12Device *dxDevice, int width, int height);
 	void ResetRenderTargetStates(ID3D12GraphicsCommandList* command);
-	void SetSRV(ID3D12Resource* textureSRV, DXGI_FORMAT format, int index, bool isTextureCube = false);
+	void SetSRV(ID3D12Resource* textureSRV, int index, bool isTextureCube = false);
+	uint32_t SetSRV(ID3D12Resource* textureSRV, bool isTextureCube = false);
+	uint32_t SetSRVs(ID3D12Resource** textureSRV, int textureCount, bool isTextureCube = false);
 	void SetIBLTextures(ID3D12Resource* irradianceTextureCube, ID3D12Resource* prefilterTextureCube, ID3D12Resource* brdfLUTTexture);
 
 	void Initialize(ID3D12GraphicsCommandList* command);
@@ -139,6 +141,5 @@ public:
 	void UpdateConstantBuffer(const PixelConstantBuffer& pixelBuffer, ID3D12GraphicsCommandList* command);
 	void UpdateConstantBufferPerObject(ConstantBuffer& buffer, int index);
 	CDescriptorHeapWrapper& GetSRVHeap();
-	
 	~DeferredRenderer();
 };
