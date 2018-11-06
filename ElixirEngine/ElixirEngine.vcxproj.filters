@@ -54,6 +54,9 @@
     <ClCompile Include="Material.cpp">
       <Filter>Source Files\Core</Filter>
     </ClCompile>
+    <ClCompile Include="Texture.cpp">
+      <Filter>Source Files\Core</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
@@ -99,6 +102,9 @@
       <Filter>Header Files\Core</Filter>
     </ClInclude>
     <ClInclude Include="Material.h">
+      <Filter>Header Files\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="Texture.h">
       <Filter>Header Files\Core</Filter>
     </ClInclude>
   </ItemGroup>

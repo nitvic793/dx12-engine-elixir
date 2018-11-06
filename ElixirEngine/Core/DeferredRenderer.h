@@ -54,6 +54,7 @@ class DeferredRenderer
 	const static int numRTV = 7;
 	int constBufferIndex = 0;
 	ID3D12RootSignature* rootSignature;
+	uint32_t srvHeapIndex;
 
 	ID3D12Resource* gBufferTextures[numRTV];
 	ID3D12Resource* depthStencilTexture;
@@ -138,6 +139,6 @@ public:
 	void UpdateConstantBuffer(const PixelConstantBuffer& pixelBuffer, ID3D12GraphicsCommandList* command);
 	void UpdateConstantBufferPerObject(ConstantBuffer& buffer, int index);
 	CDescriptorHeapWrapper& GetSRVHeap();
-
+	
 	~DeferredRenderer();
 };

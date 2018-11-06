@@ -11,7 +11,8 @@ DeferredRenderer::DeferredRenderer(ID3D12Device* dxDevice, int width, int height
 	device(dxDevice),
 	viewportHeight(height),
 	viewportWidth(width),
-	constBufferIndex(0)
+	constBufferIndex(0),
+	srvHeapIndex(0)
 {
 }
 
@@ -127,8 +128,8 @@ void DeferredRenderer::GeneratePreFilterEnvironmentMap(ID3D12GraphicsCommandList
 		viewport.Width = mipWidth;
 		viewport.Height = mipHeight;
 
-		scissorRect.bottom = mipHeight;
-		scissorRect.right = mipWidth;
+		scissorRect.bottom = (LONG)mipHeight;
+		scissorRect.right = (LONG)mipWidth;
 
 		float roughness = (float)mip / (float)(maxMipLevels - 1);
 		constBufferIndex = 0;
@@ -176,24 +177,20 @@ void DeferredRenderer::GeneratePreFilterEnvironmentMap(ID3D12GraphicsCommandList
 
 void DeferredRenderer::SetGBUfferPSO(ID3D12GraphicsCommandList* command, Camera* camera, const PixelConstantBuffer& pixelCb)
 {
-	ID3D12DescriptorHeap* ppHeaps[] = { srvHeap.pDescriptorHeap.Get() };
 	this->camera = camera;
 	this->entities = entities;
+	ID3D12DescriptorHeap* ppHeaps[] = { pixelCbHeap.pDescriptorHeap.Get() };
+
 	command->SetPipelineState(deferredPSO);
 	for (int i = 0; i < numRTV; i++)
 		command->ClearRenderTargetView(rtvHeap.handleCPU(i), mClearColor, 0, nullptr);
 
 	command->ClearDepthStencilView(dsvHeap.hCPUHeapStart, D3D12_CLEAR_FLAG_DEPTH, mClearDepth, 0xff, 0, nullptr);
-
 	command->OMSetRenderTargets(numRTV, &rtvHeap.hCPUHeapStart, true, &dsvHeap.hCPUHeapStart);
-	command->SetDescriptorHeaps(1, ppHeaps);
 	command->SetGraphicsRootSignature(rootSignature);
-	command->SetGraphicsRootDescriptorTable(2, srvHeap.handleGPU(0));
-	//command->SetGraphicsRootDescriptorTable(0, cbHeap.handleGPU(0));
-	ID3D12DescriptorHeap* ppHeap2[] = { pixelCbHeap.pDescriptorHeap.Get() };
-	command->SetDescriptorHeaps(1, ppHeap2);
+
+	command->SetDescriptorHeaps(1, ppHeaps);
 	command->SetGraphicsRootDescriptorTable(1, pixelCbHeap.handleGPU(0));
-	//command->SetGraphicsRootDescriptorTable(2, srvHeap.pDescriptorHeap.Get()->GetGPUDescriptorHandleForHeapStart());
 
 	pixelCbWrapper.CopyData((void*)&pixelCb, sizeof(PixelConstantBuffer), 0);
 }
