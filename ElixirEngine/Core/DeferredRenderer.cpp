@@ -273,11 +273,10 @@ void DeferredRenderer::Draw(ID3D12GraphicsCommandList* commandList, std::vector<
 	constBufferIndex += index;
 }
 
-void DeferredRenderer::DrawSkybox(ID3D12GraphicsCommandList * commandList, D3D12_CPU_DESCRIPTOR_HANDLE &rtvHandle, int skyboxIndex)
+void DeferredRenderer::DrawSkybox(ID3D12GraphicsCommandList * commandList, Texture* skybox)
 {
 	int ConstantBufferPerObjectAlignedSize = (sizeof(ConstantBuffer) + 255) & ~255;
 	commandList->SetPipelineState(skyboxPSO);
-	//commandList->OMSetRenderTargets(1, &rtvHandle, true, &dsvHeap.hCPUHeapStart);
 	commandList->OMSetRenderTargets(1, &rtvHeap.handleCPU(RTV_ORDER_QUAD), true, &dsvHeap.hCPUHeapStart);
 	ID3D12DescriptorHeap* ppHeaps[] = { cbHeap.pDescriptorHeap.Get() };
 	ID3D12DescriptorHeap* ppSrvHeaps[] = { srvHeap.pDescriptorHeap.Get() };
@@ -292,7 +291,7 @@ void DeferredRenderer::DrawSkybox(ID3D12GraphicsCommandList * commandList, D3D12
 	};
 
 	commandList->SetDescriptorHeaps(1, ppSrvHeaps);
-	commandList->SetGraphicsRootDescriptorTable(2, srvHeap.handleGPU(skyboxIndex)); //Set skybox texture
+	commandList->SetGraphicsRootDescriptorTable(2, skybox->GetGPUDescriptorHandle()); //Set skybox texture
 	commandList->SetDescriptorHeaps(1, ppHeaps);
 
 	cbWrapper.CopyData(&cb, ConstantBufferPerObjectAlignedSize, constBufferIndex);
@@ -849,8 +848,6 @@ void DeferredRenderer::CreateRootSignature()
 	device->CreateRootSignature(0, rootSigBlob->GetBufferPointer(), rootSigBlob->GetBufferSize(), IID_PPV_ARGS(&rootSignature));
 
 }
-
-
 
 DeferredRenderer::~DeferredRenderer()
 {

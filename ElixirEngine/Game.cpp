@@ -11,9 +11,11 @@ void Game::InitializeAssets()
 	entity3 = new Entity();
 	entity4 = new Entity();
 	sphereMesh = new Mesh("../../Assets/sphere.obj", device, commandList);
-	cubeMesh = new Mesh("../../Assets/torus.obj", device, commandList);
+	cubeMesh = new Mesh("../../Assets/wrench.obj", device, commandList);
 	entity1->SetMesh(sphereMesh);
-	entity2->SetMesh(sphereMesh);
+	entity2->SetMesh(cubeMesh);
+	entity2->SetScale(XMFLOAT3(0.05f, 0.05f, 0.05f));
+	entity2->SetRotation(XMFLOAT3(45 * XM_PIDIV2, 0, 0));
 	entity3->SetMesh(sphereMesh);
 	entity4->SetMesh(sphereMesh);
 
@@ -30,9 +32,6 @@ void Game::InitializeAssets()
 	CreateDDSTextureFromFile(device, uploadBatch, L"../../Assets/envSpecularHDR.dds", &skyboxPreFilter);
 	auto uploadOperation = uploadBatch.End(commandQueue);
 	uploadOperation.wait();
-
-	//auto image = std::make_unique<ScratchImage>();
-	//LoadFromHDRFile(L"../../Assets/HDR/GravelPlaza_Env.hdr", nullptr, *image);
 
 	scratchedMaterial = new Material(
 		deferredRenderer,
@@ -82,17 +81,25 @@ void Game::InitializeAssets()
 		commandQueue
 	);
 
+	breadMaterial = new Material(
+		deferredRenderer,
+		{
+			L"../../Assets/Textures/wrench_albedo.jpg" ,
+			L"../../Assets/Textures/wrench_normals.png" ,
+			L"../../Assets/Textures/wrench_roughness.jpg" ,
+			L"../../Assets/Textures/wrench_metal.jpg"
+		},
+		device,
+		commandQueue
+	);
+
 	deferredRenderer->SetIBLTextures(skyboxIRTexture, skyboxPreFilter, brdfLutTexture);
 
-	deferredRenderer->SetSRV(skyboxTexture, true);
-	deferredRenderer->SetSRV(skyboxIRTexture, true);
-	deferredRenderer->SetSRV(brdfLutTexture);
-	deferredRenderer->SetSRV(skyboxPreFilter);
-
-	//deferredRenderer->GeneratePreFilterEnvironmentMap(commandList, 4 * MATERIAL_COUNT);
+	skyTexture = new Texture(deferredRenderer, device);
+	skyTexture->CreateTexture(L"../../Assets/envEnvHDR.dds", TexFileTypeDDS, commandQueue, true);
 
 	entity1->SetMaterial(scratchedMaterial);
-	entity2->SetMaterial(woodenMaterial);
+	entity2->SetMaterial(breadMaterial);
 	entity3->SetMaterial(cobblestoneMaterial);
 	entity4->SetMaterial(bronzeMaterial);
 }
@@ -125,7 +132,6 @@ void Game::Update()
 
 void Game::Draw()
 {
-	//deferredRenderer->GeneratePreFilterEnvironmentMap(commandList, 4 * MATERIAL_COUNT); // Remove once done.
 	CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(rtvDescriptorHeap->GetCPUDescriptorHandleForHeapStart(), frameIndex, rtvDescriptorSize);
 	CD3DX12_CPU_DESCRIPTOR_HANDLE dsvHandle(dsDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
 	commandList->OMSetRenderTargets(1, &rtvHandle, FALSE, &dsvHandle);
@@ -156,12 +162,9 @@ void Game::Draw()
 	deferredRenderer->SetLightPassPSO(commandList, pixelCb);
 	deferredRenderer->DrawLightPass(commandList);
 
-	deferredRenderer->DrawSkybox(commandList, rtvHandle, 4 * MATERIAL_COUNT);
+	deferredRenderer->DrawSkybox(commandList, skyTexture);
 
-	/*commandList->OMSetRenderTargets(1, &rtvHandle, true, nullptr);
-	commandList->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);*/
-
-	deferredRenderer->DrawResult(commandList, rtvHandle);
+	deferredRenderer->DrawResult(commandList, rtvHandle); //Draw renderer result to given main Render Target handle
 
 	computeProcess->Dispatch(commandList);
 
@@ -212,6 +215,8 @@ Game::~Game()
 	delete woodenMaterial;
 	delete cobblestoneMaterial;
 	delete bronzeMaterial;
+	delete breadMaterial;
+	delete skyTexture;
 
 	skyboxTexture->Release();
 	skyboxIRTexture->Release();

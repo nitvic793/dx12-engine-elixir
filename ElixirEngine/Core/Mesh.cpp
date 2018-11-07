@@ -341,6 +341,6 @@ Mesh::~Mesh()
 	vertexBuffer->Release();
 	indexBuffer->Release();
 
-	iBufferUploadHeap->Release();
+	iBufferUploadHeap->Release(); //Most probably should have one upload heap for all meshes
 	vBufferUploadHeap->Release();
 }

@@ -1,5 +1,6 @@
 #pragma once
 #include "Core/Core.h"
+#include "Texture.h"
 #include "ComputeProcess.h"
 
 class Game : public Core
@@ -15,6 +16,8 @@ protected:
 	ID3D12Resource* brdfLutTexture;
 	ID3D12Resource* skyboxPreFilter;
 
+	Texture*		skyTexture;
+
 	Mesh*		sphereMesh;
 	Mesh*		cubeMesh;
 	Camera*		camera;
@@ -23,6 +26,7 @@ protected:
 	Entity*		entity3;
 	Entity*		entity4;
 	Material*	scratchedMaterial;
+	Material*	breadMaterial;
 	Material*	woodenMaterial;
 	Material*	cobblestoneMaterial;
 	Material*	bronzeMaterial;

@@ -5,6 +5,7 @@
 #include "Entity.h"
 #include "ConstantBuffer.h"
 #include "Camera.h"
+#include "../Texture.h"
 
 class ConstantBufferWrapper
 {
@@ -133,7 +134,7 @@ public:
 	void SetLightShapePassPSO(ID3D12GraphicsCommandList* command, const PixelConstantBuffer& pixelCb);
 
 	void Draw(ID3D12GraphicsCommandList* commandList, std::vector<Entity*> entities);
-	void DrawSkybox(ID3D12GraphicsCommandList* commandList, D3D12_CPU_DESCRIPTOR_HANDLE &rtvHandle, int skyboxIndex);
+	void DrawSkybox(ID3D12GraphicsCommandList* commandList, Texture* skybox);
 	void DrawLightPass(ID3D12GraphicsCommandList* commandList);
 	void DrawLightShapePass(ID3D12GraphicsCommandList* commandList, const PixelConstantBuffer & pixelCb);
 	void DrawResult(ID3D12GraphicsCommandList* commandList, D3D12_CPU_DESCRIPTOR_HANDLE &rtvHandle);

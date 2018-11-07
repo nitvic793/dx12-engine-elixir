@@ -42,6 +42,7 @@ D3D12_GPU_DESCRIPTOR_HANDLE Texture::GetGPUDescriptorHandle()
 
 Texture::Texture(DeferredRenderer* renderContext, ID3D12Device* device)
 {
+	this->renderContext = renderContext;
 	descriptorHeap = &renderContext->GetSRVHeap();
 	this->device = device;
 }
