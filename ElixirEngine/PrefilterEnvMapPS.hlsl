@@ -70,7 +70,7 @@ float4 main(VertexToPixel input) : SV_TARGET
 		float NdotL = max(dot(N, L), 0.0f);
 		if (NdotL > 0.f)
 		{
-			prefilteredColor += EnvMap.Sample(basicSampler, L) * NdotL;
+			prefilteredColor += EnvMap.Sample(basicSampler, L).rgb * NdotL;
 			totalWeight += NdotL;
 		}
 	}

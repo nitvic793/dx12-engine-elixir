@@ -41,7 +41,7 @@ uint32_t DeferredRenderer::SetSRVs(ID3D12Resource** textureSRV, int textureCount
 {
 	auto index = srvHeapIndex;
 	auto heapIndexInc = srvHeapIndex;
-	for (int i = index; i < index + textureCount; ++i)
+	for (uint32_t i = index; i < index + textureCount; ++i)
 	{
 		CreateShaderResourceView(device, textureSRV[i], srvHeap.handleCPU(i), isTextureCube);
 		heapIndexInc++;
