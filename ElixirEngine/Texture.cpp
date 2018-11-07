@@ -32,7 +32,11 @@ void Texture::CreateTexture(std::wstring textureFileName,
 		CreateDDSTextureFromFile(device, uploadBatch, textureFileName.c_str(), &resource);
 		break;
 	}
-	heapIndex = renderContext->SetSRV(resource, isCubeMap);
+
+	if (textureViewType == TextureViewType::TextureTypeSRV)
+	{
+		heapIndex = renderContext->SetSRV(resource, isCubeMap);
+	}
 }
 
 D3D12_GPU_DESCRIPTOR_HANDLE Texture::GetGPUDescriptorHandle()
@@ -40,11 +44,26 @@ D3D12_GPU_DESCRIPTOR_HANDLE Texture::GetGPUDescriptorHandle()
 	return descriptorHeap->handleGPU(heapIndex);
 }
 
+CDescriptorHeapWrapper * Texture::GetTextureDescriptorHeap()
+{
+	return descriptorHeap;
+}
+
 Texture::Texture(DeferredRenderer* renderContext, ID3D12Device* device)
 {
 	this->renderContext = renderContext;
 	descriptorHeap = &renderContext->GetSRVHeap();
 	this->device = device;
+}
+
+Texture::Texture(DeferredRenderer * renderContext, ID3D12Device * device, ID3D12Resource * resource, int heapIndex, TextureViewType viewType)
+{
+	this->renderContext = renderContext;
+	descriptorHeap = &renderContext->GetSRVHeap();
+	this->device = device;
+	this->resource = resource;
+	textureViewType = viewType;
+	this->heapIndex = heapIndex;
 }
 
 

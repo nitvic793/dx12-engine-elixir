@@ -48,9 +48,20 @@ ComputeProcess::~ComputeProcess()
 	if (pipelineStateObject)pipelineStateObject->Release();
 }
 
-void ComputeProcess::Dispatch(ID3D12GraphicsCommandList* commandList)
+void ComputeProcess::SetShader(ID3D12GraphicsCommandList * commandList)
 {
 	commandList->SetComputeRootSignature(rootSignature);
 	commandList->SetPipelineState(pipelineStateObject);
-	commandList->Dispatch(8, 1, 1);
+}
+
+void ComputeProcess::SetTextureUAV(ID3D12GraphicsCommandList* commandList, Texture * textureUAV)
+{
+	ID3D12DescriptorHeap* ppHeaps[] = { textureUAV->GetTextureDescriptorHeap()->pDescriptorHeap.Get() };
+	commandList->SetDescriptorHeaps(1, ppHeaps);
+	commandList->SetComputeRootDescriptorTable(0, textureUAV->GetGPUDescriptorHandle());
+}
+
+void ComputeProcess::Dispatch(ID3D12GraphicsCommandList* commandList, int x, int y, int z)
+{
+	commandList->Dispatch(x, y, z);
 }

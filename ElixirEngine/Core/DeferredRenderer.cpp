@@ -76,6 +76,11 @@ void DeferredRenderer::SetIBLTextures(ID3D12Resource* irradianceTextureCube, ID3
 	device->CreateShaderResourceView(prefilterTextureCube, &srvDesc, gBufferHeap.handleCPU(prefilterIndex));
 }
 
+Texture * DeferredRenderer::GetResultUAV()
+{
+	return resultUAV;
+}
+
 void DeferredRenderer::Initialize(ID3D12GraphicsCommandList* command)
 {
 	CreateCB();
@@ -724,7 +729,7 @@ void DeferredRenderer::CreateRTV()
 	resourceDesc.Width = viewportWidth;
 	resourceDesc.Height = viewportHeight;
 	resourceDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
-	resourceDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
+	resourceDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET | D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
 
 	D3D12_CLEAR_VALUE clearVal;
 	clearVal.Color[0] = mClearColor[0];
@@ -766,6 +771,17 @@ void DeferredRenderer::CreateRTV()
 		descSRV.Format = mRtvFormat[i];
 		device->CreateShaderResourceView(gBufferTextures[i], &descSRV, gBufferHeap.handleCPU(i));
 	}
+
+	D3D12_UNORDERED_ACCESS_VIEW_DESC UAVDesc = {};
+	UAVDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D;
+	UAVDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
+	UAVDesc.Buffer.NumElements = 1;
+	UAVDesc.Buffer.Flags = D3D12_BUFFER_UAV_FLAG_RAW;
+
+	device->CreateUnorderedAccessView(gBufferTextures[RTV_ORDER_QUAD], nullptr, &UAVDesc, srvHeap.handleCPU(srvHeapIndex));
+	resultUAV = new Texture(this, device, gBufferTextures[RTV_ORDER_QUAD], srvHeapIndex, TextureTypeUAV);
+	srvHeapIndex++;
+	
 }
 
 void DeferredRenderer::CreateDSV()
