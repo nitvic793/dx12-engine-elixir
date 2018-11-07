@@ -4,6 +4,7 @@
 //Initializes assets. This function's scope has access to commandList which is not closed. 
 void Game::InitializeAssets()
 {
+	computeProcess = new ComputeProcess(device, L"ComputeCS.cso");
 	camera = new Camera((float)Width, (float)Height);
 	entity1 = new Entity();
 	entity2 = new Entity();
@@ -83,10 +84,10 @@ void Game::InitializeAssets()
 
 	deferredRenderer->SetIBLTextures(skyboxIRTexture, skyboxPreFilter, brdfLutTexture);
 
-	deferredRenderer->SetSRV(skyboxTexture, 4 * MATERIAL_COUNT, true);
-	deferredRenderer->SetSRV(skyboxIRTexture, 4 * MATERIAL_COUNT + 1, true);
-	deferredRenderer->SetSRV(brdfLutTexture, 4 * MATERIAL_COUNT + 2);
-	deferredRenderer->SetSRV(skyboxPreFilter, 4 * MATERIAL_COUNT + 3);
+	deferredRenderer->SetSRV(skyboxTexture, true);
+	deferredRenderer->SetSRV(skyboxIRTexture, true);
+	deferredRenderer->SetSRV(brdfLutTexture);
+	deferredRenderer->SetSRV(skyboxPreFilter);
 
 	//deferredRenderer->GeneratePreFilterEnvironmentMap(commandList, 4 * MATERIAL_COUNT);
 
@@ -145,7 +146,7 @@ void Game::Draw()
 			entity1,
 			entity2,
 			entity3,
-			entity4 
+			entity4
 		}
 	);
 
@@ -161,6 +162,8 @@ void Game::Draw()
 	commandList->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);*/
 
 	deferredRenderer->DrawResult(commandList, rtvHandle);
+
+	computeProcess->Dispatch(commandList);
 
 	deferredRenderer->ResetRenderTargetStates(commandList);
 }
@@ -197,6 +200,7 @@ void Game::OnMouseWheel(float wheelDelta, int x, int y)
 
 Game::~Game()
 {
+	delete computeProcess;
 	delete sphereMesh;
 	delete cubeMesh;
 	delete camera;
@@ -213,8 +217,4 @@ Game::~Game()
 	skyboxIRTexture->Release();
 	brdfLutTexture->Release();
 	skyboxPreFilter->Release();
-	//textureBuffer->Release();
-	//normalTexture->Release();
-	//roughnessTexture->Release();
-	//metalnessTexture->Release();
 }

@@ -1,11 +1,11 @@
 #include "stdafx.h"
 #include "Texture.h"
-
+#include "Core/DeferredRenderer.h"
 
 void Texture::CreateTexture(std::wstring textureFileName,
-	TextureFileType textureFileType, 
+	TextureFileType textureFileType,
 	ID3D12CommandQueue* commandQueue,
-	bool isCubeMap, 
+	bool isCubeMap,
 	TextureViewType textureViewType)
 {
 	ResourceUploadBatch uploadBatch(device);
@@ -15,11 +15,11 @@ void Texture::CreateTexture(std::wstring textureFileName,
 	uploadOperation.wait();
 }
 
-void Texture::CreateTexture(std::wstring textureFileName, 
-	TextureFileType textureFileType, 
-	ID3D12CommandQueue * commandQueue, 
-	ResourceUploadBatch & uploadBatch, 
-	bool isCubeMap, 
+void Texture::CreateTexture(std::wstring textureFileName,
+	TextureFileType textureFileType,
+	ID3D12CommandQueue * commandQueue,
+	ResourceUploadBatch & uploadBatch,
+	bool isCubeMap,
 	TextureViewType textureViewType)
 {
 	this->textureViewType = textureViewType;
@@ -49,4 +49,5 @@ Texture::Texture(DeferredRenderer* renderContext, ID3D12Device* device)
 
 Texture::~Texture()
 {
+	if (resource) resource->Release();
 }

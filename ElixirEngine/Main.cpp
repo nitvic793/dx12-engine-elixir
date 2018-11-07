@@ -24,7 +24,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow)
 	game->Initialize();
 	game->Run([&](Core* core) 
 	{
-		//Game Logic here...
 	});
 
 	delete game;

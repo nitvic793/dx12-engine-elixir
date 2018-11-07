@@ -1,5 +1,6 @@
 #pragma once
 #include "Core/Core.h"
+#include "ComputeProcess.h"
 
 class Game : public Core
 {
@@ -27,7 +28,7 @@ protected:
 	Material*	bronzeMaterial;
 
 	POINT prevMousePos;
-
+	ComputeProcess* computeProcess;
 	void InitializeAssets();
 public:
 	Game(HINSTANCE hInstance, int ShowWnd, int width, int height, bool fullscreen);

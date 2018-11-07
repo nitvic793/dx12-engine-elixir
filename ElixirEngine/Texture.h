@@ -1,7 +1,9 @@
 #pragma once
 #include "stdafx.h"
 #include "DirectXHelper.h"
-#include "Core/DeferredRenderer.h"
+
+
+class DeferredRenderer;
 
 enum TextureViewType
 {

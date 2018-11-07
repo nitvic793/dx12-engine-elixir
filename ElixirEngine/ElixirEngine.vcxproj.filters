@@ -57,6 +57,9 @@
     <ClCompile Include="Texture.cpp">
       <Filter>Source Files\Core</Filter>
     </ClCompile>
+    <ClCompile Include="ComputeProcess.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
@@ -107,6 +110,9 @@
     <ClInclude Include="Texture.h">
       <Filter>Header Files\Core</Filter>
     </ClInclude>
+    <ClInclude Include="ComputeProcess.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Shaders\DefaultVS.hlsl">
@@ -140,6 +146,9 @@
       <Filter>Shaders</Filter>
     </FxCompile>
     <FxCompile Include="ScreenQuadPS.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="ComputeCS.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
   </ItemGroup>
