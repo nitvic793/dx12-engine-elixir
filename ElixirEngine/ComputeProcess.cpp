@@ -72,6 +72,7 @@ void ComputeProcess::SetTextureSRV(ID3D12GraphicsCommandList* commandList, Textu
 	ID3D12DescriptorHeap* ppHeaps[] = { textureSRV->GetTextureDescriptorHeap()->pDescriptorHeap.Get() };
 	commandList->SetDescriptorHeaps(1, ppHeaps);
 	commandList->SetComputeRootDescriptorTable(0, textureSRV->GetGPUDescriptorHandle());
+	commandList->SetComputeRoot32BitConstant(2, 1, 0); // constant buffer value settings
 }
 
 void ComputeProcess::Dispatch(ID3D12GraphicsCommandList* commandList, int x, int y, int z)
