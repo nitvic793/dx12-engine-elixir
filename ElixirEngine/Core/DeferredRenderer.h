@@ -80,6 +80,7 @@ class DeferredRenderer
 	ConstantBufferWrapper cbWrapper;
 	ConstantBufferWrapper pixelCbWrapper;
 	Texture* resultUAV;
+	Texture* resultSRV;
 
 	//Constant buffer must be larger than 256 bytes
 	static const int ConstantBufferSize = (sizeof(ConstantBuffer) + 255) & ~255;;
@@ -130,6 +131,7 @@ public:
 	uint32_t SetSRVs(ID3D12Resource** textureSRV, int textureCount, bool isTextureCube = false);
 	void SetIBLTextures(ID3D12Resource* irradianceTextureCube, ID3D12Resource* prefilterTextureCube, ID3D12Resource* brdfLUTTexture);
 	Texture* GetResultUAV();
+	Texture* GetResultSRV();
 
 	void Initialize(ID3D12GraphicsCommandList* command);
 	void GeneratePreFilterEnvironmentMap(ID3D12GraphicsCommandList* command, int envTextureIndex);

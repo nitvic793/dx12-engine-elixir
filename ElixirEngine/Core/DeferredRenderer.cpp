@@ -81,6 +81,11 @@ Texture * DeferredRenderer::GetResultUAV()
 	return resultUAV;
 }
 
+Texture * DeferredRenderer::GetResultSRV()
+{
+	return resultSRV;
+}
+
 void DeferredRenderer::Initialize(ID3D12GraphicsCommandList* command)
 {
 	CreateCB();
@@ -780,10 +785,15 @@ void DeferredRenderer::CreateRTV()
 	UAVDesc.Buffer.NumElements = 1;
 	UAVDesc.Buffer.Flags = D3D12_BUFFER_UAV_FLAG_RAW;
 
+	descSRV.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
+
 	device->CreateUnorderedAccessView(gBufferTextures[RTV_ORDER_QUAD], nullptr, &UAVDesc, srvHeap.handleCPU(srvHeapIndex));
 	resultUAV = new Texture(this, device, gBufferTextures[RTV_ORDER_QUAD], srvHeapIndex, TextureTypeUAV);
 	srvHeapIndex++;
-	
+
+	device->CreateShaderResourceView(gBufferTextures[RTV_ORDER_QUAD], &descSRV, srvHeap.handleCPU(srvHeapIndex));
+	resultSRV = new Texture(this, device, gBufferTextures[RTV_ORDER_QUAD], srvHeapIndex, TextureTypeSRV);
+	srvHeapIndex++;
 }
 
 void DeferredRenderer::CreateDSV()
@@ -877,6 +887,7 @@ DeferredRenderer::~DeferredRenderer()
 	gBufferHeap.pDescriptorHeap->Release();
 	resultTexture->Release();
 	delete resultUAV;
+	delete resultSRV;
 
 	for (int i = 0; i < numRTV; ++i)
 		gBufferTextures[numRTV]->Release();
