@@ -165,7 +165,8 @@ void Game::Draw()
 	deferredRenderer->DrawSkybox(commandList, skyTexture);
 	computeProcess->SetShader(commandList);
 	computeProcess->SetTextureUAV(commandList, deferredRenderer->GetResultUAV());
-	computeProcess->Dispatch(commandList, 8);
+	computeProcess->SetTextureSRV(commandList, skyTexture);
+	computeProcess->Dispatch(commandList, 1280, 720, 1);
 	deferredRenderer->DrawResult(commandList, rtvHandle); //Draw renderer result to given main Render Target handle
 
 	deferredRenderer->ResetRenderTargetStates(commandList);

@@ -60,6 +60,7 @@ class DeferredRenderer
 	ID3D12Resource* gBufferTextures[numRTV];
 	ID3D12Resource* depthStencilTexture;
 	ID3D12Resource* prefilterTexture;
+	ID3D12Resource* resultTexture;
 
 	ID3D12PipelineState* deferredPSO;
 	ID3D12PipelineState* dirLightPassPSO;

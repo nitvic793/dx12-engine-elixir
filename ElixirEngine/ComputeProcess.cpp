@@ -15,15 +15,21 @@ void ComputeProcess::CreatePSO()
 void ComputeProcess::CreateRootSignature()
 {
 	CD3DX12_DESCRIPTOR_RANGE range[2];
-	range[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 2, 0);
+	range[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0);
 	range[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, 1, 0);
 
-	CD3DX12_ROOT_PARAMETER rootParameters[2];
-	rootParameters[0].InitAsDescriptorTable(2, range);
-	rootParameters[1].InitAsConstants(4, 0);
+	CD3DX12_ROOT_PARAMETER rootParameters[3];
+	rootParameters[0].InitAsDescriptorTable(1, &range[0]);
+	rootParameters[1].InitAsDescriptorTable(1, &range[1]);
+	rootParameters[2].InitAsConstants(4, 0);
+
+	CD3DX12_STATIC_SAMPLER_DESC StaticSamplers[1];
+	StaticSamplers[0].Init(0, D3D12_FILTER_ANISOTROPIC);
 
 	CD3DX12_ROOT_SIGNATURE_DESC descRootSignature;
-	descRootSignature.Init(2, rootParameters);
+	descRootSignature.Init(3, rootParameters);
+	descRootSignature.NumStaticSamplers = 1;
+	descRootSignature.pStaticSamplers = StaticSamplers;
 
 	Microsoft::WRL::ComPtr<ID3DBlob> rootSigBlob;
 	Microsoft::WRL::ComPtr<ID3DBlob> errorBlob;
@@ -54,11 +60,18 @@ void ComputeProcess::SetShader(ID3D12GraphicsCommandList * commandList)
 	commandList->SetPipelineState(pipelineStateObject);
 }
 
-void ComputeProcess::SetTextureUAV(ID3D12GraphicsCommandList* commandList, Texture * textureUAV)
+void ComputeProcess::SetTextureUAV(ID3D12GraphicsCommandList* commandList, Texture* textureUAV)
 {
 	ID3D12DescriptorHeap* ppHeaps[] = { textureUAV->GetTextureDescriptorHeap()->pDescriptorHeap.Get() };
 	commandList->SetDescriptorHeaps(1, ppHeaps);
-	commandList->SetComputeRootDescriptorTable(0, textureUAV->GetGPUDescriptorHandle());
+	commandList->SetComputeRootDescriptorTable(1, textureUAV->GetGPUDescriptorHandle());
+}
+
+void ComputeProcess::SetTextureSRV(ID3D12GraphicsCommandList* commandList, Texture* textureSRV)
+{
+	ID3D12DescriptorHeap* ppHeaps[] = { textureSRV->GetTextureDescriptorHeap()->pDescriptorHeap.Get() };
+	commandList->SetDescriptorHeaps(1, ppHeaps);
+	commandList->SetComputeRootDescriptorTable(0, textureSRV->GetGPUDescriptorHandle());
 }
 
 void ComputeProcess::Dispatch(ID3D12GraphicsCommandList* commandList, int x, int y, int z)

@@ -417,7 +417,7 @@ void Core::Cleanup()
 		swapChain->SetFullscreenState(false, NULL);
 
 	if (device)device->Release();
-	swapChain->Release();
+
 
 	rtvDescriptorHeap->Release();
 	commandList->Release();
@@ -437,6 +437,7 @@ void Core::Cleanup()
 	depthStencilBuffer->Release();
 	dsDescriptorHeap->Release();
 	commandQueue->Release();
+	swapChain->Release();
 	//textureBufferUploadHeap->Release();
 
 

@@ -743,6 +743,8 @@ void DeferredRenderer::CreateRTV()
 		device->CreateCommittedResource(&heapProperty, D3D12_HEAP_FLAG_NONE, &resourceDesc, D3D12_RESOURCE_STATE_RENDER_TARGET, &clearVal, IID_PPV_ARGS(&gBufferTextures[i]));
 	}
 
+	device->CreateCommittedResource(&heapProperty, D3D12_HEAP_FLAG_NONE, &resourceDesc, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, &clearVal, IID_PPV_ARGS(&resultTexture));
+
 	D3D12_RENDER_TARGET_VIEW_DESC desc;
 	ZeroMemory(&desc, sizeof(desc));
 	desc.Texture2D.MipSlice = 0;
@@ -873,6 +875,7 @@ DeferredRenderer::~DeferredRenderer()
 	dsvHeap.pDescriptorHeap->Release();
 	srvHeap.pDescriptorHeap->Release();
 	gBufferHeap.pDescriptorHeap->Release();
+	resultTexture->Release();
 	delete resultUAV;
 
 	for (int i = 0; i < numRTV; ++i)
