@@ -45,7 +45,7 @@ sampler basicSampler;
 
 float3 PrefilteredColor(float3 viewDir, float3 normal, float roughness)
 {
-	const float MAX_REF_LOD = 4.0f;
+	const float MAX_REF_LOD = 5.0f;
 	float3 R = reflect(-viewDir, normal);
 	return skyPrefilterTexture.SampleLevel(basicSampler, R, roughness * MAX_REF_LOD).rgb;
 }

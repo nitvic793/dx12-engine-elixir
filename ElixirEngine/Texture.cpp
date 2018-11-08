@@ -54,10 +54,12 @@ Texture::Texture(DeferredRenderer* renderContext, ID3D12Device* device)
 	this->renderContext = renderContext;
 	descriptorHeap = &renderContext->GetSRVHeap();
 	this->device = device;
+	releaseNeeded = true;
 }
 
 Texture::Texture(DeferredRenderer * renderContext, ID3D12Device * device, ID3D12Resource * resource, int heapIndex, TextureViewType viewType)
 {
+	releaseNeeded = false;
 	this->renderContext = renderContext;
 	descriptorHeap = &renderContext->GetSRVHeap();
 	this->device = device;
@@ -69,5 +71,5 @@ Texture::Texture(DeferredRenderer * renderContext, ID3D12Device * device, ID3D12
 
 Texture::~Texture()
 {
-	if (resource) resource->Release();
+	if (releaseNeeded && resource) resource->Release();
 }

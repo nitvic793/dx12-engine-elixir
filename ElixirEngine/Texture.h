@@ -25,6 +25,7 @@ class Texture
 	uint32_t heapIndex;
 	DeferredRenderer* renderContext;
 	bool isCubeMap;
+	bool releaseNeeded;
 	ID3D12Device* device;
 public:
 	void CreateTexture(std::wstring textureFileName, 

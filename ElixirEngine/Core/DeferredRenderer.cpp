@@ -873,6 +873,7 @@ DeferredRenderer::~DeferredRenderer()
 	dsvHeap.pDescriptorHeap->Release();
 	srvHeap.pDescriptorHeap->Release();
 	gBufferHeap.pDescriptorHeap->Release();
+	delete resultUAV;
 
 	for (int i = 0; i < numRTV; ++i)
 		gBufferTextures[numRTV]->Release();

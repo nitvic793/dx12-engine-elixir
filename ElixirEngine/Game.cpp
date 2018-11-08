@@ -11,11 +11,11 @@ void Game::InitializeAssets()
 	entity3 = new Entity();
 	entity4 = new Entity();
 	sphereMesh = new Mesh("../../Assets/sphere.obj", device, commandList);
-	cubeMesh = new Mesh("../../Assets/wrench.obj", device, commandList);
+	cubeMesh = new Mesh("../../Assets/cube.obj", device, commandList);
 	entity1->SetMesh(sphereMesh);
-	entity2->SetMesh(cubeMesh);
-	entity2->SetScale(XMFLOAT3(0.05f, 0.05f, 0.05f));
-	entity2->SetRotation(XMFLOAT3(45 * XM_PIDIV2, 0, 0));
+	entity2->SetMesh(sphereMesh);
+	/*entity2->SetScale(XMFLOAT3(0.05f, 0.05f, 0.05f));
+	entity2->SetRotation(XMFLOAT3(45 * XM_PIDIV2, 0, 0));*/
 	entity3->SetMesh(sphereMesh);
 	entity4->SetMesh(sphereMesh);
 
@@ -99,7 +99,7 @@ void Game::InitializeAssets()
 	skyTexture->CreateTexture(L"../../Assets/envEnvHDR.dds", TexFileTypeDDS, commandQueue, true);
 
 	entity1->SetMaterial(scratchedMaterial);
-	entity2->SetMaterial(breadMaterial);
+	entity2->SetMaterial(woodenMaterial);
 	entity3->SetMaterial(cobblestoneMaterial);
 	entity4->SetMaterial(bronzeMaterial);
 }
