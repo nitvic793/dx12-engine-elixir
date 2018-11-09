@@ -62,10 +62,10 @@ void Game::InitializeAssets()
 	cobblestoneMaterial = new Material(
 		deferredRenderer,
 		{
-			L"../../Assets/Textures/rough_albedo.png" ,
-			L"../../Assets/Textures/rough_normals.png" ,
-			L"../../Assets/Textures/rough_roughness.png" ,
-			L"../../Assets/Textures/rough_metal.png"
+			L"../../Assets/Textures/scratched_albedo.png" ,
+			L"../../Assets/Textures/scratched_normals.png" ,
+			L"../../Assets/Textures/scratched_roughness.png" ,
+			L"../../Assets/Textures/scratched_metal.png"
 		},
 		device,
 		commandQueue
