@@ -11,5 +11,5 @@ SamplerState basicSampler:			register(s0);
 [numthreads(8, 8, 1)]
 void main(uint3 threadID : SV_DispatchThreadID)
 {
-	outputTexture[threadID.xy] = outputTexture[threadID.xy] / (float)reduceFactor;
+	outputTexture[threadID.xy] = inputTexture[threadID.xy] / (float)reduceFactor;
 }

@@ -360,6 +360,18 @@ void DeferredRenderer::DrawResult(ID3D12GraphicsCommandList* commandList, D3D12_
 	DrawLightPass(commandList); // Draws full screen quad with null vertex buffer.
 }
 
+void DeferredRenderer::DrawResult(ID3D12GraphicsCommandList * commandList, D3D12_CPU_DESCRIPTOR_HANDLE & rtvHandle, Texture* resultTex)
+{
+	commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(gBufferTextures[RTV_ORDER_QUAD], D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_GENERIC_READ));
+	commandList->ClearRenderTargetView(rtvHandle, mClearColor, 0, nullptr);
+	commandList->OMSetRenderTargets(1, &rtvHandle, true, nullptr);
+	commandList->SetPipelineState(screenQuadPSO);
+	ID3D12DescriptorHeap* ppHeaps[] = { resultTex->GetTextureDescriptorHeap()->pDescriptorHeap.Get() };
+	commandList->SetDescriptorHeaps(1, ppHeaps);
+	commandList->SetGraphicsRootDescriptorTable(2, resultTex->GetGPUDescriptorHandle());
+	DrawLightPass(commandList); // Draws full screen quad with null vertex buffer.
+}
+
 void DeferredRenderer::Draw(Mesh * m, const ConstantBuffer & cb, ID3D12GraphicsCommandList* commandList)
 {
 	commandList->IASetVertexBuffers(0, 1, &m->GetVertexBufferView());
@@ -879,6 +891,10 @@ void DeferredRenderer::CreateRootSignature()
 
 DeferredRenderer::~DeferredRenderer()
 {
+	for (int i = 0; i < numRTV; ++i)
+		gBufferTextures[numRTV]->Release();
+	depthStencilTexture->Release();
+
 	rootSignature->Release();
 
 	rtvHeap.pDescriptorHeap->Release();
@@ -888,10 +904,6 @@ DeferredRenderer::~DeferredRenderer()
 	resultTexture->Release();
 	delete resultUAV;
 	delete resultSRV;
-
-	for (int i = 0; i < numRTV; ++i)
-		gBufferTextures[numRTV]->Release();
-	depthStencilTexture->Release();
 
 	deferredPSO->Release();
 	dirLightPassPSO->Release();

@@ -4,7 +4,9 @@
 //Initializes assets. This function's scope has access to commandList which is not closed. 
 void Game::InitializeAssets()
 {
-	computeProcess = new ComputeProcess(device, L"ComputeCS.cso");
+	isBlurEnabled = false;
+	computeCore = new ComputeCore(device);
+	blurFilter = new BlurFilter(computeCore);
 	camera = new Camera((float)Width, (float)Height);
 	entity1 = new Entity();
 	entity2 = new Entity();
@@ -126,6 +128,14 @@ void Game::Update()
 	entity1->SetPosition(pos);
 	entity2->SetPosition(XMFLOAT3(2, 0, 2));
 	entity3->SetPosition(XMFLOAT3(0, 0, 5));
+	if (GetAsyncKeyState(VK_TAB))
+	{
+		isBlurEnabled = true;
+	}
+	else
+	{
+		isBlurEnabled = false;
+	}
 	/*float rotX = 2 * sin(totalTime);
 	entity1->SetRotation(XMFLOAT3(rotX, rotX, 0));*/
 }
@@ -164,10 +174,8 @@ void Game::Draw()
 
 	deferredRenderer->DrawSkybox(commandList, skyTexture);
 
-	computeProcess->SetShader(commandList);
-	computeProcess->SetTextureUAV(commandList, deferredRenderer->GetResultUAV());
-	computeProcess->SetTextureSRV(commandList, skyTexture);
-	computeProcess->Dispatch(commandList, 1280, 720, 1);
+	if (isBlurEnabled)
+		blurFilter->Blur(commandList, deferredRenderer->GetResultUAV(), deferredRenderer->GetResultSRV(), 4);
 
 	deferredRenderer->DrawResult(commandList, rtvHandle); //Draw renderer result to given main Render Target handle
 
@@ -206,7 +214,8 @@ void Game::OnMouseWheel(float wheelDelta, int x, int y)
 
 Game::~Game()
 {
-	delete computeProcess;
+	delete blurFilter;
+	delete computeCore;
 	delete sphereMesh;
 	delete cubeMesh;
 	delete camera;

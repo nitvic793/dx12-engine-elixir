@@ -1,7 +1,9 @@
 #pragma once
 #include "Core/Core.h"
 #include "Texture.h"
+#include "ComputeCore.h"
 #include "ComputeProcess.h"
+#include "BlurFilter.h"
 
 class Game : public Core
 {
@@ -31,8 +33,11 @@ protected:
 	Material*	cobblestoneMaterial;
 	Material*	bronzeMaterial;
 
-	POINT prevMousePos;
-	ComputeProcess* computeProcess;
+	ComputeCore*	computeCore;
+	POINT			prevMousePos;
+	BlurFilter*		blurFilter;
+
+	bool			isBlurEnabled;
 	void InitializeAssets();
 public:
 	Game(HINSTANCE hInstance, int ShowWnd, int width, int height, bool fullscreen);
