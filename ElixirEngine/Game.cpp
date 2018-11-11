@@ -181,7 +181,6 @@ void Game::Draw()
 	}
 
 	deferredRenderer->DrawResult(commandList, rtvHandle, finalTexture); //Draw renderer result to given main Render Target handle
-
 	deferredRenderer->ResetRenderTargetStates(commandList);
 }
 

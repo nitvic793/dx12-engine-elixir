@@ -17,3 +17,9 @@ struct PixelConstantBuffer
 	XMFLOAT4X4 invProjView;
 	XMFLOAT3 cameraPosition;
 };
+
+struct PerFrameConstantBuffer
+{
+	float nearZ;
+	float farZ;
+};

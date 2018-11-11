@@ -184,7 +184,7 @@ void Core::InitializeResources()
 
 	D3D12_DESCRIPTOR_RANGE  descriptorTableRanges[1]; // only one range right now
 	descriptorTableRanges[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV; // this is a range of shader resource views (descriptors)
-	descriptorTableRanges[0].NumDescriptors = 1; // we only have one texture right now, so the range is only 1
+	descriptorTableRanges[0].NumDescriptors = 12; // we only have one texture right now, so the range is only 1
 	descriptorTableRanges[0].BaseShaderRegister = 0; // start index of the shader registers in the range
 	descriptorTableRanges[0].RegisterSpace = 0; // space 0. can usually be zero
 	descriptorTableRanges[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND; // this appends the range to the end of the root signature descriptor tables
@@ -193,7 +193,7 @@ void Core::InitializeResources()
 	descriptorTable.NumDescriptorRanges = _countof(descriptorTableRanges); // we only have one range
 	descriptorTable.pDescriptorRanges = &descriptorTableRanges[0]; // the pointer to the beginning of our ranges array
 
-	D3D12_ROOT_PARAMETER  rootParameters[3];
+	D3D12_ROOT_PARAMETER  rootParameters[4];
 	rootParameters[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV; // this is a constant buffer view root descriptor
 	rootParameters[0].Descriptor = rootCBVDescriptor;
 	rootParameters[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
@@ -205,6 +205,13 @@ void Core::InitializeResources()
 	rootParameters[2].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE; // this is a descriptor table
 	rootParameters[2].DescriptorTable = descriptorTable; // this is our descriptor table for this root parameter
 	rootParameters[2].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL; // our pixel shader will be the only shader accessing this parameter for now
+
+	rootCBVDescriptor.RegisterSpace = 0;
+	rootCBVDescriptor.ShaderRegister = 1;
+
+	rootParameters[3].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV; // Per frame CB
+	rootParameters[3].Descriptor = rootCBVDescriptor;
+	rootParameters[3].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
 
 	D3D12_STATIC_SAMPLER_DESC sampler = {};
 	sampler.Filter = D3D12_FILTER_ANISOTROPIC;

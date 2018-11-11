@@ -286,6 +286,10 @@ void DeferredRenderer::SetLightShapePassPSO(ID3D12GraphicsCommandList * command,
 void DeferredRenderer::Draw(ID3D12GraphicsCommandList* commandList, std::vector<Entity*> entities)
 {
 	int ConstantBufferPerObjectAlignedSize = (sizeof(ConstantBuffer) + 255) & ~255;
+	int PerFrameCBSize = (sizeof(PerFrameConstantBuffer) + 255) & ~255;
+
+	PerFrameConstantBuffer frameCB = { camera->GetNearZ(), camera->GetFarZ() }; //Projection Constants for DOF
+	perFrameCbWrapper.CopyData(&frameCB, PerFrameCBSize, 0);
 	int index = 0;
 	ID3D12DescriptorHeap* ppHeaps[] = { cbHeap.pDescriptorHeap.Get() };
 	ID3D12DescriptorHeap* ppSrvHeaps[] = { srvHeap.pDescriptorHeap.Get() };
@@ -305,6 +309,7 @@ void DeferredRenderer::Draw(ID3D12GraphicsCommandList* commandList, std::vector<
 		};
 		cbWrapper.CopyData(&cb, ConstantBufferPerObjectAlignedSize, index);
 		commandList->SetGraphicsRootDescriptorTable(0, cbHeap.handleGPU(index));
+		commandList->SetGraphicsRootDescriptorTable(3, cbHeap.handleGPU(ConstBufferCount - 1)); //Per frame const buffer
 
 		Draw(e->GetMesh(), cb, commandList);
 		index++;
@@ -451,13 +456,15 @@ void DeferredRenderer::CreateCB()
 
 	resourceDesc.Width = 1024 * 128;
 	device->CreateCommittedResource(&heapProperty, D3D12_HEAP_FLAG_NONE, &resourceDesc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(&lightCB));
+	device->CreateCommittedResource(&heapProperty, D3D12_HEAP_FLAG_NONE, &resourceDesc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(&perFrameCB));
+
 }
 
 void DeferredRenderer::CreateViews()
 {
 	gBufferHeap.Create(device, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 32, true);
 
-	const int numCBsForNow = 32;
+	int numCBsForNow = ConstBufferCount;
 	cbHeap.Create(device, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, numCBsForNow, true);
 	pixelCbHeap.Create(device, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, numCBsForNow, true);
 
@@ -467,7 +474,7 @@ void DeferredRenderer::CreateViews()
 	descBuffer.SizeInBytes = ConstantBufferSize;
 
 
-	for (int i = 0; i < numCBsForNow; ++i)
+	for (int i = 0; i < numCBsForNow - 1; ++i)
 	{
 		descBuffer.BufferLocation = worldViewCB->GetGPUVirtualAddress() + i * ConstantBufferSize;
 		device->CreateConstantBufferView(&descBuffer, cbHeap.handleCPU(i));
@@ -482,6 +489,12 @@ void DeferredRenderer::CreateViews()
 		device->CreateConstantBufferView(&descBuffer, pixelCbHeap.handleCPU(i));
 	}
 
+	int perFrameCBSize = (sizeof(PerFrameConstantBuffer) + 255) & ~255;
+	descBuffer.BufferLocation = perFrameCB->GetGPUVirtualAddress();
+	descBuffer.SizeInBytes = (UINT)perFrameCBSize;
+	device->CreateConstantBufferView(&descBuffer, cbHeap.handleCPU(ConstBufferCount - 1));
+
+	perFrameCbWrapper.Initialize(perFrameCB, perFrameCBSize);
 	cbWrapper.Initialize(worldViewCB, ConstantBufferSize);
 	pixelCbWrapper.Initialize(lightCB, PixelConstantBufferSize);
 
@@ -894,22 +907,24 @@ void DeferredRenderer::CreateDSV()
 
 void DeferredRenderer::CreateRootSignature()
 {
-	CD3DX12_DESCRIPTOR_RANGE range[3];
+	CD3DX12_DESCRIPTOR_RANGE range[4];
 	//view dependent CBV
 	range[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0);
 	//light dependent CBV
 	range[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0);
 	//G-Buffer inputs
 	range[2].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 12, 0);
+	//per frame CBV
+	range[3].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 1);
 
-	CD3DX12_ROOT_PARAMETER rootParameters[3];
+	CD3DX12_ROOT_PARAMETER rootParameters[4];
 	rootParameters[0].InitAsDescriptorTable(1, &range[0], D3D12_SHADER_VISIBILITY_VERTEX);
 	rootParameters[1].InitAsDescriptorTable(1, &range[1], D3D12_SHADER_VISIBILITY_PIXEL);
 	rootParameters[2].InitAsDescriptorTable(1, &range[2], D3D12_SHADER_VISIBILITY_ALL);
-	//rootParameters[3].InitAsDescriptorTable(1, &range[3], D3D12_SHADER_VISIBILITY_ALL);
+	rootParameters[3].InitAsDescriptorTable(1, &range[3], D3D12_SHADER_VISIBILITY_VERTEX);
 
 	CD3DX12_ROOT_SIGNATURE_DESC descRootSignature;
-	descRootSignature.Init(3, rootParameters, 0, nullptr, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT | // we can deny shader stages here for better performance
+	descRootSignature.Init(4, rootParameters, 0, nullptr, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT | // we can deny shader stages here for better performance
 		D3D12_ROOT_SIGNATURE_FLAG_DENY_HULL_SHADER_ROOT_ACCESS |
 		D3D12_ROOT_SIGNATURE_FLAG_DENY_DOMAIN_SHADER_ROOT_ACCESS |
 		D3D12_ROOT_SIGNATURE_FLAG_DENY_GEOMETRY_SHADER_ROOT_ACCESS);
@@ -955,6 +970,7 @@ DeferredRenderer::~DeferredRenderer()
 
 	prefilterRTVHeap.pDescriptorHeap->Release();
 	prefilterTexture->Release();
+	perFrameCB->Release();
 	lightCB->Release();
 	worldViewCB->Release();
 	delete sphereMesh;

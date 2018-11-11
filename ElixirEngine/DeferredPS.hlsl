@@ -1,10 +1,11 @@
 struct VertexOutput
 {
-	float4 pos	: SV_POSITION;
-	float2 uv	: TEXCOORD;
+	float4 pos		: SV_POSITION;
+	float2 uv		: TEXCOORD;
 	float3 normal	: NORMAL;
 	float3 tangent	: TANGENT;
 	float3 worldPos	: POSITION;
+	float linearZ	: LINEARZ;
 };
 
 struct PixelOutput
@@ -66,5 +67,6 @@ PixelOutput main(VertexOutput input)// : SV_TARGET
 	float metal = MetalTexture.Sample(Sampler, input.uv).r;
 	output.roughness = float4(roughness, 0, 0, 0);
 	output.metalness = float4(metal, 0.f, 0.f, 0);
+	output.albedo.a = input.linearZ;
 	return output;
 }

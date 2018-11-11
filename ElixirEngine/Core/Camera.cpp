@@ -85,6 +85,16 @@ const XMFLOAT4X4 & Camera::GetInverseProjectionViewMatrix()
 	return inverseProjectionView;
 }
 
+const float & Camera::GetNearZ()
+{
+	return nearZ;
+}
+
+const float & Camera::GetFarZ()
+{
+	return farZ;
+}
+
 XMFLOAT4X4 Camera::GetViewMatrixTransposed()
 {
 	auto mat = XMLoadFloat4x4(&viewMatrix);
@@ -123,7 +133,9 @@ void Camera::SetProjectionMatrix(float width, float height)
 	XMStoreFloat4x4(&projectionMatrix, P);
 }
 
-Camera::Camera(float width, float height)
+Camera::Camera(float width, float height, float nearZ, float farZ) :
+	nearZ(nearZ),
+	farZ(farZ)
 {
 	float aspectRatio = width / height;
 	XMStoreFloat4(&rotation, XMQuaternionIdentity());
@@ -143,8 +155,8 @@ Camera::Camera(float width, float height)
 	XMMATRIX P = XMMatrixPerspectiveFovLH(
 		0.25f * XM_PI,		// Field of View Angle
 		aspectRatio,		// Aspect ratio
-		0.1f,						// Near clip plane distance
-		1000.0f);					// Far clip plane distance
+		nearZ,						// Near clip plane distance
+		farZ);					// Far clip plane distance
 	XMStoreFloat4x4(&projectionMatrix, XMMatrixTranspose(P));
 	XMStoreFloat4x4(&projectionMatrix, P);
 }

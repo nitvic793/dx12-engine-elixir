@@ -79,6 +79,7 @@ class DeferredRenderer
 
 	ConstantBufferWrapper cbWrapper;
 	ConstantBufferWrapper pixelCbWrapper;
+	ConstantBufferWrapper perFrameCbWrapper;
 
 	Texture* resultUAV;
 	Texture* resultSRV;
@@ -87,12 +88,14 @@ class DeferredRenderer
 
 	std::vector<Texture*> textureVector;
 
+	static const int ConstBufferCount = 32;
 	//Constant buffer must be larger than 256 bytes
-	static const int ConstantBufferSize = (sizeof(ConstantBuffer) + 255) & ~255;;
+	static const int ConstantBufferSize = (sizeof(ConstantBuffer) + 255) & ~255;
 	static const int PixelConstantBufferSize = (sizeof(PixelConstantBuffer) + 255) & ~255;
 
 	ID3D12Resource *lightCB;
 	ID3D12Resource *worldViewCB;
+	ID3D12Resource *perFrameCB;
 	Mesh* sphereMesh;
 	Mesh* cubeMesh;
 
