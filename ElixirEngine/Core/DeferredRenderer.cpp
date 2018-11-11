@@ -37,6 +37,20 @@ uint32_t DeferredRenderer::SetSRV(ID3D12Resource* textureSRV, bool isTextureCube
 	return index;
 }
 
+uint32_t DeferredRenderer::SetUAV(ID3D12Resource * textureSRV, bool isTextureCube)
+{
+	D3D12_UNORDERED_ACCESS_VIEW_DESC UAVDesc = {};
+	UAVDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D;
+	UAVDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
+	UAVDesc.Buffer.NumElements = 1;
+	UAVDesc.Buffer.Flags = D3D12_BUFFER_UAV_FLAG_RAW;
+
+	auto index = srvHeapIndex;
+	device->CreateUnorderedAccessView(textureSRV, nullptr, &UAVDesc, srvHeap.handleCPU(index));
+	srvHeapIndex++;
+	return index;
+}
+
 uint32_t DeferredRenderer::SetSRVs(ID3D12Resource** textureSRV, int textureCount, bool isTextureCube)
 {
 	auto index = srvHeapIndex;
@@ -64,7 +78,7 @@ void DeferredRenderer::SetIBLTextures(ID3D12Resource* irradianceTextureCube, ID3
 	srvDesc.Texture2D.MipLevels = 1;
 
 	device->CreateShaderResourceView(irradianceTextureCube, &srvDesc, gBufferHeap.handleCPU(irradianceIndex));
-	
+
 
 	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
 	srvDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
@@ -84,6 +98,21 @@ Texture * DeferredRenderer::GetResultUAV()
 Texture * DeferredRenderer::GetResultSRV()
 {
 	return resultSRV;
+}
+
+Texture * DeferredRenderer::GetPostProcessSRV()
+{
+	return postProcessSRV;
+}
+
+Texture * DeferredRenderer::GetPostProcessUAV()
+{
+	return postProcessUAV;
+}
+
+std::vector<Texture*> DeferredRenderer::GetTexturesArrayForPost()
+{
+	return textureVector;
 }
 
 void DeferredRenderer::Initialize(ID3D12GraphicsCommandList* command)
@@ -760,7 +789,7 @@ void DeferredRenderer::CreateRTV()
 		device->CreateCommittedResource(&heapProperty, D3D12_HEAP_FLAG_NONE, &resourceDesc, D3D12_RESOURCE_STATE_RENDER_TARGET, &clearVal, IID_PPV_ARGS(&gBufferTextures[i]));
 	}
 
-	device->CreateCommittedResource(&heapProperty, D3D12_HEAP_FLAG_NONE, &resourceDesc, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, &clearVal, IID_PPV_ARGS(&resultTexture));
+	device->CreateCommittedResource(&heapProperty, D3D12_HEAP_FLAG_NONE, &resourceDesc, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, &clearVal, IID_PPV_ARGS(&postProcessTexture));
 
 	D3D12_RENDER_TARGET_VIEW_DESC desc;
 	ZeroMemory(&desc, sizeof(desc));
@@ -806,6 +835,16 @@ void DeferredRenderer::CreateRTV()
 	device->CreateShaderResourceView(gBufferTextures[RTV_ORDER_QUAD], &descSRV, srvHeap.handleCPU(srvHeapIndex));
 	resultSRV = new Texture(this, device, gBufferTextures[RTV_ORDER_QUAD], srvHeapIndex, TextureTypeSRV);
 	srvHeapIndex++;
+
+	device->CreateUnorderedAccessView(postProcessTexture, nullptr, &UAVDesc, srvHeap.handleCPU(srvHeapIndex));
+	postProcessUAV = new Texture(this, device, postProcessTexture, srvHeapIndex, TextureTypeUAV);
+	srvHeapIndex++;
+
+	device->CreateShaderResourceView(postProcessTexture, &descSRV, srvHeap.handleCPU(srvHeapIndex));
+	postProcessSRV = new Texture(this, device, postProcessTexture, srvHeapIndex, TextureTypeSRV);
+	srvHeapIndex++;
+
+	textureVector = { resultUAV , resultSRV, postProcessUAV, postProcessSRV };
 }
 
 void DeferredRenderer::CreateDSV()
@@ -901,9 +940,11 @@ DeferredRenderer::~DeferredRenderer()
 	dsvHeap.pDescriptorHeap->Release();
 	srvHeap.pDescriptorHeap->Release();
 	gBufferHeap.pDescriptorHeap->Release();
-	resultTexture->Release();
+	postProcessTexture->Release();
 	delete resultUAV;
 	delete resultSRV;
+	delete postProcessSRV;
+	delete postProcessUAV;
 
 	deferredPSO->Release();
 	dirLightPassPSO->Release();

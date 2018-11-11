@@ -12,6 +12,6 @@ public:
 	~BlurFilter();
 
 	std::vector<float> CalcGaussWeights(float sigma);
-	void Blur(ID3D12GraphicsCommandList* commandList, Texture* outputUAV, Texture* inputSRV, int blurRadius);
+	Texture* Blur(ID3D12GraphicsCommandList* commandList, std::vector<Texture*> textures, int blurRadius);
 };
 

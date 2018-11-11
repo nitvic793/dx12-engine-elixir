@@ -60,7 +60,7 @@ class DeferredRenderer
 	ID3D12Resource* gBufferTextures[numRTV];
 	ID3D12Resource* depthStencilTexture;
 	ID3D12Resource* prefilterTexture;
-	ID3D12Resource* resultTexture;
+	ID3D12Resource* postProcessTexture;
 
 	ID3D12PipelineState* deferredPSO;
 	ID3D12PipelineState* dirLightPassPSO;
@@ -79,8 +79,13 @@ class DeferredRenderer
 
 	ConstantBufferWrapper cbWrapper;
 	ConstantBufferWrapper pixelCbWrapper;
+
 	Texture* resultUAV;
 	Texture* resultSRV;
+	Texture* postProcessUAV;
+	Texture* postProcessSRV;
+
+	std::vector<Texture*> textureVector;
 
 	//Constant buffer must be larger than 256 bytes
 	static const int ConstantBufferSize = (sizeof(ConstantBuffer) + 255) & ~255;;
@@ -128,10 +133,14 @@ public:
 
 	void SetSRV(ID3D12Resource* textureSRV, int index, bool isTextureCube = false);
 	uint32_t SetSRV(ID3D12Resource* textureSRV, bool isTextureCube = false);
+	uint32_t SetUAV(ID3D12Resource* textureSRV, bool isTextureCube = false);
 	uint32_t SetSRVs(ID3D12Resource** textureSRV, int textureCount, bool isTextureCube = false);
 	void SetIBLTextures(ID3D12Resource* irradianceTextureCube, ID3D12Resource* prefilterTextureCube, ID3D12Resource* brdfLUTTexture);
-	Texture* GetResultUAV();
-	Texture* GetResultSRV();
+	Texture*				GetResultUAV();
+	Texture*				GetResultSRV();
+	Texture*				GetPostProcessSRV();
+	Texture*				GetPostProcessUAV();
+	std::vector<Texture*>	GetTexturesArrayForPost();
 
 	void Initialize(ID3D12GraphicsCommandList* command);
 	void GeneratePreFilterEnvironmentMap(ID3D12GraphicsCommandList* command, int envTextureIndex);
