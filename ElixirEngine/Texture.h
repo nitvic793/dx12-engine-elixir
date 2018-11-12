@@ -45,6 +45,7 @@ public:
 	CDescriptorHeapWrapper* GetTextureDescriptorHeap();
 	Texture(DeferredRenderer* renderContext, ID3D12Device* device);
 	Texture(DeferredRenderer* renderContext, ID3D12Device* device, ID3D12Resource* resource, int heapIndex, TextureViewType viewType);
+	Texture(DeferredRenderer* renderContext, ID3D12Device* device, ID3D12Resource* resource, int heapIndex, TextureViewType viewType, CDescriptorHeapWrapper* descHeap);
 	~Texture();
 };
 

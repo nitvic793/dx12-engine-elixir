@@ -49,6 +49,8 @@ enum GBufferRenderTargetOrder
 	RTV_ORDER_COUNT
 };
 
+typedef GBufferRenderTargetOrder GBufferType;
+
 class DeferredRenderer
 {
 	ID3D12Device *device;
@@ -87,6 +89,7 @@ class DeferredRenderer
 	Texture* postProcessSRV;
 
 	std::vector<Texture*> textureVector;
+	std::vector<Texture*> gBufferTextureVector;
 
 	static const int ConstBufferCount = 32;
 	//Constant buffer must be larger than 256 bytes
@@ -144,6 +147,7 @@ public:
 	Texture*				GetPostProcessSRV();
 	Texture*				GetPostProcessUAV();
 	std::vector<Texture*>	GetTexturesArrayForPost();
+	Texture*				GetGBufferTextureSRV(GBufferType gBufferType);
 
 	void Initialize(ID3D12GraphicsCommandList* command);
 	void GeneratePreFilterEnvironmentMap(ID3D12GraphicsCommandList* command, int envTextureIndex);
@@ -161,5 +165,6 @@ public:
 	void UpdateConstantBuffer(const PixelConstantBuffer& pixelBuffer, ID3D12GraphicsCommandList* command);
 	void UpdateConstantBufferPerObject(ConstantBuffer& buffer, int index);
 	CDescriptorHeapWrapper& GetSRVHeap();
+	CDescriptorHeapWrapper& GetGBufferHeap();
 	~DeferredRenderer();
 };

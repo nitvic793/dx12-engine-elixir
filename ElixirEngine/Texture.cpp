@@ -68,6 +68,17 @@ Texture::Texture(DeferredRenderer * renderContext, ID3D12Device * device, ID3D12
 	this->heapIndex = heapIndex;
 }
 
+Texture::Texture(DeferredRenderer * renderContext, ID3D12Device * device, ID3D12Resource * resource, int heapIndex, TextureViewType viewType, CDescriptorHeapWrapper* descHeap)
+{
+	releaseNeeded = false;
+	this->renderContext = renderContext;
+	descriptorHeap = descHeap;
+	this->device = device;
+	this->resource = resource;
+	textureViewType = viewType;
+	this->heapIndex = heapIndex;
+}
+
 
 Texture::~Texture()
 {

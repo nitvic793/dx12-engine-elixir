@@ -61,7 +61,8 @@ float2 BrdfLUT(float3 normal, float3 viewDir, float roughness)
 float4 main(VertexToPixel pIn) : SV_TARGET
 {
 	int3 sampleIndices = int3(pIn.position.xy, 0);
-	float3 albedo = gAlbedoTexture.Sample(basicSampler, pIn.uv).rgb;
+	float4 packedAlbedo = gAlbedoTexture.Sample(basicSampler, pIn.uv);
+	float3 albedo = packedAlbedo.rgb;
 	float3 normal = gNormalTexture.Sample(basicSampler, pIn.uv).rgb;
 	float3 worldPos = gWorldPosTexture.Sample(basicSampler, pIn.uv).rgb;
 	float roughness = gRoughnessTexture.Sample(basicSampler, pIn.uv).r;
@@ -81,6 +82,6 @@ float4 main(VertexToPixel pIn) : SV_TARGET
 	finalColor = finalColor / (finalColor + float3(1.f, 1.f, 1.f));
 	float3 totalColor = finalColor + otherlights;
 	float3 gammaCorrect = pow(totalColor, 1.0 / 2.2); 
-	return float4(gammaCorrect, 1.0f);
+	return float4(gammaCorrect, packedAlbedo.a);
 
 }

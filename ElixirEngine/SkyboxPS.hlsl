@@ -12,5 +12,5 @@ struct VertexToPixel
 // Entry point for this pixel shader
 float4 main(VertexToPixel input) : SV_TARGET
 {
-	return Sky.Sample(basicSampler, input.uvw);
+	return float4(Sky.Sample(basicSampler, input.uvw).rgb, 0.f);
 }

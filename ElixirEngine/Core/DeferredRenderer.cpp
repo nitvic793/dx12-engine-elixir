@@ -115,6 +115,11 @@ std::vector<Texture*> DeferredRenderer::GetTexturesArrayForPost()
 	return textureVector;
 }
 
+Texture* DeferredRenderer::GetGBufferTextureSRV(GBufferType gBufferType)
+{
+	return gBufferTextureVector[gBufferType];
+}
+
 void DeferredRenderer::Initialize(ID3D12GraphicsCommandList* command)
 {
 	CreateCB();
@@ -434,6 +439,11 @@ void DeferredRenderer::UpdateConstantBufferPerObject(ConstantBuffer& buffer, int
 CDescriptorHeapWrapper& DeferredRenderer::GetSRVHeap()
 {
 	return srvHeap;
+}
+
+CDescriptorHeapWrapper & DeferredRenderer::GetGBufferHeap()
+{
+	return gBufferHeap;
 }
 
 void DeferredRenderer::CreateCB()
@@ -831,6 +841,7 @@ void DeferredRenderer::CreateRTV()
 	for (int i = 0; i < numRTV; i++) {
 		descSRV.Format = mRtvFormat[i];
 		device->CreateShaderResourceView(gBufferTextures[i], &descSRV, gBufferHeap.handleCPU(i));
+		gBufferTextureVector.push_back(new Texture(this, device, gBufferTextures[i], i, TextureTypeSRV, &gBufferHeap));
 	}
 
 	D3D12_UNORDERED_ACCESS_VIEW_DESC UAVDesc = {};
@@ -960,6 +971,10 @@ DeferredRenderer::~DeferredRenderer()
 	delete resultSRV;
 	delete postProcessSRV;
 	delete postProcessUAV;
+	for (auto& t : gBufferTextureVector)
+	{
+		delete t;
+	}
 
 	deferredPSO->Release();
 	dirLightPassPSO->Release();
