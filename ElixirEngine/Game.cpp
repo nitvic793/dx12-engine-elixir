@@ -4,6 +4,7 @@
 //Initializes assets. This function's scope has access to commandList which is not closed. 
 void Game::InitializeAssets()
 {
+	texturePool = new TexturePool(device, deferredRenderer);
 	isBlurEnabled = false;
 	computeCore = new ComputeCore(device);
 	blurFilter = new BlurFilter(computeCore);
@@ -175,9 +176,10 @@ void Game::Draw()
 	deferredRenderer->DrawSkybox(commandList, skyTexture);
 
 	Texture* finalTexture = deferredRenderer->GetResultSRV();
+
 	if (isBlurEnabled)
 	{
-		finalTexture = blurFilter->Blur(commandList, deferredRenderer->GetTexturesArrayForPost(), 4);
+		finalTexture = blurFilter->Blur(commandList, finalTexture, texturePool, 4);
 	}
 
 	deferredRenderer->DrawResult(commandList, rtvHandle, finalTexture); //Draw renderer result to given main Render Target handle
@@ -216,6 +218,7 @@ void Game::OnMouseWheel(float wheelDelta, int x, int y)
 
 Game::~Game()
 {
+	delete texturePool;
 	delete blurFilter;
 	delete computeCore;
 	delete sphereMesh;

@@ -139,7 +139,8 @@ public:
 
 	void SetSRV(ID3D12Resource* textureSRV, int index, bool isTextureCube = false);
 	uint32_t SetSRV(ID3D12Resource* textureSRV, bool isTextureCube = false);
-	uint32_t SetUAV(ID3D12Resource* textureSRV, bool isTextureCube = false);
+	uint32_t SetSRV(ID3D12Resource* textureSRV, DXGI_FORMAT format, bool isTextureCube = false);
+	uint32_t SetUAV(ID3D12Resource* textureSRV, bool isTextureCube = false, DXGI_FORMAT format = DXGI_FORMAT_R32G32B32A32_FLOAT);
 	uint32_t SetSRVs(ID3D12Resource** textureSRV, int textureCount, bool isTextureCube = false);
 	void SetIBLTextures(ID3D12Resource* irradianceTextureCube, ID3D12Resource* prefilterTextureCube, ID3D12Resource* brdfLUTTexture);
 	Texture*				GetResultUAV();

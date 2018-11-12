@@ -42,6 +42,7 @@ public:
 		TextureViewType textureViewType = TextureTypeSRV);
 
 	D3D12_GPU_DESCRIPTOR_HANDLE GetGPUDescriptorHandle();
+	D3D12_CPU_DESCRIPTOR_HANDLE GetCPUDescriptorHandle();
 	CDescriptorHeapWrapper* GetTextureDescriptorHeap();
 	Texture(DeferredRenderer* renderContext, ID3D12Device* device);
 	Texture(DeferredRenderer* renderContext, ID3D12Device* device, ID3D12Resource* resource, int heapIndex, TextureViewType viewType);

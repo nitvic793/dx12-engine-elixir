@@ -48,12 +48,10 @@ std::vector<float> BlurFilter::CalcGaussWeights(float sigma)
 	return weights;
 }
 
-Texture* BlurFilter::Blur(ID3D12GraphicsCommandList* commandList, std::vector<Texture*> textures, int blurRadius)
+//TODO: Change input parameters since blur radius is being recalculated
+Texture* BlurFilter::Blur(ID3D12GraphicsCommandList* commandList, Texture* inputSRV, TexturePool* texturePool, int blurRadius)
 {
-	// [rUAV, rSRV, pUAV, pSRV]
-	auto inputSRV = textures[1];
-	auto outputUAV = textures[2];
-	//TODO: Change input parameters since blur radius is being recalculated
+	auto outputUAV = texturePool->GetUAV(0);
 	auto weights = CalcGaussWeights(2.5f);
 	blurRadius = (int)weights.size() / 2;
 	UINT height = 720;
@@ -68,8 +66,8 @@ Texture* BlurFilter::Blur(ID3D12GraphicsCommandList* commandList, std::vector<Te
 		UINT numGroupsX = (UINT)ceilf(width / 256.f);
 		blurHorizontalCS->Dispatch(commandList, numGroupsX, height, 1);
 
-		inputSRV = textures[3];
-		outputUAV = textures[0];
+		inputSRV = texturePool->GetSRV(0);
+		outputUAV = texturePool->GetUAV(1);
 
 		blurVerticalCS->SetShader(commandList);
 		blurVerticalCS->SetConstants(commandList, &blurRadius, 1, 0);
@@ -80,5 +78,5 @@ Texture* BlurFilter::Blur(ID3D12GraphicsCommandList* commandList, std::vector<Te
 		blurHorizontalCS->Dispatch(commandList, width, numGroupsY, 1);
 	}
 
-	return textures[1];
+	return texturePool->GetSRV(1);
 }

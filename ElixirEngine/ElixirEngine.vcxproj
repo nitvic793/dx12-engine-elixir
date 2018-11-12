@@ -137,6 +137,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="Texture.cpp" />
+    <ClCompile Include="TexturePool.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="BlurFilter.h" />
@@ -158,6 +159,7 @@
     <ClInclude Include="Material.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="Texture.h" />
+    <ClInclude Include="TexturePool.h" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="BlurHorizontalCS.hlsl">

@@ -44,6 +44,11 @@ D3D12_GPU_DESCRIPTOR_HANDLE Texture::GetGPUDescriptorHandle()
 	return descriptorHeap->handleGPU(heapIndex);
 }
 
+D3D12_CPU_DESCRIPTOR_HANDLE Texture::GetCPUDescriptorHandle()
+{
+	return descriptorHeap->handleCPU(heapIndex);
+}
+
 CDescriptorHeapWrapper * Texture::GetTextureDescriptorHeap()
 {
 	return descriptorHeap;

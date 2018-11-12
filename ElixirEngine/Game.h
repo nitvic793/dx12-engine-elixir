@@ -4,6 +4,7 @@
 #include "ComputeCore.h"
 #include "ComputeProcess.h"
 #include "BlurFilter.h"
+#include "TexturePool.h"
 
 class Game : public Core
 {
@@ -18,8 +19,7 @@ protected:
 	ID3D12Resource* brdfLutTexture;
 	ID3D12Resource* skyboxPreFilter;
 
-	Texture*		skyTexture;
-
+	Texture*	skyTexture;
 	Mesh*		sphereMesh;
 	Mesh*		cubeMesh;
 	Camera*		camera;
@@ -33,6 +33,7 @@ protected:
 	Material*	cobblestoneMaterial;
 	Material*	bronzeMaterial;
 
+	TexturePool*	texturePool;
 	ComputeCore*	computeCore;
 	POINT			prevMousePos;
 	BlurFilter*		blurFilter;

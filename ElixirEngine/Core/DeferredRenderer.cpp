@@ -37,11 +37,29 @@ uint32_t DeferredRenderer::SetSRV(ID3D12Resource* textureSRV, bool isTextureCube
 	return index;
 }
 
-uint32_t DeferredRenderer::SetUAV(ID3D12Resource * textureSRV, bool isTextureCube)
+uint32_t DeferredRenderer::SetSRV(ID3D12Resource * textureSRV, DXGI_FORMAT format, bool isTextureCube)
+{
+	auto viewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+	if (isTextureCube) viewDimension = D3D12_SRV_DIMENSION_TEXTURECUBE;
+
+	D3D12_SHADER_RESOURCE_VIEW_DESC descSRV;
+	ZeroMemory(&descSRV, sizeof(descSRV));
+	descSRV.Texture2D.MipLevels = 1;
+	descSRV.Texture2D.MostDetailedMip = 0;
+	descSRV.Format = format;
+	descSRV.ViewDimension = viewDimension;
+	descSRV.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+	auto index = srvHeapIndex;
+	device->CreateShaderResourceView(textureSRV, &descSRV, srvHeap.handleCPU(index));
+	srvHeapIndex++;
+	return index;
+}
+
+uint32_t DeferredRenderer::SetUAV(ID3D12Resource * textureSRV, bool isTextureCube, DXGI_FORMAT format)
 {
 	D3D12_UNORDERED_ACCESS_VIEW_DESC UAVDesc = {};
 	UAVDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D;
-	UAVDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
+	UAVDesc.Format = format;
 	UAVDesc.Buffer.NumElements = 1;
 	UAVDesc.Buffer.Flags = D3D12_BUFFER_UAV_FLAG_RAW;
 
@@ -836,7 +854,7 @@ void DeferredRenderer::CreateRTV()
 	descSRV.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
 	descSRV.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
 
-	srvHeap.Create(device, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 32, true);
+	srvHeap.Create(device, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 64, true);
 
 	for (int i = 0; i < numRTV; i++) {
 		descSRV.Format = mRtvFormat[i];

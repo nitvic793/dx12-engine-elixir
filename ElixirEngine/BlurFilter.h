@@ -1,6 +1,7 @@
 #pragma once
 #include "stdafx.h"
 #include "ComputeProcess.h"
+#include "TexturePool.h"
 
 class BlurFilter
 {
@@ -12,6 +13,6 @@ public:
 	~BlurFilter();
 
 	std::vector<float> CalcGaussWeights(float sigma);
-	Texture* Blur(ID3D12GraphicsCommandList* commandList, std::vector<Texture*> textures, int blurRadius);
+	Texture* Blur(ID3D12GraphicsCommandList* commandList, Texture* inputSRV, TexturePool* texturePool, int blurRadius);
 };
 
