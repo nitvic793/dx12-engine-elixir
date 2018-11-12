@@ -18,6 +18,7 @@ public:
 	void SetShader(ID3D12GraphicsCommandList* commandList);
 	void SetTextureUAV(ID3D12GraphicsCommandList* commandList, Texture* textureUAV);
 	void SetTextureSRV(ID3D12GraphicsCommandList* commandList, Texture* textureSRV);
+	void SetTextureSRVOffset(ID3D12GraphicsCommandList* commandList, Texture* textureSRV);
 	void SetConstants(ID3D12GraphicsCommandList* commandList, void* data, UINT count, UINT offset);
 	void Dispatch(ID3D12GraphicsCommandList* commandList, int x = 1, int y = 1, int z = 1);
 };

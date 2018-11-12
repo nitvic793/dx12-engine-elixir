@@ -27,12 +27,16 @@ cbuffer cbSettings : register(b0)
 	float w8;
 	float w9;
 	float w10;
+
+	float focusPlaneZ;
+	float focusLength;
 };
 
 static const int gMaxBlurRadius = 5;
 
 
 Texture2D gInput            : register(t0);
+Texture2D sharp	            : register(t4);
 RWTexture2D<float4> gOutput : register(u0);
 
 #define N 256
@@ -87,5 +91,11 @@ void main(int3 groupThreadID : SV_GroupThreadID,
 		blurColor += weights[i + gBlurRadius] * gCache[k];
 	}
 
-	gOutput[dispatchThreadID.xy] = blurColor;
+	float4 finalColor = sharp[dispatchThreadID.xy];
+	float focusPlane = 6.f;
+	float linearZ = gInput[dispatchThreadID.xy].a; //Packed Linear Z;
+	if (linearZ > focusPlane + 1.f || linearZ < focusPlane - 1.f)
+		finalColor = blurColor;
+
+	gOutput[dispatchThreadID.xy] = finalColor;// blurColor;
 }

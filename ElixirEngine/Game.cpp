@@ -177,7 +177,7 @@ void Game::Draw()
 
 	Texture* finalTexture = deferredRenderer->GetResultSRV();
 
-	if (isBlurEnabled)
+	if (true)
 	{
 		finalTexture = blurFilter->Blur(commandList, finalTexture, texturePool, 4);
 	}
