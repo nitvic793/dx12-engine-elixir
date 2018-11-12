@@ -7,6 +7,8 @@ void Game::InitializeAssets()
 	texturePool = new TexturePool(device, deferredRenderer);
 	isBlurEnabled = false;
 	computeCore = new ComputeCore(device);
+
+	dofPass = std::unique_ptr<DepthOfFieldPass>(new DepthOfFieldPass(computeCore));
 	blurFilter = new BlurFilter(computeCore);
 	camera = new Camera((float)Width, (float)Height);
 	entity1 = new Entity();
@@ -177,9 +179,14 @@ void Game::Draw()
 
 	Texture* finalTexture = deferredRenderer->GetResultSRV();
 
-	if (true)
+	if (isBlurEnabled)
 	{
-		finalTexture = blurFilter->Blur(commandList, finalTexture, texturePool, 4);
+		auto blurTexture = blurFilter->Blur(commandList, finalTexture, texturePool, 4);
+		finalTexture = dofPass->Apply(commandList, finalTexture, blurTexture, texturePool, 6, 4);
+	}
+	else
+	{
+		//finalTexture = blurFilter->Blur(commandList, finalTexture, texturePool, 4);
 	}
 
 	deferredRenderer->DrawResult(commandList, rtvHandle, finalTexture); //Draw renderer result to given main Render Target handle

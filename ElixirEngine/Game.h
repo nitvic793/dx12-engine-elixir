@@ -4,6 +4,7 @@
 #include "ComputeCore.h"
 #include "ComputeProcess.h"
 #include "BlurFilter.h"
+#include "DepthOfFieldPass.h"
 #include "TexturePool.h"
 
 class Game : public Core
@@ -37,6 +38,8 @@ protected:
 	ComputeCore*	computeCore;
 	POINT			prevMousePos;
 	BlurFilter*		blurFilter;
+
+	std::unique_ptr<DepthOfFieldPass> dofPass;
 
 	bool			isBlurEnabled;
 	void InitializeAssets();

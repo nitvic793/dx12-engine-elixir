@@ -5,11 +5,11 @@ RWTexture2D<float4> resultTexture	: register(u0);
 
 #define N 16
 
-[numthreads(N, N, 1)]
+[numthreads(8, 8, 1)]
 void main( uint3 dThreadID : SV_DispatchThreadID )
 {
 	float focusPlane = 6.f;
-	float scale = 1.f;
+	float scale = 0.2f;
 	float4 sharp = sharpTexture[dThreadID.xy];
 	float3 blur = blurTexture[dThreadID.xy].rgb;
 	float linearZ = sharp.a;

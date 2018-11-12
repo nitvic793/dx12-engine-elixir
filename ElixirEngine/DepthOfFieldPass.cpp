@@ -10,7 +10,14 @@ DepthOfFieldPass::DepthOfFieldPass(ComputeCore* core):
 
 Texture * DepthOfFieldPass::Apply(ID3D12GraphicsCommandList * commandList, Texture * sharpSRV, Texture * blurSRV, TexturePool * texturePool, float focusPlaneZ, float focusLength)
 {
-	return nullptr;
+	UINT width = 1280;
+	UINT height = 720;
+	dofCS->SetShader(commandList);
+	dofCS->SetTextureSRV(commandList, blurSRV);
+	dofCS->SetTextureSRVOffset(commandList, sharpSRV);
+	dofCS->SetTextureUAV(commandList, texturePool->GetUAV(2));
+	dofCS->Dispatch(commandList, width, height, 1);
+	return texturePool->GetSRV(2);
 }
 
 
