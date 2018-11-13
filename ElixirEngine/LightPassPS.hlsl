@@ -45,7 +45,7 @@ sampler basicSampler;
 
 float3 PrefilteredColor(float3 viewDir, float3 normal, float roughness)
 {
-	const float MAX_REF_LOD = 8.0f; // (mip level - 1)
+	const float MAX_REF_LOD = 9.0f; // (mip level - 1)
 	float3 R = reflect(-viewDir, normal);
 	return skyPrefilterTexture.SampleLevel(basicSampler, R, roughness * MAX_REF_LOD).rgb;
 }
@@ -81,7 +81,7 @@ float4 main(VertexToPixel pIn) : SV_TARGET
 		specColor, irradiance, prefilter, brdf);
 	finalColor = finalColor / (finalColor + float3(1.f, 1.f, 1.f));
 	float3 totalColor = finalColor + otherlights;
-	float3 gammaCorrect = pow(totalColor, 1.0 / 2.2); 
+	float3 gammaCorrect = lerp(totalColor, pow(totalColor, 1.0 / 2.2), 0.4f); 
 	return float4(gammaCorrect, packedAlbedo.a);
 
 }
