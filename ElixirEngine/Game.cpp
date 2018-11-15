@@ -4,6 +4,56 @@
 //Initializes assets. This function's scope has access to commandList which is not closed. 
 void Game::InitializeAssets()
 {
+	int entityCount = 10;
+	std::vector<std::wstring> textureList = {
+			L"../../Assets/Textures/floor_albedo.png" ,
+			L"../../Assets/Textures/floor_normals.png" ,
+			L"../../Assets/Textures/floor_roughness.png" ,
+			L"../../Assets/Textures/floor_metal.png",
+			L"../../Assets/Textures/wood_albedo.png" ,
+			L"../../Assets/Textures/wood_normals.png" ,
+			L"../../Assets/Textures/wood_roughness.png" ,
+			L"../../Assets/Textures/wood_metal.png",
+			L"../../Assets/Textures/scratched_albedo.png" ,
+			L"../../Assets/Textures/scratched_normals.png" ,
+			L"../../Assets/Textures/scratched_roughness.png" ,
+			L"../../Assets/Textures/scratched_metal.png",
+			L"../../Assets/Textures/bronze_albedo.png" ,
+			L"../../Assets/Textures/bronze_normals.png" ,
+			L"../../Assets/Textures/bronze_roughness.png" ,
+			L"../../Assets/Textures/bronze_metal.png"
+	};
+
+	std::vector<std::string> meshList = {
+		"../../Assets/sphere.obj"
+	};
+
+	size_t materialCount = textureList.size() / 4;
+	for (int i = 0; i < textureList.size(); i += 4)
+	{
+		materials.push_back(std::unique_ptr<Material>(new Material(
+			deferredRenderer,
+			{
+				textureList[i].c_str(),
+				textureList[i + 1].c_str(),
+				textureList[i + 2].c_str(),
+				textureList[i + 3].c_str()
+			}, 
+			device, 
+			commandQueue)));
+	}
+
+	for (int i = 0; i < meshList.size(); ++i)
+	{
+		meshes.push_back(std::unique_ptr<Mesh>(new Mesh(meshList[i], device, commandList)));
+	}
+
+	std::vector<int> entityMaterialMap;
+	for (int i = 0; i < entityCount; ++i)
+	{
+		entityMaterialMap.push_back(i % materialCount);
+	}
+
 	texturePool = new TexturePool(device, deferredRenderer);
 	isBlurEnabled = false;
 	computeCore = new ComputeCore(device);
@@ -11,18 +61,6 @@ void Game::InitializeAssets()
 	dofPass = std::unique_ptr<DepthOfFieldPass>(new DepthOfFieldPass(computeCore));
 	blurFilter = new BlurFilter(computeCore);
 	camera = new Camera((float)Width, (float)Height);
-	entity1 = new Entity();
-	entity2 = new Entity();
-	entity3 = new Entity();
-	entity4 = new Entity();
-	sphereMesh = new Mesh("../../Assets/sphere.obj", device, commandList);
-	cubeMesh = new Mesh("../../Assets/cube.obj", device, commandList);
-	entity1->SetMesh(sphereMesh);
-	entity2->SetMesh(sphereMesh);
-	/*entity2->SetScale(XMFLOAT3(0.05f, 0.05f, 0.05f));
-	entity2->SetRotation(XMFLOAT3(45 * XM_PIDIV2, 0, 0));*/
-	entity3->SetMesh(sphereMesh);
-	entity4->SetMesh(sphereMesh);
 
 	pixelCb.light.AmbientColor = XMFLOAT4(0.1f, 0.1f, 0.1f, 0);
 	pixelCb.light.DiffuseColor = XMFLOAT4(0.1f, 0.1f, 0.1f, 0.f);
@@ -38,75 +76,19 @@ void Game::InitializeAssets()
 	auto uploadOperation = uploadBatch.End(commandQueue);
 	uploadOperation.wait();
 
-	scratchedMaterial = new Material(
-		deferredRenderer,
-		{
-			L"../../Assets/Textures/floor_albedo.png" ,
-			L"../../Assets/Textures/floor_normals.png" ,
-			L"../../Assets/Textures/floor_roughness.png" ,
-			L"../../Assets/Textures/floor_metal.png"
-		},
-		device,
-		commandQueue
-	);
-
-	woodenMaterial = new Material(
-		deferredRenderer,
-		{
-			L"../../Assets/Textures/wood_albedo.png" ,
-			L"../../Assets/Textures/wood_normals.png" ,
-			L"../../Assets/Textures/wood_roughness.png" ,
-			L"../../Assets/Textures/wood_metal.png"
-		},
-		device,
-		commandQueue
-	);
-
-	cobblestoneMaterial = new Material(
-		deferredRenderer,
-		{
-			L"../../Assets/Textures/scratched_albedo.png" ,
-			L"../../Assets/Textures/scratched_normals.png" ,
-			L"../../Assets/Textures/scratched_roughness.png" ,
-			L"../../Assets/Textures/scratched_metal.png"
-		},
-		device,
-		commandQueue
-	);
-
-	bronzeMaterial = new Material(
-		deferredRenderer,
-		{
-			L"../../Assets/Textures/bronze_albedo.png" ,
-			L"../../Assets/Textures/bronze_normals.png" ,
-			L"../../Assets/Textures/bronze_roughness.png" ,
-			L"../../Assets/Textures/bronze_metal.png"
-		},
-		device,
-		commandQueue
-	);
-
-	breadMaterial = new Material(
-		deferredRenderer,
-		{
-			L"../../Assets/Textures/wrench_albedo.jpg" ,
-			L"../../Assets/Textures/wrench_normals.png" ,
-			L"../../Assets/Textures/wrench_roughness.jpg" ,
-			L"../../Assets/Textures/wrench_metal.jpg"
-		},
-		device,
-		commandQueue
-	);
+	for (int i = 0; i < entityCount; ++i)
+	{
+		entities.push_back(std::unique_ptr<Entity>(new Entity()));
+		entities[i]->SetMesh(meshes[0].get());
+		auto pos = XMFLOAT3((float)i, 0, 0);
+		entities[i]->SetPosition(pos);
+		int matId = entityMaterialMap[i];
+		entities[i]->SetMaterial(materials[matId].get());
+	}
 
 	deferredRenderer->SetIBLTextures(skyboxIRTexture, skyboxPreFilter, brdfLutTexture);
-
 	skyTexture = new Texture(deferredRenderer, device);
 	skyTexture->CreateTexture(L"../../Assets/envEnvHDR.dds", TexFileTypeDDS, commandQueue, true);
-
-	entity1->SetMaterial(scratchedMaterial);
-	entity2->SetMaterial(woodenMaterial);
-	entity3->SetMaterial(cobblestoneMaterial);
-	entity4->SetMaterial(bronzeMaterial);
 }
 
 Game::Game(HINSTANCE hInstance, int ShowWnd, int width, int height, bool fullscreen) :
@@ -127,10 +109,6 @@ void Game::Update()
 {
 	CurrentTime += deltaTime;
 	camera->Update(deltaTime);
-	auto pos = XMFLOAT3(-2, 0, 2);
-	entity1->SetPosition(pos);
-	entity2->SetPosition(XMFLOAT3(2, 0, 2));
-	entity3->SetPosition(XMFLOAT3(0, 0, 5));
 	if (GetAsyncKeyState(VK_TAB))
 	{
 		isBlurEnabled = true;
@@ -139,8 +117,6 @@ void Game::Update()
 	{
 		isBlurEnabled = false;
 	}
-	/*float rotX = 2 * sin(totalTime);
-	entity1->SetRotation(XMFLOAT3(rotX, rotX, 0));*/
 }
 
 void Game::Draw()
@@ -159,14 +135,15 @@ void Game::Draw()
 	pixelCb.cameraPosition = camera->GetPosition();
 	pixelCb.invProjView = camera->GetInverseProjectionViewMatrix();
 
+	std::vector<Entity*> entityList;
+	for (auto& entity : entities)
+	{
+		entityList.push_back(entity.get());
+	}
+
 	// draw
 	deferredRenderer->SetGBUfferPSO(commandList, camera, pixelCb);
-	deferredRenderer->Draw(commandList, {
-			entity1,
-			entity2,
-			entity3,
-			entity4
-		}
+	deferredRenderer->Draw(commandList, entityList
 	);
 
 	deferredRenderer->SetLightShapePassPSO(commandList, pixelCb);
@@ -183,10 +160,6 @@ void Game::Draw()
 	{
 		auto blurTexture = blurFilter->Blur(commandList, finalTexture, texturePool, 4);
 		finalTexture = dofPass->Apply(commandList, finalTexture, blurTexture, texturePool, 6, 4);
-	}
-	else
-	{
-		//finalTexture = blurFilter->Blur(commandList, finalTexture, texturePool, 4);
 	}
 
 	deferredRenderer->DrawResult(commandList, rtvHandle, finalTexture); //Draw renderer result to given main Render Target handle
@@ -228,18 +201,7 @@ Game::~Game()
 	delete texturePool;
 	delete blurFilter;
 	delete computeCore;
-	delete sphereMesh;
-	delete cubeMesh;
 	delete camera;
-	delete entity1;
-	delete entity2;
-	delete entity3;
-	delete entity4;
-	delete scratchedMaterial;
-	delete woodenMaterial;
-	delete cobblestoneMaterial;
-	delete bronzeMaterial;
-	delete breadMaterial;
 	delete skyTexture;
 
 	skyboxTexture->Release();

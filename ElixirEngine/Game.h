@@ -10,35 +10,22 @@
 class Game : public Core
 {
 protected:
-	ID3D12Resource* textureBuffer;
-	ID3D12Resource* normalTexture;
-	ID3D12Resource* roughnessTexture;
-	ID3D12Resource* metalnessTexture;
-
 	ID3D12Resource* skyboxTexture;
 	ID3D12Resource* skyboxIRTexture;
 	ID3D12Resource* brdfLutTexture;
 	ID3D12Resource* skyboxPreFilter;
 
 	Texture*	skyTexture;
-	Mesh*		sphereMesh;
-	Mesh*		cubeMesh;
 	Camera*		camera;
-	Entity*		entity1;
-	Entity*		entity2;
-	Entity*		entity3;
-	Entity*		entity4;
-	Material*	scratchedMaterial;
-	Material*	breadMaterial;
-	Material*	woodenMaterial;
-	Material*	cobblestoneMaterial;
-	Material*	bronzeMaterial;
 
 	TexturePool*	texturePool;
 	ComputeCore*	computeCore;
 	POINT			prevMousePos;
 	BlurFilter*		blurFilter;
 
+	std::vector<std::unique_ptr<Entity>> entities;
+	std::vector<std::unique_ptr<Material>> materials;
+	std::vector<std::unique_ptr<Mesh>> meshes;
 	std::unique_ptr<DepthOfFieldPass> dofPass;
 
 	bool			isBlurEnabled;
