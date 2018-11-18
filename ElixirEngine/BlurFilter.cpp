@@ -49,7 +49,7 @@ std::vector<float> BlurFilter::CalcGaussWeights(float sigma)
 }
 
 //TODO: Change input parameters since blur radius is being recalculated
-Texture* BlurFilter::Blur(ID3D12GraphicsCommandList* commandList, Texture* inputSRV, TexturePool* texturePool, int blurRadius)
+Texture* BlurFilter::Blur(ID3D12GraphicsCommandList* commandList, Texture* inputSRV, TexturePool* texturePool, int blurRadius, float focusPlane, float focalLength)
 {
 	auto input = inputSRV;
 	auto outputUAV = texturePool->GetUAV(0);
@@ -61,7 +61,10 @@ Texture* BlurFilter::Blur(ID3D12GraphicsCommandList* commandList, Texture* input
 	{
 		blurHorizontalCS->SetShader(commandList);
 		blurHorizontalCS->SetConstants(commandList, &blurRadius, 1, 0);
-		blurHorizontalCS->SetConstants(commandList, weights.data(), (UINT)weights.size(), 1);
+		blurHorizontalCS->SetConstants(commandList, &focusPlane, 1, 1);
+		blurHorizontalCS->SetConstants(commandList, &focalLength, 1, 2);
+		blurHorizontalCS->SetConstants(commandList, weights.data(), (UINT)weights.size(), 3);
+
 		blurHorizontalCS->SetTextureSRV(commandList, input);
 		blurHorizontalCS->SetTextureSRVOffset(commandList, inputSRV);
 		blurHorizontalCS->SetTextureUAV(commandList, outputUAV);
@@ -73,7 +76,10 @@ Texture* BlurFilter::Blur(ID3D12GraphicsCommandList* commandList, Texture* input
 
 		blurVerticalCS->SetShader(commandList);
 		blurVerticalCS->SetConstants(commandList, &blurRadius, 1, 0);
-		blurVerticalCS->SetConstants(commandList, weights.data(), (UINT)weights.size(), 1);
+		blurVerticalCS->SetConstants(commandList, &focusPlane, 1, 1);
+		blurVerticalCS->SetConstants(commandList, &focalLength, 1, 2);
+		blurVerticalCS->SetConstants(commandList, weights.data(), (UINT)weights.size(), 3);
+
 		blurVerticalCS->SetTextureSRV(commandList, input);
 		blurVerticalCS->SetTextureSRVOffset(commandList, inputSRV);
 		blurVerticalCS->SetTextureUAV(commandList, outputUAV);

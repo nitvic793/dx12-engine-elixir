@@ -9,7 +9,7 @@ class DepthOfFieldPass
 	ComputeCore*	computeCore;
 public:
 	DepthOfFieldPass(ComputeCore* core);
-	Texture* Apply(ID3D12GraphicsCommandList* commandList, Texture* sharpSRV, Texture* blurSRV, TexturePool* texturePool, float focusPlaneZ, float focusLength);
+	Texture* Apply(ID3D12GraphicsCommandList* commandList, Texture* sharpSRV, Texture* blurSRV, TexturePool* texturePool, float focusPlaneZ, float scale);
 	~DepthOfFieldPass();
 };
 
