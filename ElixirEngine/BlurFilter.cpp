@@ -49,7 +49,7 @@ std::vector<float> BlurFilter::CalcGaussWeights(float sigma)
 }
 
 //TODO: Change input parameters since blur radius is being recalculated
-Texture* BlurFilter::Blur(ID3D12GraphicsCommandList* commandList, Texture* inputSRV, TexturePool* texturePool, int blurRadius, float focusPlane, float focalLength)
+Texture* BlurFilter::Apply(ID3D12GraphicsCommandList* commandList, Texture* inputSRV, TexturePool* texturePool, int blurRadius, float focusPlane, float focalLength)
 {
 	auto input = inputSRV;
 	auto outputUAV = texturePool->GetUAV(0);

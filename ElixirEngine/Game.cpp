@@ -158,7 +158,7 @@ void Game::Draw()
 
 	if (isBlurEnabled)
 	{
-		auto blurTexture = blurFilter->Blur(commandList, finalTexture, texturePool, 4, 6, 2);
+		auto blurTexture = blurFilter->Apply(commandList, finalTexture, texturePool, 4, 6, 2);
 		finalTexture = dofPass->Apply(commandList, finalTexture, blurTexture, texturePool, 6, 0.2f);
 	}
 

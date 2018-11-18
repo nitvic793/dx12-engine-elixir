@@ -13,6 +13,6 @@ public:
 	~BlurFilter();
 
 	std::vector<float> CalcGaussWeights(float sigma);
-	Texture* Blur(ID3D12GraphicsCommandList* commandList, Texture* inputSRV, TexturePool* texturePool, int blurRadius, float focusPlane, float focalLength);
+	Texture* Apply(ID3D12GraphicsCommandList* commandList, Texture* inputSRV, TexturePool* texturePool, int blurRadius, float focusPlane, float focalLength);
 };
 
