@@ -83,7 +83,7 @@ class DeferredRenderer
 	ConstantBufferWrapper pixelCbWrapper;
 	ConstantBufferWrapper perFrameCbWrapper;
 
-	Texture* gDepthSRV;
+	std::unique_ptr<Texture> gDepthSRV;
 	Texture* resultUAV;
 	Texture* resultSRV;
 	Texture* postProcessUAV;

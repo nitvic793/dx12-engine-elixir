@@ -2,6 +2,14 @@
 #include "TexturePool.h"
 #include "Core/DeferredRenderer.h"
 
+
+int64_t hash(int x_, int y_, int z_) {
+	uint64_t result = uint16_t(x_);
+	result = (result << 16) + uint16_t(y_);
+	result = (result << 16) + uint16_t(z_);
+	return result;
+}
+
 void TexturePool::AddTexture(DXGI_FORMAT format, int width, int height)
 {
 	ID3D12Resource* texture;
@@ -58,6 +66,37 @@ Texture * TexturePool::GetSRV(int index)
 Texture * TexturePool::GetUAV(int index)
 {
 	return textureUAVs[index];
+}
+
+Texture* TexturePool::Request(DXGI_FORMAT format, int width, int height, TextureViewType type, int* index, bool getCached)
+{
+	int texIndex;
+	auto hashed = hash(format, width, height);
+	bool containsKey = textureRequestMap.find(hashed) != textureRequestMap.end();
+	if (!containsKey || !getCached)
+	{
+		texIndex = maxTextureCount;
+		AddTexture(format, width, height);
+		if (!containsKey)
+			textureRequestMap.insert(std::pair<uint64_t, int>(hashed, maxTextureCount));
+		else
+			textureRequestMap[hashed] = maxTextureCount;
+		maxTextureCount++;
+	}
+	else
+	{
+		texIndex = textureRequestMap[hashed];
+	}
+
+	if (index != nullptr)
+		*index = texIndex;
+
+	if (type == TextureTypeSRV)
+		return GetSRV(texIndex);
+	else if (type == TextureTypeUAV)
+		return GetUAV(texIndex);
+
+	return nullptr;
 }
 
 

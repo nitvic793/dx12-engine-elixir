@@ -130,7 +130,7 @@ Texture * DeferredRenderer::GetPostProcessUAV()
 
 Texture * DeferredRenderer::GetGBufferDepthSRV()
 {
-	return gDepthSRV;
+	return gDepthSRV.get();
 }
 
 std::vector<Texture*> DeferredRenderer::GetTexturesArrayForPost()
@@ -939,7 +939,8 @@ void DeferredRenderer::CreateDSV()
 	device->CreateShaderResourceView(depthStencilTexture, &descSRV, gBufferHeap.handleCPU(RTV_ORDER_COUNT));
 
 	auto heapIndex = SetSRV(depthStencilTexture, DXGI_FORMAT_R24_UNORM_X8_TYPELESS);
-	gDepthSRV = new Texture(this, device, depthStencilTexture, heapIndex, TextureTypeSRV);
+	
+	gDepthSRV = std::make_unique<Texture>(this, device, depthStencilTexture, heapIndex, TextureTypeSRV);
 }
 
 void DeferredRenderer::CreateRootSignature()
