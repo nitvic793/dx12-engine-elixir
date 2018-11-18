@@ -30,8 +30,7 @@ void Game::InitializeAssets()
 
 	std::vector<std::string> meshList = {
 		"../../Assets/sphere.obj",
-		"../../Assets/quad.obj",
-		"../../Assets/dice.obj"
+		"../../Assets/quad.obj"
 	};
 
 	size_t materialCount = textureList.size() / 4;
@@ -96,11 +95,6 @@ void Game::InitializeAssets()
 	entities[9]->SetPosition(XMFLOAT3(5, -1, 0));
 	entities[9]->SetScale(XMFLOAT3(15, 15, 15));
 	entities[9]->SetMaterial(materials[4].get());
-
-	entities[8]->SetMesh(meshes[2].get());
-	//entities[8]->SetPosition(XMFLOAT3(5, -1, 0));
-	//entities[8]->SetScale(XMFLOAT3(15, 15, 15));
-	//entities[8]->SetMaterial(materials[4].get());
 
 	deferredRenderer->SetIBLTextures(skyboxIRTexture, skyboxPreFilter, brdfLutTexture);
 	skyTexture = new Texture(deferredRenderer, device);

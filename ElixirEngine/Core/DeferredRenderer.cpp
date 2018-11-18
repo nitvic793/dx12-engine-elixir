@@ -128,6 +128,11 @@ Texture * DeferredRenderer::GetPostProcessUAV()
 	return postProcessUAV;
 }
 
+Texture * DeferredRenderer::GetGBufferDepthSRV()
+{
+	return gDepthSRV;
+}
+
 std::vector<Texture*> DeferredRenderer::GetTexturesArrayForPost()
 {
 	return textureVector;
@@ -932,6 +937,9 @@ void DeferredRenderer::CreateDSV()
 	descSRV.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
 
 	device->CreateShaderResourceView(depthStencilTexture, &descSRV, gBufferHeap.handleCPU(RTV_ORDER_COUNT));
+
+	auto heapIndex = SetSRV(depthStencilTexture, DXGI_FORMAT_R24_UNORM_X8_TYPELESS);
+	gDepthSRV = new Texture(this, device, depthStencilTexture, heapIndex, TextureTypeSRV);
 }
 
 void DeferredRenderer::CreateRootSignature()

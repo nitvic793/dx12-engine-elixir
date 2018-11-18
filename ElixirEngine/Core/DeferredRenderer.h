@@ -83,10 +83,12 @@ class DeferredRenderer
 	ConstantBufferWrapper pixelCbWrapper;
 	ConstantBufferWrapper perFrameCbWrapper;
 
+	Texture* gDepthSRV;
 	Texture* resultUAV;
 	Texture* resultSRV;
 	Texture* postProcessUAV;
 	Texture* postProcessSRV;
+
 
 	std::vector<Texture*> textureVector;
 	std::vector<Texture*> gBufferTextureVector;
@@ -147,6 +149,7 @@ public:
 	Texture*				GetResultSRV();
 	Texture*				GetPostProcessSRV();
 	Texture*				GetPostProcessUAV();
+	Texture*				GetGBufferDepthSRV();
 	std::vector<Texture*>	GetTexturesArrayForPost();
 	Texture*				GetGBufferTextureSRV(GBufferType gBufferType);
 
