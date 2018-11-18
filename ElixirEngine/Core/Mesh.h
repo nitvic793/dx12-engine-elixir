@@ -2,6 +2,7 @@
 #include "../stdafx.h"
 #include "Vertex.h"
 
+
 class Mesh
 {
 	ID3D12Resource* vertexBuffer;

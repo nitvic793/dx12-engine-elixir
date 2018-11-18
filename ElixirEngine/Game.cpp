@@ -6,26 +6,32 @@ void Game::InitializeAssets()
 {
 	int entityCount = 10;
 	std::vector<std::wstring> textureList = {
-			L"../../Assets/Textures/floor_albedo.png" ,
+			L"../../Assets/Textures/floor_albedo.png" , //0
 			L"../../Assets/Textures/floor_normals.png" ,
 			L"../../Assets/Textures/floor_roughness.png" ,
 			L"../../Assets/Textures/floor_metal.png",
-			L"../../Assets/Textures/wood_albedo.png" ,
+			L"../../Assets/Textures/wood_albedo.png" , //1
 			L"../../Assets/Textures/wood_normals.png" ,
 			L"../../Assets/Textures/wood_roughness.png" ,
 			L"../../Assets/Textures/wood_metal.png",
-			L"../../Assets/Textures/scratched_albedo.png" ,
+			L"../../Assets/Textures/scratched_albedo.png" , //2
 			L"../../Assets/Textures/scratched_normals.png" ,
 			L"../../Assets/Textures/scratched_roughness.png" ,
 			L"../../Assets/Textures/scratched_metal.png",
-			L"../../Assets/Textures/bronze_albedo.png" ,
+			L"../../Assets/Textures/bronze_albedo.png" , //3
 			L"../../Assets/Textures/bronze_normals.png" ,
 			L"../../Assets/Textures/bronze_roughness.png" ,
-			L"../../Assets/Textures/bronze_metal.png"
+			L"../../Assets/Textures/bronze_metal.png",
+			L"../../Assets/Textures/cement_albedo.png" , //4
+			L"../../Assets/Textures/cement_normals.png" ,
+			L"../../Assets/Textures/cement_roughness.png" ,
+			L"../../Assets/Textures/cement_metal.png"
 	};
 
 	std::vector<std::string> meshList = {
-		"../../Assets/sphere.obj"
+		"../../Assets/sphere.obj",
+		"../../Assets/quad.obj",
+		"../../Assets/dice.obj"
 	};
 
 	size_t materialCount = textureList.size() / 4;
@@ -65,7 +71,7 @@ void Game::InitializeAssets()
 	pixelCb.light.AmbientColor = XMFLOAT4(0.1f, 0.1f, 0.1f, 0);
 	pixelCb.light.DiffuseColor = XMFLOAT4(0.1f, 0.1f, 0.1f, 0.f);
 	pixelCb.light.Direction = XMFLOAT3(-1.f, 0.f, 1.f);
-	pixelCb.pointLight = PointLight{ {0.99f, 0.2f, 0.2f, 0.f} , {0.0f, 2.f, 1.f}, 20.f };
+	pixelCb.pointLight = PointLight{ {0.99f, 0.2f, 0.2f, 0.f} , {0.0f, 2.f, 1.f}, 10.f };
 
 	ResourceUploadBatch uploadBatch(device);
 	uploadBatch.Begin();
@@ -85,6 +91,16 @@ void Game::InitializeAssets()
 		int matId = entityMaterialMap[i];
 		entities[i]->SetMaterial(materials[matId].get());
 	}
+
+	entities[9]->SetMesh(meshes[1].get());
+	entities[9]->SetPosition(XMFLOAT3(5, -1, 0));
+	entities[9]->SetScale(XMFLOAT3(15, 15, 15));
+	entities[9]->SetMaterial(materials[4].get());
+
+	entities[8]->SetMesh(meshes[2].get());
+	//entities[8]->SetPosition(XMFLOAT3(5, -1, 0));
+	//entities[8]->SetScale(XMFLOAT3(15, 15, 15));
+	//entities[8]->SetMaterial(materials[4].get());
 
 	deferredRenderer->SetIBLTextures(skyboxIRTexture, skyboxPreFilter, brdfLutTexture);
 	skyTexture = new Texture(deferredRenderer, device);
