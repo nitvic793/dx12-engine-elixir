@@ -64,6 +64,7 @@ void Game::InitializeAssets()
 	computeCore = new ComputeCore(device);
 
 	dofPass = std::unique_ptr<DepthOfFieldPass>(new DepthOfFieldPass(computeCore));
+	sunRaysPass = std::unique_ptr<SunRaysPass>(new SunRaysPass(computeCore, deferredRenderer));
 	blurFilter = new BlurFilter(computeCore);
 	camera = new Camera((float)Width, (float)Height);
 
@@ -165,7 +166,7 @@ void Game::Draw()
 	deferredRenderer->DrawSkybox(commandList, skyTexture);
 
 	Texture* finalTexture = deferredRenderer->GetResultSRV();
-
+	auto ocTex = sunRaysPass->Apply(commandList, deferredRenderer->GetGBufferDepthSRV(), texturePool);
 	if (isBlurEnabled)
 	{
 		auto blurTexture = blurFilter->Apply(commandList, finalTexture, texturePool, 4, 6, 2);

@@ -143,6 +143,11 @@ Texture* DeferredRenderer::GetGBufferTextureSRV(GBufferType gBufferType)
 	return gBufferTextureVector[gBufferType];
 }
 
+ID3D12RootSignature * DeferredRenderer::GetRootSignature()
+{
+	return rootSignature;
+}
+
 void DeferredRenderer::Initialize(ID3D12GraphicsCommandList* command)
 {
 	CreateCB();

@@ -2,7 +2,6 @@
 #include "stdafx.h"
 #include "DirectXHelper.h"
 
-
 class DeferredRenderer;
 
 enum TextureViewType
@@ -19,14 +18,15 @@ enum TextureFileType
 
 class Texture
 {
-	ID3D12Resource* resource;
+	ID3D12Device*			device;
+	ID3D12Resource*			resource;
 	CDescriptorHeapWrapper* descriptorHeap;
-	TextureViewType textureViewType;
-	uint32_t heapIndex;
-	DeferredRenderer* renderContext;
+	TextureViewType			textureViewType;
+	uint32_t				heapIndex;
+	DeferredRenderer*		renderContext;
+
 	bool isCubeMap;
 	bool releaseNeeded;
-	ID3D12Device* device;
 public:
 	void CreateTexture(std::wstring textureFileName, 
 		TextureFileType textureFileType, 
@@ -43,7 +43,9 @@ public:
 
 	D3D12_GPU_DESCRIPTOR_HANDLE GetGPUDescriptorHandle();
 	D3D12_CPU_DESCRIPTOR_HANDLE GetCPUDescriptorHandle();
-	CDescriptorHeapWrapper* GetTextureDescriptorHeap();
+	CDescriptorHeapWrapper*		GetTextureDescriptorHeap();
+	ID3D12Resource*				GetTextureResource();
+
 	Texture(DeferredRenderer* renderContext, ID3D12Device* device);
 	Texture(DeferredRenderer* renderContext, ID3D12Device* device, ID3D12Resource* resource, int heapIndex, TextureViewType viewType);
 	Texture(DeferredRenderer* renderContext, ID3D12Device* device, ID3D12Resource* resource, int heapIndex, TextureViewType viewType, CDescriptorHeapWrapper* descHeap);

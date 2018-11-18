@@ -22,6 +22,12 @@
     <Filter Include="Shaders">
       <UniqueIdentifier>{40b7cc6d-2282-4cca-9419-a980fe89844f}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Shaders\PostProcess">
+      <UniqueIdentifier>{b9000d03-124c-450a-9323-0d2e05223b6a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Shaders\Deferred">
+      <UniqueIdentifier>{32a69fea-39ee-4e3e-825f-921993e96633}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Main.cpp">
@@ -70,6 +76,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="DepthOfFieldPass.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="SunRaysPass.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -137,27 +146,15 @@
     <ClInclude Include="DepthOfFieldPass.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="SunRaysPass.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Shaders\DefaultVS.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
-    <FxCompile Include="Shaders\DefaultPS.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="DeferredPS.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
     <FxCompile Include="ScreenQuadVS.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="LightPassPS.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="LightShapeVS.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="LightShapePassPS.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
     <FxCompile Include="SkyboxVS.hlsl">
@@ -172,16 +169,40 @@
     <FxCompile Include="ScreenQuadPS.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
-    <FxCompile Include="ComputeCS.hlsl">
+    <FxCompile Include="OcclusionPassCS.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
     <FxCompile Include="BlurHorizontalCS.hlsl">
-      <Filter>Shaders</Filter>
+      <Filter>Shaders\PostProcess</Filter>
     </FxCompile>
     <FxCompile Include="BlurVerticalCS.hlsl">
-      <Filter>Shaders</Filter>
+      <Filter>Shaders\PostProcess</Filter>
+    </FxCompile>
+    <FxCompile Include="ComputeCS.hlsl">
+      <Filter>Shaders\PostProcess</Filter>
     </FxCompile>
     <FxCompile Include="DepthOfFieldCS.hlsl">
+      <Filter>Shaders\PostProcess</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\DefaultPS.hlsl">
+      <Filter>Shaders\PostProcess</Filter>
+    </FxCompile>
+    <FxCompile Include="DeferredPS.hlsl">
+      <Filter>Shaders\PostProcess</Filter>
+    </FxCompile>
+    <FxCompile Include="LightPassPS.hlsl">
+      <Filter>Shaders\PostProcess</Filter>
+    </FxCompile>
+    <FxCompile Include="LightShapePassPS.hlsl">
+      <Filter>Shaders\PostProcess</Filter>
+    </FxCompile>
+    <FxCompile Include="LightShapeVS.hlsl">
+      <Filter>Shaders\PostProcess</Filter>
+    </FxCompile>
+    <FxCompile Include="SunRaysCS.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="SunRaysPS.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
   </ItemGroup>

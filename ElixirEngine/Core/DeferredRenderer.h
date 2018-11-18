@@ -152,6 +152,7 @@ public:
 	Texture*				GetGBufferDepthSRV();
 	std::vector<Texture*>	GetTexturesArrayForPost();
 	Texture*				GetGBufferTextureSRV(GBufferType gBufferType);
+	ID3D12RootSignature*	GetRootSignature();
 
 	void Initialize(ID3D12GraphicsCommandList* command);
 	void GeneratePreFilterEnvironmentMap(ID3D12GraphicsCommandList* command, int envTextureIndex);

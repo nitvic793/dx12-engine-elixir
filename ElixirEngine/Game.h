@@ -5,6 +5,7 @@
 #include "ComputeProcess.h"
 #include "BlurFilter.h"
 #include "DepthOfFieldPass.h"
+#include "SunRaysPass.h"
 #include "TexturePool.h"
 
 class Game : public Core
@@ -27,6 +28,7 @@ protected:
 	std::vector<std::unique_ptr<Material>> materials;
 	std::vector<std::unique_ptr<Mesh>> meshes;
 	std::unique_ptr<DepthOfFieldPass> dofPass;
+	std::unique_ptr<SunRaysPass> sunRaysPass;
 
 	bool			isBlurEnabled;
 	void InitializeAssets();

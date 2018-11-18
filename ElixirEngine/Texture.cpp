@@ -54,6 +54,11 @@ CDescriptorHeapWrapper * Texture::GetTextureDescriptorHeap()
 	return descriptorHeap;
 }
 
+ID3D12Resource * Texture::GetTextureResource()
+{
+	return resource;
+}
+
 Texture::Texture(DeferredRenderer* renderContext, ID3D12Device* device)
 {
 	this->renderContext = renderContext;

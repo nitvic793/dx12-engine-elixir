@@ -14,6 +14,7 @@ class TexturePool
 
 	ID3D12Device* device;
 	CDescriptorHeapWrapper* descriptorHeap;
+	CDescriptorHeapWrapper rtvHeap;
 	DeferredRenderer* renderContext;
 	std::unordered_map<uint64_t, int> textureRequestMap;
 
@@ -22,6 +23,7 @@ public:
 	TexturePool(ID3D12Device* device, DeferredRenderer* renderContext, int totalTextureCount = 6);
 	Texture* GetSRV(int index);
 	Texture* GetUAV(int index);
+	D3D12_CPU_DESCRIPTOR_HANDLE GetRTVHandle(int index);
 	Texture* Request(DXGI_FORMAT format, int width, int height, TextureViewType type, int *index = nullptr, bool getCached = true);
 	~TexturePool();
 };

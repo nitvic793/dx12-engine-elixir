@@ -44,6 +44,14 @@ void TexturePool::AddTexture(DXGI_FORMAT format, int width, int height)
 
 	heapIndex = renderContext->SetUAV(texture, false, format);
 	textureUAVs.push_back(new Texture(renderContext, device, texture, heapIndex, TextureTypeUAV));
+
+	D3D12_RENDER_TARGET_VIEW_DESC desc;
+	ZeroMemory(&desc, sizeof(desc));
+	desc.Texture2D.MipSlice = 0;
+	desc.Texture2D.PlaneSlice = 0;
+	desc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;
+	desc.Format = format;
+	device->CreateRenderTargetView(texture, &desc, rtvHeap.handleCPU((UINT)textures.size() - 1));
 }
 
 TexturePool::TexturePool(ID3D12Device* device, DeferredRenderer* renderContext, int totalTextureCount)
@@ -51,11 +59,13 @@ TexturePool::TexturePool(ID3D12Device* device, DeferredRenderer* renderContext, 
 	this->device = device;
 	this->renderContext = renderContext;
 	descriptorHeap = &renderContext->GetSRVHeap();
+	rtvHeap.Create(device, D3D12_DESCRIPTOR_HEAP_TYPE_RTV, totalTextureCount);
 
 	for (int i = 0; i < totalTextureCount; ++i)
 	{
 		AddTexture();
 	}
+
 }
 
 Texture * TexturePool::GetSRV(int index)
@@ -66,6 +76,11 @@ Texture * TexturePool::GetSRV(int index)
 Texture * TexturePool::GetUAV(int index)
 {
 	return textureUAVs[index];
+}
+
+D3D12_CPU_DESCRIPTOR_HANDLE TexturePool::GetRTVHandle(int index)
+{
+	return rtvHeap.handleCPU(index);
 }
 
 Texture* TexturePool::Request(DXGI_FORMAT format, int width, int height, TextureViewType type, int* index, bool getCached)
@@ -102,6 +117,7 @@ Texture* TexturePool::Request(DXGI_FORMAT format, int width, int height, Texture
 
 TexturePool::~TexturePool()
 {
+	rtvHeap.pDescriptorHeap->Release();
 	for (auto t : textureSRVs)
 		delete t;
 
