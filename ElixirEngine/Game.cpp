@@ -166,14 +166,14 @@ void Game::Draw()
 	deferredRenderer->DrawSkybox(commandList, skyTexture);
 
 	Texture* finalTexture = deferredRenderer->GetResultSRV();
-	auto ocTex = sunRaysPass->Apply(commandList, deferredRenderer->GetGBufferDepthSRV(), texturePool);
+
 	if (isBlurEnabled)
 	{
-		auto blurTexture = blurFilter->Apply(commandList, finalTexture, texturePool, 4, 6, 2);
-		finalTexture = dofPass->Apply(commandList, finalTexture, blurTexture, texturePool, 6, 0.2f);
+		auto blurTexture = blurFilter->Apply(commandList, finalTexture, texturePool, 4, 3, 2);
+		finalTexture = dofPass->Apply(commandList, finalTexture, blurTexture, texturePool, 3, 0.2f);
 	}
-
-	deferredRenderer->DrawResult(commandList, rtvHandle, finalTexture); //Draw renderer result to given main Render Target handle
+	auto sunRaysTex = sunRaysPass->Apply(commandList, deferredRenderer->GetGBufferDepthSRV(), finalTexture, texturePool, camera);
+	deferredRenderer->DrawResult(commandList, rtvHandle, sunRaysTex); //Draw renderer result to given main Render Target handle
 	deferredRenderer->ResetRenderTargetStates(commandList);
 }
 

@@ -17,6 +17,7 @@ class Camera
 	float farZ;
 public:
 	XMFLOAT3 GetPosition();
+	XMFLOAT3 GetDirection();
 	void Update(float deltaTime);
 	void SetPosition(const XMFLOAT3& pos);
 
@@ -26,6 +27,8 @@ public:
 	const float&		GetNearZ();
 	const float&		GetFarZ();
 
+	XMFLOAT4X4 GetViewProjectionMatrixTransposed();
+	XMFLOAT4X4 GetViewProjectionMatrix();
 	XMFLOAT4X4 GetViewMatrixTransposed();
 	XMFLOAT4X4 GetProjectionMatrixTransposed();
 

@@ -7,35 +7,6 @@
 #include "Camera.h"
 #include "../Texture.h"
 
-class ConstantBufferWrapper
-{
-	ID3D12Resource* constantBuffer;
-	int bufferSize;
-	char* vAddressBegin;
-public:
-	ConstantBufferWrapper()
-	{
-		constantBuffer = nullptr;
-	};
-	void Initialize(ID3D12Resource* buffer, const int& bSize)
-	{
-		bufferSize = bSize;
-		constantBuffer = buffer;
-		CD3DX12_RANGE readRange(0, 0);
-		buffer->Map(0, &readRange, reinterpret_cast<void**>(&vAddressBegin));
-	}
-	void CopyData(void* data, int size, int index)
-	{
-		char* ptr = reinterpret_cast<char*>(vAddressBegin) + bufferSize * index;
-		memcpy(ptr, data, size);
-	}
-
-	~ConstantBufferWrapper()
-	{
-		/*if (constantBuffer)
-			constantBuffer->Unmap(0, nullptr);*/
-	}
-};
 
 enum GBufferRenderTargetOrder
 {
@@ -137,14 +108,16 @@ class DeferredRenderer
 	void Draw(Mesh* m, const ConstantBuffer& cb, ID3D12GraphicsCommandList* commandList);
 public:
 	DeferredRenderer(ID3D12Device *dxDevice, int width, int height);
-	void ResetRenderTargetStates(ID3D12GraphicsCommandList* command);
 
+	void ResetRenderTargetStates(ID3D12GraphicsCommandList* command);
 	void SetSRV(ID3D12Resource* textureSRV, int index, bool isTextureCube = false);
+	void SetIBLTextures(ID3D12Resource* irradianceTextureCube, ID3D12Resource* prefilterTextureCube, ID3D12Resource* brdfLUTTexture);
+
 	uint32_t SetSRV(ID3D12Resource* textureSRV, bool isTextureCube = false);
 	uint32_t SetSRV(ID3D12Resource* textureSRV, DXGI_FORMAT format, bool isTextureCube = false);
 	uint32_t SetUAV(ID3D12Resource* textureSRV, bool isTextureCube = false, DXGI_FORMAT format = DXGI_FORMAT_R32G32B32A32_FLOAT);
 	uint32_t SetSRVs(ID3D12Resource** textureSRV, int textureCount, bool isTextureCube = false);
-	void SetIBLTextures(ID3D12Resource* irradianceTextureCube, ID3D12Resource* prefilterTextureCube, ID3D12Resource* brdfLUTTexture);
+	
 	Texture*				GetResultUAV();
 	Texture*				GetResultSRV();
 	Texture*				GetPostProcessSRV();
@@ -171,5 +144,6 @@ public:
 	void UpdateConstantBufferPerObject(ConstantBuffer& buffer, int index);
 	CDescriptorHeapWrapper& GetSRVHeap();
 	CDescriptorHeapWrapper& GetGBufferHeap();
+	CDescriptorHeapWrapper& GetCBHeap();
 	~DeferredRenderer();
 };

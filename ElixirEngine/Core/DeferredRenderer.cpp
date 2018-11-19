@@ -474,6 +474,11 @@ CDescriptorHeapWrapper & DeferredRenderer::GetGBufferHeap()
 	return gBufferHeap;
 }
 
+CDescriptorHeapWrapper & DeferredRenderer::GetCBHeap()
+{
+	return cbHeap;
+}
+
 void DeferredRenderer::CreateCB()
 {
 	CD3DX12_HEAP_PROPERTIES heapProperty(D3D12_HEAP_TYPE_UPLOAD);

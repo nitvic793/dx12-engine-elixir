@@ -17,9 +17,9 @@ Texture * DepthOfFieldPass::Apply(ID3D12GraphicsCommandList * commandList, Textu
 	dofCS->SetConstants(commandList, &scale, 1, 1);
 	dofCS->SetTextureSRV(commandList, blurSRV);
 	dofCS->SetTextureSRVOffset(commandList, sharpSRV);
-	dofCS->SetTextureUAV(commandList, texturePool->GetUAV(2));
+	dofCS->SetTextureUAV(commandList, texturePool->GetUAV(1));
 	dofCS->Dispatch(commandList, width, height, 1);
-	return texturePool->GetSRV(2);
+	return texturePool->GetSRV(1);
 }
 
 

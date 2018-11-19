@@ -184,25 +184,28 @@
     <FxCompile Include="DepthOfFieldCS.hlsl">
       <Filter>Shaders\PostProcess</Filter>
     </FxCompile>
-    <FxCompile Include="Shaders\DefaultPS.hlsl">
-      <Filter>Shaders\PostProcess</Filter>
-    </FxCompile>
-    <FxCompile Include="DeferredPS.hlsl">
-      <Filter>Shaders\PostProcess</Filter>
-    </FxCompile>
-    <FxCompile Include="LightPassPS.hlsl">
-      <Filter>Shaders\PostProcess</Filter>
-    </FxCompile>
-    <FxCompile Include="LightShapePassPS.hlsl">
-      <Filter>Shaders\PostProcess</Filter>
-    </FxCompile>
-    <FxCompile Include="LightShapeVS.hlsl">
-      <Filter>Shaders\PostProcess</Filter>
-    </FxCompile>
     <FxCompile Include="SunRaysCS.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
     <FxCompile Include="SunRaysPS.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="LightPassPS.hlsl">
+      <Filter>Shaders\Deferred</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\DefaultPS.hlsl">
+      <Filter>Shaders\Deferred</Filter>
+    </FxCompile>
+    <FxCompile Include="LightShapePassPS.hlsl">
+      <Filter>Shaders\Deferred</Filter>
+    </FxCompile>
+    <FxCompile Include="LightShapeVS.hlsl">
+      <Filter>Shaders\Deferred</Filter>
+    </FxCompile>
+    <FxCompile Include="DeferredPS.hlsl">
+      <Filter>Shaders\Deferred</Filter>
+    </FxCompile>
+    <FxCompile Include="CompositeRaysCS.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
   </ItemGroup>

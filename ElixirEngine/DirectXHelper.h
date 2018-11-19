@@ -2,6 +2,37 @@
 #include <comdef.h>
 #include <wrl/client.h>
 
+
+class ConstantBufferWrapper
+{
+	ID3D12Resource* constantBuffer;
+	int bufferSize;
+	char* vAddressBegin;
+public:
+	ConstantBufferWrapper()
+	{
+		constantBuffer = nullptr;
+	};
+	void Initialize(ID3D12Resource* buffer, const int& bSize)
+	{
+		bufferSize = bSize;
+		constantBuffer = buffer;
+		CD3DX12_RANGE readRange(0, 0);
+		buffer->Map(0, &readRange, reinterpret_cast<void**>(&vAddressBegin));
+	}
+	void CopyData(void* data, int size, int index)
+	{
+		char* ptr = reinterpret_cast<char*>(vAddressBegin) + bufferSize * index;
+		memcpy(ptr, data, size);
+	}
+
+	~ConstantBufferWrapper()
+	{
+		/*if (constantBuffer)
+			constantBuffer->Unmap(0, nullptr);*/
+	}
+};
+
 class CDescriptorHeapWrapper
 {
 public:

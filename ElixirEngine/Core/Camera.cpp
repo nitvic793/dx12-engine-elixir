@@ -6,6 +6,14 @@ XMFLOAT3 Camera::GetPosition()
 	return position;
 }
 
+XMFLOAT3 Camera::GetDirection()
+{
+	auto dir = XMVector3Rotate(XMLoadFloat3(&direction), DirectX::XMLoadFloat4(&rotation));
+	XMFLOAT3 dirV;
+	XMStoreFloat3(&dirV, dir);
+	return dirV;
+}
+
 void Camera::Update(float deltaTime)
 {
 	float speed = 10.f;
@@ -93,6 +101,26 @@ const float & Camera::GetNearZ()
 const float & Camera::GetFarZ()
 {
 	return farZ;
+}
+
+XMFLOAT4X4 Camera::GetViewProjectionMatrixTransposed()
+{
+	auto view = XMLoadFloat4x4(&viewMatrix);
+	auto proj = XMLoadFloat4x4(&projectionMatrix);
+	auto viewProj = view * proj;
+	XMFLOAT4X4 viewProjT;
+	XMStoreFloat4x4(&viewProjT, XMMatrixTranspose(viewProj));
+	return viewProjT;
+}
+
+XMFLOAT4X4 Camera::GetViewProjectionMatrix()
+{
+	auto view = XMLoadFloat4x4(&viewMatrix);
+	auto proj = XMLoadFloat4x4(&projectionMatrix);
+	auto viewProj = view * proj;
+	XMFLOAT4X4 viewProjT;
+	XMStoreFloat4x4(&viewProjT, viewProj);
+	return viewProjT;
 }
 
 XMFLOAT4X4 Camera::GetViewMatrixTransposed()
