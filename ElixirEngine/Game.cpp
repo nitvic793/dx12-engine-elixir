@@ -30,8 +30,7 @@ void Game::InitializeAssets()
 
 	std::vector<std::string> meshList = {
 		"../../Assets/sphere.obj",
-		"../../Assets/quad.obj",
-		"../../Assets/WoodenFence/obj/fence1.obj"
+		"../../Assets/quad.obj"
 	};
 
 	size_t materialCount = 3;

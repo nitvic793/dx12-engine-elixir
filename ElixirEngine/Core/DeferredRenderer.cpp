@@ -104,7 +104,7 @@ void DeferredRenderer::SetIBLTextures(ID3D12Resource* irradianceTextureCube, ID3
 
 	srvDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
 	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURECUBE;
-	srvDesc.Texture2D.MipLevels = 5;
+	srvDesc.Texture2D.MipLevels = 10;
 	device->CreateShaderResourceView(prefilterTextureCube, &srvDesc, gBufferHeap.handleCPU(prefilterIndex));
 }
 
@@ -320,7 +320,6 @@ void DeferredRenderer::SetLightShapePassPSO(ID3D12GraphicsCommandList * command,
 void DeferredRenderer::RenderShadowMap(ID3D12GraphicsCommandList * commandList, std::vector<Entity*> entities)
 {
 	commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(shadowMapTexture, D3D12_RESOURCE_STATE_GENERIC_READ, D3D12_RESOURCE_STATE_DEPTH_WRITE));
-	UINT shadowMapSize = 1024;
 	D3D12_VIEWPORT viewport = {};
 	D3D12_RECT scissorRect = {};
 	viewport.TopLeftX = 0;
@@ -352,6 +351,7 @@ void DeferredRenderer::RenderShadowMap(ID3D12GraphicsCommandList * commandList, 
 	cb.projection = shadowProjTransposed;
 
 	ID3D12DescriptorHeap* ppHeaps[] = { cbHeap.pDescriptorHeap.Get() };
+	ID3D12DescriptorHeap* ppSrvHeaps[] = { srvHeap.pDescriptorHeap.Get() };
 	commandList->RSSetViewports(1, &viewport);
 	commandList->RSSetScissorRects(1, &scissorRect);
 	commandList->SetGraphicsRootSignature(rootSignature);
@@ -366,6 +366,8 @@ void DeferredRenderer::RenderShadowMap(ID3D12GraphicsCommandList * commandList, 
 		cb.world = e->GetWorldMatrixTransposed();
 		cbWrapper.CopyData(&cb, ConstantBufferSize, index);
 		commandList->SetGraphicsRootDescriptorTable(0, cbHeap.handleGPU(index));
+		commandList->SetGraphicsRootDescriptorTable(1, cbHeap.handleGPU(index));
+		commandList->SetGraphicsRootDescriptorTable(3, cbHeap.handleGPU(ConstBufferCount - 1)); //Per frame const buffer
 		Draw(e->GetMesh(), cb, commandList);
 		index++;
 	}
@@ -1050,6 +1052,9 @@ void DeferredRenderer::CreateRootSignature()
 
 void DeferredRenderer::CreateShadowBuffers()
 {
+	int shadowPosTextureIndex = numRTV + 5;
+	int shadowMapTextureIndex = numRTV + 4;
+	
 	D3D12_INPUT_ELEMENT_DESC inputLayout[] =
 	{
 		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
@@ -1093,8 +1098,8 @@ void DeferredRenderer::CreateShadowBuffers()
 	resourceDesc.MipLevels = 1;
 	resourceDesc.Format = mDsvFormat;
 	resourceDesc.DepthOrArraySize = 1;
-	resourceDesc.Width = viewportWidth;
-	resourceDesc.Height = viewportHeight;
+	resourceDesc.Width = shadowMapSize;
+	resourceDesc.Height = shadowMapSize;
 	resourceDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
 	resourceDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
 
@@ -1121,7 +1126,20 @@ void DeferredRenderer::CreateShadowBuffers()
 
 	device->CreateDepthStencilView(shadowMapTexture, &desc, dsvHeap.handleCPU(1)); // 0 is the main depth target
 
-	device->CreateShaderResourceView(shadowMapTexture, &descSRV, gBufferHeap.handleCPU(numRTV + 4)); // numRTV + 1,2,3 taken up by IBL textures
+	device->CreateShaderResourceView(shadowMapTexture, &descSRV, gBufferHeap.handleCPU(shadowMapTextureIndex)); // numRTV + 1,2,3 taken up by IBL textures
+
+	resourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+	resourceDesc.Alignment = 0;
+	resourceDesc.SampleDesc.Count = 1;
+	resourceDesc.SampleDesc.Quality = 0;
+	resourceDesc.MipLevels = 1;
+	resourceDesc.DepthOrArraySize = 1;
+	resourceDesc.Width = viewportWidth;
+	resourceDesc.Height = viewportHeight;
+	resourceDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
+	resourceDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
+	resourceDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
+	device->CreateCommittedResource(&heapProperty, D3D12_HEAP_FLAG_NONE, &resourceDesc, D3D12_RESOURCE_STATE_GENERIC_READ, &clearVal, IID_PPV_ARGS(&shadowPosTexture));
 }
 
 DeferredRenderer::~DeferredRenderer()
@@ -1130,6 +1148,7 @@ DeferredRenderer::~DeferredRenderer()
 		gBufferTextures[numRTV]->Release();
 	depthStencilTexture->Release();
 	shadowMapTexture->Release();
+	shadowPosTexture->Release();
 	rootSignature->Release();
 
 	rtvHeap.pDescriptorHeap->Release();

@@ -25,8 +25,9 @@ typedef GBufferRenderTargetOrder GBufferType;
 class DeferredRenderer
 {
 	ID3D12Device *device;
-	const static int numRTV = 7;
+	const static int numRTV = RTV_ORDER_COUNT;
 	int constBufferIndex = 0;
+	int shadowMapSize = 1024;
 	ID3D12RootSignature* rootSignature;
 	uint32_t srvHeapIndex;
 
@@ -35,6 +36,7 @@ class DeferredRenderer
 	ID3D12Resource* prefilterTexture;
 	ID3D12Resource* postProcessTexture;
 	ID3D12Resource* shadowMapTexture;
+	ID3D12Resource* shadowPosTexture;
 
 	ID3D12PipelineState* deferredPSO;
 	ID3D12PipelineState* dirLightPassPSO;
