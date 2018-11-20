@@ -30,10 +30,11 @@ void Game::InitializeAssets()
 
 	std::vector<std::string> meshList = {
 		"../../Assets/sphere.obj",
-		"../../Assets/quad.obj"
+		"../../Assets/quad.obj",
+		"../../Assets/WoodenFence/obj/fence1.obj"
 	};
 
-	size_t materialCount = textureList.size() / 4;
+	size_t materialCount = 3;
 	for (int i = 0; i < textureList.size(); i += 4)
 	{
 		materials.push_back(std::unique_ptr<Material>(new Material(
@@ -70,7 +71,7 @@ void Game::InitializeAssets()
 
 	pixelCb.light.AmbientColor = XMFLOAT4(0.1f, 0.1f, 0.1f, 0);
 	pixelCb.light.DiffuseColor = XMFLOAT4(0.1f, 0.1f, 0.1f, 0.f);
-	pixelCb.light.Direction = XMFLOAT3(-1.f, 0.f, 1.f);
+	pixelCb.light.Direction = XMFLOAT3(0.5f, 0.5f, 1.f);
 	pixelCb.pointLight = PointLight{ {0.99f, 0.2f, 0.2f, 0.f} , {0.0f, 2.f, 1.f}, 10.f };
 
 	ResourceUploadBatch uploadBatch(device);
@@ -132,6 +133,17 @@ void Game::Update()
 
 void Game::Draw()
 {
+	std::vector<Entity*> entityList;
+	for (auto& entity : entities)
+	{
+		entityList.push_back(entity.get());
+	}
+
+	commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+	//Render shadow Map before setting viewport and scissor rect
+	deferredRenderer->RenderShadowMap(commandList, entityList);
+
 	CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(rtvDescriptorHeap->GetCPUDescriptorHandleForHeapStart(), frameIndex, rtvDescriptorSize);
 	CD3DX12_CPU_DESCRIPTOR_HANDLE dsvHandle(dsDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
 	commandList->OMSetRenderTargets(1, &rtvHandle, FALSE, &dsvHandle);
@@ -141,21 +153,13 @@ void Game::Draw()
 
 	commandList->RSSetViewports(1, &viewport);
 	commandList->RSSetScissorRects(1, &scissorRect);
-	commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-
+	
 	pixelCb.cameraPosition = camera->GetPosition();
 	pixelCb.invProjView = camera->GetInverseProjectionViewMatrix();
 
-	std::vector<Entity*> entityList;
-	for (auto& entity : entities)
-	{
-		entityList.push_back(entity.get());
-	}
-
 	// draw
 	deferredRenderer->SetGBUfferPSO(commandList, camera, pixelCb);
-	deferredRenderer->Draw(commandList, entityList
-	);
+	deferredRenderer->Draw(commandList, entityList);
 
 	deferredRenderer->SetLightShapePassPSO(commandList, pixelCb);
 	deferredRenderer->DrawLightShapePass(commandList, pixelCb);

@@ -34,6 +34,7 @@ class DeferredRenderer
 	ID3D12Resource* depthStencilTexture;
 	ID3D12Resource* prefilterTexture;
 	ID3D12Resource* postProcessTexture;
+	ID3D12Resource* shadowMapTexture;
 
 	ID3D12PipelineState* deferredPSO;
 	ID3D12PipelineState* dirLightPassPSO;
@@ -41,6 +42,7 @@ class DeferredRenderer
 	ID3D12PipelineState* screenQuadPSO;
 	ID3D12PipelineState* skyboxPSO;
 	ID3D12PipelineState* prefilterEnvMapPSO;
+	ID3D12PipelineState* shadowMapDirLightPSO;
 
 	CDescriptorHeapWrapper prefilterRTVHeap;
 	CDescriptorHeapWrapper rtvHeap;
@@ -53,6 +55,7 @@ class DeferredRenderer
 	ConstantBufferWrapper cbWrapper;
 	ConstantBufferWrapper pixelCbWrapper;
 	ConstantBufferWrapper perFrameCbWrapper;
+
 
 	std::unique_ptr<Texture> gDepthSRV;
 	Texture* resultUAV;
@@ -72,6 +75,7 @@ class DeferredRenderer
 	ID3D12Resource *lightCB;
 	ID3D12Resource *worldViewCB;
 	ID3D12Resource *perFrameCB;
+
 	Mesh* sphereMesh;
 	Mesh* cubeMesh;
 
@@ -105,6 +109,7 @@ class DeferredRenderer
 	void CreateRTV();
 	void CreateDSV();
 	void CreateRootSignature();
+	void CreateShadowBuffers();
 	void Draw(Mesh* m, const ConstantBuffer& cb, ID3D12GraphicsCommandList* commandList);
 public:
 	DeferredRenderer(ID3D12Device *dxDevice, int width, int height);
@@ -133,6 +138,7 @@ public:
 	void SetLightPassPSO(ID3D12GraphicsCommandList* command, const PixelConstantBuffer& pixelCb);
 	void SetLightShapePassPSO(ID3D12GraphicsCommandList* command, const PixelConstantBuffer& pixelCb);
 
+	void RenderShadowMap(ID3D12GraphicsCommandList* commandList, std::vector<Entity*> entities);
 	void Draw(ID3D12GraphicsCommandList* commandList, std::vector<Entity*> entities);
 	void DrawSkybox(ID3D12GraphicsCommandList* commandList, Texture* skybox);
 	void DrawLightPass(ID3D12GraphicsCommandList* commandList);

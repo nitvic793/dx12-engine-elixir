@@ -163,6 +163,7 @@ void DeferredRenderer::Initialize(ID3D12GraphicsCommandList* command)
 	CreateRTV();
 	CreateDSV();
 	CreatePrefilterResources(command);
+	CreateShadowBuffers();
 
 	sphereMesh = new Mesh("../../Assets/sphere.obj", device, command);
 	cubeMesh = new Mesh("../../Assets/cube.obj", device, command);
@@ -316,6 +317,62 @@ void DeferredRenderer::SetLightShapePassPSO(ID3D12GraphicsCommandList * command,
 
 }
 
+void DeferredRenderer::RenderShadowMap(ID3D12GraphicsCommandList * commandList, std::vector<Entity*> entities)
+{
+	commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(shadowMapTexture, D3D12_RESOURCE_STATE_GENERIC_READ, D3D12_RESOURCE_STATE_DEPTH_WRITE));
+	UINT shadowMapSize = 1024;
+	D3D12_VIEWPORT viewport = {};
+	D3D12_RECT scissorRect = {};
+	viewport.TopLeftX = 0;
+	viewport.TopLeftY = 0;
+	viewport.Width = (float)shadowMapSize;
+	viewport.Height = (float)shadowMapSize;
+	viewport.MinDepth = 0.0f;
+	viewport.MaxDepth = 1.0f;
+
+	// Fill out a scissor rect
+	scissorRect.left = 0;
+	scissorRect.top = 0;
+	scissorRect.right = shadowMapSize;
+	scissorRect.bottom = shadowMapSize;
+
+	XMFLOAT4X4 shadowViewTransposed;;
+	XMFLOAT4X4 shadowProjTransposed;;
+	XMMATRIX shView = XMMatrixLookAtLH(
+		XMVectorSet(0, 20, 20, 0),	// Start back and in the air
+		XMVectorSet(0, 0, 0, 0),	// Look at the origin
+		XMVectorSet(0, 1, 0, 0));	// Up is up
+	XMStoreFloat4x4(&shadowViewTransposed, XMMatrixTranspose(shView));
+
+	XMMATRIX shProj = XMMatrixOrthographicLH(20.0f, 20.0f, 0.1f, 100.0f);
+	XMStoreFloat4x4(&shadowProjTransposed, XMMatrixTranspose(shProj));
+
+	ConstantBuffer cb;
+	cb.view = shadowViewTransposed;
+	cb.projection = shadowProjTransposed;
+
+	ID3D12DescriptorHeap* ppHeaps[] = { cbHeap.pDescriptorHeap.Get() };
+	commandList->RSSetViewports(1, &viewport);
+	commandList->RSSetScissorRects(1, &scissorRect);
+	commandList->SetGraphicsRootSignature(rootSignature);
+	commandList->SetDescriptorHeaps(1, ppHeaps);
+	commandList->ClearDepthStencilView(dsvHeap.handleCPU(1), D3D12_CLEAR_FLAGS::D3D12_CLEAR_FLAG_DEPTH, mClearDepth, 0xff, 0, nullptr);
+	commandList->OMSetRenderTargets(0, nullptr, false, &dsvHeap.handleCPU(1));
+	commandList->SetPipelineState(shadowMapDirLightPSO);
+
+	int index = constBufferIndex;
+	for (auto e : entities)
+	{
+		cb.world = e->GetWorldMatrixTransposed();
+		cbWrapper.CopyData(&cb, ConstantBufferSize, index);
+		commandList->SetGraphicsRootDescriptorTable(0, cbHeap.handleGPU(index));
+		Draw(e->GetMesh(), cb, commandList);
+		index++;
+	}
+	constBufferIndex = index;
+	commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(shadowMapTexture, D3D12_RESOURCE_STATE_DEPTH_WRITE, D3D12_RESOURCE_STATE_GENERIC_READ));
+}
+
 void DeferredRenderer::Draw(ID3D12GraphicsCommandList* commandList, std::vector<Entity*> entities)
 {
 	int ConstantBufferPerObjectAlignedSize = (sizeof(ConstantBuffer) + 255) & ~255;
@@ -323,7 +380,7 @@ void DeferredRenderer::Draw(ID3D12GraphicsCommandList* commandList, std::vector<
 
 	PerFrameConstantBuffer frameCB = { camera->GetNearZ(), camera->GetFarZ() }; //Projection Constants for DOF
 	perFrameCbWrapper.CopyData(&frameCB, PerFrameCBSize, 0);
-	int index = 0;
+	int index = constBufferIndex;
 	ID3D12DescriptorHeap* ppHeaps[] = { cbHeap.pDescriptorHeap.Get() };
 	ID3D12DescriptorHeap* ppSrvHeaps[] = { srvHeap.pDescriptorHeap.Get() };
 	//ConstantBuffer cb;
@@ -347,7 +404,7 @@ void DeferredRenderer::Draw(ID3D12GraphicsCommandList* commandList, std::vector<
 		Draw(e->GetMesh(), cb, commandList);
 		index++;
 	}
-	constBufferIndex += index;
+	constBufferIndex = index;
 }
 
 void DeferredRenderer::DrawSkybox(ID3D12GraphicsCommandList * commandList, Texture* skybox)
@@ -906,7 +963,7 @@ void DeferredRenderer::CreateRTV()
 
 void DeferredRenderer::CreateDSV()
 {
-	dsvHeap.Create(device, D3D12_DESCRIPTOR_HEAP_TYPE_DSV, 1);
+	dsvHeap.Create(device, D3D12_DESCRIPTOR_HEAP_TYPE_DSV, 8); //Also holds shadow map depth stencil
 
 	CD3DX12_HEAP_PROPERTIES heapProperty(D3D12_HEAP_TYPE_DEFAULT);
 
@@ -949,7 +1006,7 @@ void DeferredRenderer::CreateDSV()
 	device->CreateShaderResourceView(depthStencilTexture, &descSRV, gBufferHeap.handleCPU(RTV_ORDER_COUNT));
 
 	auto heapIndex = SetSRV(depthStencilTexture, DXGI_FORMAT_R24_UNORM_X8_TYPELESS);
-	
+
 	gDepthSRV = std::make_unique<Texture>(this, device, depthStencilTexture, heapIndex, TextureTypeSRV);
 }
 
@@ -991,12 +1048,88 @@ void DeferredRenderer::CreateRootSignature()
 
 }
 
+void DeferredRenderer::CreateShadowBuffers()
+{
+	D3D12_INPUT_ELEMENT_DESC inputLayout[] =
+	{
+		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+		{ "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 20, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+		{ "TANGENT", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 32, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
+	};
+
+	D3D12_GRAPHICS_PIPELINE_STATE_DESC descPipelineState;
+	ZeroMemory(&descPipelineState, sizeof(descPipelineState));
+
+	descPipelineState.VS = ShaderManager::LoadShader(L"ShadowVS.cso");
+	descPipelineState.InputLayout.pInputElementDescs = inputLayout;
+	descPipelineState.InputLayout.NumElements = _countof(inputLayout);
+	descPipelineState.pRootSignature = rootSignature;
+	descPipelineState.DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
+	descPipelineState.DepthStencilState.DepthEnable = true;
+	descPipelineState.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
+	descPipelineState.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
+	descPipelineState.RasterizerState.DepthClipEnable = true;
+	descPipelineState.RasterizerState.DepthBias = 1000;
+	descPipelineState.RasterizerState.DepthBiasClamp = 0.f;
+	descPipelineState.RasterizerState.SlopeScaledDepthBias = 1.f;
+	descPipelineState.SampleMask = UINT_MAX;
+	descPipelineState.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+	descPipelineState.NumRenderTargets = 0;
+	//descPipelineState.RTVFormats[0] = mDsvFormat;
+	descPipelineState.DSVFormat = mDsvFormat;
+	descPipelineState.SampleDesc.Count = 1;
+
+	device->CreateGraphicsPipelineState(&descPipelineState, IID_PPV_ARGS(&shadowMapDirLightPSO));
+
+	CD3DX12_HEAP_PROPERTIES heapProperty(D3D12_HEAP_TYPE_DEFAULT);
+
+	D3D12_RESOURCE_DESC resourceDesc;
+	ZeroMemory(&resourceDesc, sizeof(resourceDesc));
+	resourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+	resourceDesc.Alignment = 0;
+	resourceDesc.SampleDesc.Count = 1;
+	resourceDesc.SampleDesc.Quality = 0;
+	resourceDesc.MipLevels = 1;
+	resourceDesc.Format = mDsvFormat;
+	resourceDesc.DepthOrArraySize = 1;
+	resourceDesc.Width = viewportWidth;
+	resourceDesc.Height = viewportHeight;
+	resourceDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
+	resourceDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
+
+	D3D12_CLEAR_VALUE clearVal;
+	clearVal = { mDsvFormat , mClearDepth };
+
+	D3D12_SHADER_RESOURCE_VIEW_DESC descSRV;
+
+	ZeroMemory(&descSRV, sizeof(descSRV));
+	descSRV.Texture2D.MipLevels = resourceDesc.MipLevels;
+	descSRV.Texture2D.MostDetailedMip = 0;
+	descSRV.Format = DXGI_FORMAT_R24_UNORM_X8_TYPELESS;
+	descSRV.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+	descSRV.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+
+	device->CreateCommittedResource(&heapProperty, D3D12_HEAP_FLAG_NONE, &resourceDesc, D3D12_RESOURCE_STATE_GENERIC_READ, &clearVal, IID_PPV_ARGS(&shadowMapTexture));
+
+	D3D12_DEPTH_STENCIL_VIEW_DESC desc;
+	ZeroMemory(&desc, sizeof(desc));
+	desc.Texture2D.MipSlice = 0;
+	desc.Format = resourceDesc.Format;
+	desc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
+	desc.Flags = D3D12_DSV_FLAG_NONE;
+
+	device->CreateDepthStencilView(shadowMapTexture, &desc, dsvHeap.handleCPU(1)); // 0 is the main depth target
+
+	device->CreateShaderResourceView(shadowMapTexture, &descSRV, gBufferHeap.handleCPU(numRTV + 4)); // numRTV + 1,2,3 taken up by IBL textures
+}
+
 DeferredRenderer::~DeferredRenderer()
 {
 	for (int i = 0; i < numRTV; ++i)
 		gBufferTextures[numRTV]->Release();
 	depthStencilTexture->Release();
-
+	shadowMapTexture->Release();
 	rootSignature->Release();
 
 	rtvHeap.pDescriptorHeap->Release();
@@ -1019,6 +1152,7 @@ DeferredRenderer::~DeferredRenderer()
 	skyboxPSO->Release();
 	screenQuadPSO->Release();
 	prefilterEnvMapPSO->Release();
+	shadowMapDirLightPSO->Release();
 
 	prefilterRTVHeap.pDescriptorHeap->Release();
 	prefilterTexture->Release();

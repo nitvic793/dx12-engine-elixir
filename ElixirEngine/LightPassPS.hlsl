@@ -30,16 +30,17 @@ float4 calculatePointLight(float3 normal, float3 worldPos, PointLight light)
 	return light.Color * pointNdotL;
 }
 
-Texture2D gAlbedoTexture : register(t0);
-Texture2D gNormalTexture : register(t1);
-Texture2D gWorldPosTexture : register(t2);
-Texture2D gRoughnessTexture : register(t3);
-Texture2D gMetalnessTexture : register(t4);
-Texture2D gLightShapePass: register(t5);
-Texture2D gDepth: register(t7);
-TextureCube skyIrradianceTexture: register(t8);
-Texture2D brdfLUTTexture: register(t9);
-TextureCube skyPrefilterTexture: register(t10);
+Texture2D gAlbedoTexture			: register(t0);
+Texture2D gNormalTexture			: register(t1);
+Texture2D gWorldPosTexture			: register(t2);
+Texture2D gRoughnessTexture			: register(t3);
+Texture2D gMetalnessTexture			: register(t4);
+Texture2D gLightShapePass			: register(t5);
+Texture2D gDepth					: register(t7);
+
+TextureCube skyIrradianceTexture	: register(t8);
+Texture2D	brdfLUTTexture			: register(t9);
+TextureCube skyPrefilterTexture		: register(t10);
 
 sampler basicSampler;
 
