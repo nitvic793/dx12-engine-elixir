@@ -83,12 +83,12 @@ Texture* SunRaysPass::GetOcclusionTexture(ID3D12GraphicsCommandList* commandList
 }
 
 Texture* SunRaysPass::Apply(ID3D12GraphicsCommandList* commandList, Texture* depthSRV, Texture* pixels, TexturePool* texturePool, Camera* camera)
-{	//TODO : SunRaysPSO, RTV in TexturePool?
+{	
 	auto camDir = XMLoadFloat3(&camera->GetDirection());
 	
 	auto viewProjT = camera->GetViewProjectionMatrix();
 	auto viewProj = XMLoadFloat4x4(&viewProjT);
-	auto sunDir = XMVector3Normalize(XMVectorSet(0.5f, 0.5f, 1.f, 0.f));
+	auto sunDir = XMVector3Normalize(XMVectorSet(0.2f, 0.5f, 1.f, 0.f));
 	float dotCamSun = XMVectorGetX(XMVector3Dot(camDir, sunDir));
 	if (dotCamSun < 0.f) return pixels;
 
@@ -97,7 +97,7 @@ Texture* SunRaysPass::Apply(ID3D12GraphicsCommandList* commandList, Texture* dep
 	XMVectorSetX(vSunPos, XMVectorGetX(vSunPos) + XMVectorGetX(eyePos));
 	XMVectorSetX(vSunPos, XMVectorGetZ(vSunPos) + XMVectorGetZ(eyePos));
 	auto vSunPosSS = XMVector3TransformCoord(vSunPos, viewProj);
-	static const float MaxSunDist = 2.0f;
+	static const float MaxSunDist = 1.7f;
 	auto sunColor = XMVectorSet(0.5f, 0.5f, 0.05f, 0.f);
 	XMFLOAT2 sunPos(0.5f * XMVectorGetX(vSunPosSS) + 0.5f, -0.5f * XMVectorGetY(vSunPosSS) + 0.5f);
 	float maxDist = max(XMVectorGetX(vSunPosSS), XMVectorGetY(vSunPosSS));

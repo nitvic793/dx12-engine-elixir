@@ -27,7 +27,7 @@ class DeferredRenderer
 	ID3D12Device *device;
 	const static int numRTV = RTV_ORDER_COUNT;
 	int constBufferIndex = 0;
-	int shadowMapSize = 1024;
+	int shadowMapSize = 2048;
 	ID3D12RootSignature* rootSignature;
 	uint32_t srvHeapIndex;
 
@@ -51,6 +51,7 @@ class DeferredRenderer
 	CDescriptorHeapWrapper dsvHeap;
 	CDescriptorHeapWrapper srvHeap;
 	CDescriptorHeapWrapper gBufferHeap;
+	CDescriptorHeapWrapper samplerHeap;
 	CDescriptorHeapWrapper cbHeap;
 	CDescriptorHeapWrapper pixelCbHeap;
 
@@ -65,6 +66,8 @@ class DeferredRenderer
 	Texture* postProcessUAV;
 	Texture* postProcessSRV;
 
+	XMFLOAT4X4 shadowViewTransposed;
+	XMFLOAT4X4 shadowProjTransposed;
 
 	std::vector<Texture*> textureVector;
 	std::vector<Texture*> gBufferTextureVector;

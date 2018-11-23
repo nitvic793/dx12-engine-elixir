@@ -18,6 +18,8 @@ cbuffer ConstantBuffer : register(b0)
 	float4x4 world;
 	float4x4 view;
 	float4x4 projection;
+	float4x4 sview; //not used
+	float4x4 sprojection; //not used
 };
 
 VertexToPixel main(VertexInput input)

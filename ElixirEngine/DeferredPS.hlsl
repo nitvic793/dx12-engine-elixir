@@ -1,20 +1,22 @@
 struct VertexOutput
 {
-	float4 pos		: SV_POSITION;
-	float2 uv		: TEXCOORD;
-	float3 normal	: NORMAL;
-	float3 tangent	: TANGENT;
-	float3 worldPos	: POSITION;
-	float linearZ	: LINEARZ;
+	float4 pos			: SV_POSITION;
+	float2 uv			: TEXCOORD;
+	float3 normal		: NORMAL;
+	float3 tangent		: TANGENT;
+	float3 worldPos		: POSITION;
+	float linearZ		: LINEARZ;
+	float4 shadowPos	: SHADOWPOS;
 };
 
 struct PixelOutput
 {
-	float4 albedo: SV_TARGET0;
-	float4 normal: SV_TARGET1;
-	float4 worldPos: SV_TARGET2;
-	float4 roughness: SV_TARGET3;
-	float4 metalness: SV_TARGET4;
+	float4 albedo		: SV_TARGET0;
+	float4 normal		: SV_TARGET1;
+	float4 worldPos		: SV_TARGET2;
+	float4 roughness	: SV_TARGET3;
+	float4 metalness	: SV_TARGET4;
+	float4 shadowPos	: SV_TARGET7;
 };
 
 struct DirectionalLight
@@ -68,5 +70,6 @@ PixelOutput main(VertexOutput input)// : SV_TARGET
 	output.roughness = float4(roughness, 0, 0, 0);
 	output.metalness = float4(metal, 0.f, 0.f, 0);
 	output.albedo.a = input.linearZ;
+	output.shadowPos = input.shadowPos;
 	return output;
 }
