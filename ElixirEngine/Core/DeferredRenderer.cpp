@@ -1138,7 +1138,7 @@ void DeferredRenderer::CreateShadowBuffers()
 	resourceDesc.Height = viewportHeight;
 	resourceDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
 	resourceDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
-	resourceDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
+	resourceDesc.Format = mDsvFormat;
 	device->CreateCommittedResource(&heapProperty, D3D12_HEAP_FLAG_NONE, &resourceDesc, D3D12_RESOURCE_STATE_GENERIC_READ, &clearVal, IID_PPV_ARGS(&shadowPosTexture));
 }
 
