@@ -130,18 +130,50 @@ void Game::Update()
 	}
 }
 
+bool IsIntersecting(Entity* entity, Camera* camera, int mouseX, int mouseY)
+{
+	auto projMatrix = camera->GetProjectionMatrix();
+	auto pointX = ((2.0f * (float)mouseX) / (float)1280) - 1.0f;
+	auto pointY = (((2.0f * (float)mouseY) / (float)720) - 1.0f) * -1.0f;
+
+	pointX = pointX / projMatrix._11;
+	pointY = pointY / projMatrix._22;
+	
+	auto viewMatrix = camera->GetViewMatrix();
+	XMFLOAT4X4 inverseViewMatrix;
+	auto invView = XMMatrixInverse(nullptr, XMLoadFloat4x4(&viewMatrix));
+	XMStoreFloat4x4(&inverseViewMatrix, invView);
+	XMFLOAT3 direction;
+
+	// Calculate the direction of the picking ray in view space.
+	direction.x = (pointX * inverseViewMatrix._11) + (pointY * inverseViewMatrix._21) + inverseViewMatrix._31;
+	direction.y = (pointX * inverseViewMatrix._12) + (pointY * inverseViewMatrix._22) + inverseViewMatrix._32;
+	direction.z = (pointX * inverseViewMatrix._13) + (pointY * inverseViewMatrix._23) + inverseViewMatrix._33;
+
+	// Get the origin of the picking ray which is the position of the camera.
+	auto origin = camera->GetPosition();
+
+	// Get the world matrix and translate to the location of the sphere.
+	auto worldMatrix = entity->GetWorldMatrix();
+	auto world = XMLoadFloat4x4(&worldMatrix);
+	auto invWorld = XMMatrixInverse(nullptr, world);
+	// Now get the inverse of the translated world matrix.
+
+	auto rayOrigin = XMVector3TransformCoord(XMLoadFloat3(&origin), invWorld);
+	auto rayDirection = XMVector3TransformCoord(XMLoadFloat3(&direction), invWorld);
+	// Now transform the ray origin and the ray direction from view space to world space.
+
+
+	// Normalize the ray direction.
+	rayDirection = XMVector3Normalize(rayDirection);
+	float distance = 0.f;
+	return entity->GetBoundingBox().Intersects(rayOrigin, rayDirection, distance);
+	// Now perform the ray-sphere intersection test.
+
+}
+
 void Game::Draw()
 {
-	float distance = 10.f;
-	auto dir = XMVector3Normalize(XMLoadFloat3(&camera->GetDirection()));
-	if (entities[0]->GetBoundingBox().Intersects(XMLoadFloat3(&camera->GetPosition()), dir, distance))
-	{
-		printf("Intersection\r");
-	}
-	else
-	{
-		printf("None          \r");
-	}
 	std::vector<Entity*> entityList;
 	for (auto& entity : entities)
 	{
@@ -195,6 +227,15 @@ void Game::OnMouseDown(WPARAM buttonState, int x, int y)
 	prevMousePos.x = x;
 	prevMousePos.y = y;
 	SetCapture(hwnd);
+
+	for (int i = 0; i < entities.size(); ++i)
+	{
+		if (IsIntersecting(entities[i].get(), camera, x, y))
+		{
+			printf("Intersecting %d\n", i);
+		}
+	}
+	
 }
 
 void Game::OnMouseUp(WPARAM buttonState, int x, int y)
