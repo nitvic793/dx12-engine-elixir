@@ -16,7 +16,7 @@ struct PixelOutput
 	float4 worldPos		: SV_TARGET2;
 	float4 roughness	: SV_TARGET3;
 	float4 metalness	: SV_TARGET4;
-	float4 shadowPos	: SV_TARGET7;
+	float4 shadowPos	: SV_TARGET7; //Targets 5,6 reserved for light-pass
 };
 
 struct DirectionalLight

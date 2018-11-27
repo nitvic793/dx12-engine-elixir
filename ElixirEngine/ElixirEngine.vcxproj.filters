@@ -22,11 +22,23 @@
     <Filter Include="Shaders">
       <UniqueIdentifier>{40b7cc6d-2282-4cca-9419-a980fe89844f}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Shaders\PostProcess">
-      <UniqueIdentifier>{b9000d03-124c-450a-9323-0d2e05223b6a}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Shaders\Deferred">
       <UniqueIdentifier>{32a69fea-39ee-4e3e-825f-921993e96633}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Shaders\Skybox">
+      <UniqueIdentifier>{60d8e458-258e-4aa1-a625-db4e871032c2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Shaders\SunRays">
+      <UniqueIdentifier>{fa977453-3da6-444d-926e-eb24def36185}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Shaders\DepthOfField">
+      <UniqueIdentifier>{b9000d03-124c-450a-9323-0d2e05223b6a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Shaders\PostProcessCommon">
+      <UniqueIdentifier>{b8f852f7-6e6f-41e4-aab6-34a3e2fa2812}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Shaders\Shadows">
+      <UniqueIdentifier>{b761ac17-5b36-4fc4-a7d4-d66c6a04c211}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -151,44 +163,17 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <FxCompile Include="Shaders\DefaultVS.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="ScreenQuadVS.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="SkyboxVS.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="SkyboxPS.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="PrefilterEnvMapPS.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="ScreenQuadPS.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="OcclusionPassCS.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
     <FxCompile Include="BlurHorizontalCS.hlsl">
-      <Filter>Shaders\PostProcess</Filter>
+      <Filter>Shaders\DepthOfField</Filter>
     </FxCompile>
     <FxCompile Include="BlurVerticalCS.hlsl">
-      <Filter>Shaders\PostProcess</Filter>
+      <Filter>Shaders\DepthOfField</Filter>
     </FxCompile>
     <FxCompile Include="ComputeCS.hlsl">
-      <Filter>Shaders\PostProcess</Filter>
+      <Filter>Shaders\DepthOfField</Filter>
     </FxCompile>
     <FxCompile Include="DepthOfFieldCS.hlsl">
-      <Filter>Shaders\PostProcess</Filter>
-    </FxCompile>
-    <FxCompile Include="SunRaysCS.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="SunRaysPS.hlsl">
-      <Filter>Shaders</Filter>
+      <Filter>Shaders\DepthOfField</Filter>
     </FxCompile>
     <FxCompile Include="LightPassPS.hlsl">
       <Filter>Shaders\Deferred</Filter>
@@ -205,11 +190,38 @@
     <FxCompile Include="DeferredPS.hlsl">
       <Filter>Shaders\Deferred</Filter>
     </FxCompile>
+    <FxCompile Include="SkyboxPS.hlsl">
+      <Filter>Shaders\Skybox</Filter>
+    </FxCompile>
+    <FxCompile Include="SkyboxVS.hlsl">
+      <Filter>Shaders\Skybox</Filter>
+    </FxCompile>
+    <FxCompile Include="SunRaysCS.hlsl">
+      <Filter>Shaders\SunRays</Filter>
+    </FxCompile>
+    <FxCompile Include="SunRaysPS.hlsl">
+      <Filter>Shaders\SunRays</Filter>
+    </FxCompile>
+    <FxCompile Include="OcclusionPassCS.hlsl">
+      <Filter>Shaders\SunRays</Filter>
+    </FxCompile>
     <FxCompile Include="CompositeRaysCS.hlsl">
-      <Filter>Shaders</Filter>
+      <Filter>Shaders\SunRays</Filter>
+    </FxCompile>
+    <FxCompile Include="ScreenQuadPS.hlsl">
+      <Filter>Shaders\PostProcessCommon</Filter>
+    </FxCompile>
+    <FxCompile Include="ScreenQuadVS.hlsl">
+      <Filter>Shaders\PostProcessCommon</Filter>
+    </FxCompile>
+    <FxCompile Include="PrefilterEnvMapPS.hlsl">
+      <Filter>Shaders\Deferred</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\DefaultVS.hlsl">
+      <Filter>Shaders\Deferred</Filter>
     </FxCompile>
     <FxCompile Include="ShadowVS.hlsl">
-      <Filter>Shaders</Filter>
+      <Filter>Shaders\Shadows</Filter>
     </FxCompile>
   </ItemGroup>
   <ItemGroup>

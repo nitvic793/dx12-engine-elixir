@@ -52,7 +52,7 @@ float LinearZ(float4 outPosition)
 VertexOutput main(VertexInput input)
 {
 	VertexOutput output;
-	matrix shadowVP = mul(mul(world, shadowView), shadowProjection);
+	float4x4 shadowVP = mul(mul(world, shadowView), shadowProjection);
 
 	output.pos = mul(float4(input.pos, 1.0f), worldViewProjection);
 	output.uv = input.uv;

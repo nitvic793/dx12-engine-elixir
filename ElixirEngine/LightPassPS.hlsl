@@ -94,7 +94,7 @@ float4 main(VertexToPixel pIn) : SV_TARGET
 
 	float3 specColor = lerp(F0_NON_METAL.rrr, albedo.rgb, metal);
 	float3 irradiance = skyIrradianceTexture.Sample(basicSampler, normal).rgb;
-	float visibility = max(shadowAmount, 1.f);
+	float visibility = max(shadowAmount, 0.2f);
 	float3 finalColor = DirLightPBR(dirLight, normalize(normal), worldPos, 
 		cameraPosition, roughness, metal, albedo, 
 		specColor, irradiance, prefilter, brdf);
