@@ -82,6 +82,7 @@ protected:
 
 	bool InitializeDirectX();
 	void InitializeResources();
+	void CreateConsoleWindow(int bufferLines, int bufferColumns, int windowLines, int windowColumns);
 	void EndInitialization();
 	virtual void Initialize() = 0;
 	virtual void Update(); // update the game logic

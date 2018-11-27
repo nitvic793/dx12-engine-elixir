@@ -15,7 +15,11 @@ class Mesh
 	D3D12_VERTEX_BUFFER_VIEW vBufferView;
 	D3D12_INDEX_BUFFER_VIEW iBufferView;
 	UINT indexCount;
+	XMFLOAT3 minDimensions;
+	XMFLOAT3 maxDimensions;
 public:
+	const XMFLOAT3& GetMaxDimension();
+	const XMFLOAT3& GetMinDimension();
 	Mesh(ID3D12Device* device);
 	Mesh(std::string objFile, ID3D12Device* device, ID3D12GraphicsCommandList* commandList);
 	void Initialize(Vertex* vertices, UINT vertexCount, UINT* indices, UINT indexCount, ID3D12GraphicsCommandList* commandList);

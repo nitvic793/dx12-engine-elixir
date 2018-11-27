@@ -4,6 +4,15 @@
 #define TINYOBJLOADER_IMPLEMENTATION
 #include <tiny_obj_loader.h>
 
+const XMFLOAT3& Mesh::GetMaxDimension()
+{
+	return maxDimensions;
+}
+
+const XMFLOAT3& Mesh::GetMinDimension()
+{
+	return minDimensions;
+}
 
 Mesh::Mesh(ID3D12Device * device)
 {
@@ -12,7 +21,6 @@ Mesh::Mesh(ID3D12Device * device)
 
 Mesh::Mesh(std::string objFile, ID3D12Device * device, ID3D12GraphicsCommandList* commandList)
 {
-
 	// Variables used while reading the file
 	std::vector<XMFLOAT3> positions;     // Positions from the file
 	std::vector<XMFLOAT3> normals;       // Normals from the file
@@ -64,6 +72,19 @@ Mesh::Mesh(std::string objFile, ID3D12Device * device, ID3D12GraphicsCommandList
 			// per-face material
 			shapes[s].mesh.material_ids[f];
 		}
+	}
+
+	minDimensions = XMFLOAT3(FLT_MAX, FLT_MAX, FLT_MAX);
+	maxDimensions = XMFLOAT3(-FLT_MAX, -FLT_MAX, -FLT_MAX);
+	for (UINT i = 0; i < vertices.size(); ++i)
+	{
+		auto pos = vertices[i].pos;
+		if (pos.x < minDimensions.x)minDimensions.x = pos.x;
+		if (pos.y < minDimensions.y)minDimensions.y = pos.y;
+		if (pos.z < minDimensions.z)minDimensions.z = pos.z;
+		if (pos.x > maxDimensions.x)maxDimensions.x = pos.x;
+		if (pos.y > maxDimensions.y)maxDimensions.y = pos.y;
+		if (pos.z > maxDimensions.z)maxDimensions.z = pos.z;
 	}
 
 	this->device = device;

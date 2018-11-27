@@ -18,6 +18,7 @@
 #include "ResourceUploadBatch.h"
 #include "DirectXHelpers.h"
 #include <dxgidebug.h>
+#include <DirectXCollision.h>
 
 using namespace DirectX;
 

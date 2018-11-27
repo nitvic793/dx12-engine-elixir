@@ -332,6 +332,36 @@ void Core::InitializeResources()
 
 }
 
+void Core::CreateConsoleWindow(int bufferLines, int bufferColumns, int windowLines, int windowColumns)
+{
+	// Our temp console info struct
+	CONSOLE_SCREEN_BUFFER_INFO coninfo;
+
+	// Get the console info and set the number of lines
+	AllocConsole();
+	GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &coninfo);
+	coninfo.dwSize.Y = bufferLines;
+	coninfo.dwSize.X = bufferColumns;
+	SetConsoleScreenBufferSize(GetStdHandle(STD_OUTPUT_HANDLE), coninfo.dwSize);
+
+	SMALL_RECT rect;
+	rect.Left = 0;
+	rect.Top = 0;
+	rect.Right = windowColumns;
+	rect.Bottom = windowLines;
+	SetConsoleWindowInfo(GetStdHandle(STD_OUTPUT_HANDLE), TRUE, &rect);
+
+	FILE *stream;
+	freopen_s(&stream, "CONIN$", "r", stdin);
+	freopen_s(&stream, "CONOUT$", "w", stdout);
+	freopen_s(&stream, "CONOUT$", "w", stderr);
+
+	// Prevent accidental console window close
+	HWND consoleHandle = GetConsoleWindow();
+	HMENU hmenu = GetSystemMenu(consoleHandle, FALSE);
+	EnableMenuItem(hmenu, SC_CLOSE, MF_GRAYED);
+}
+
 void Core::EndInitialization()
 {
 	commandList->Close();
@@ -492,6 +522,7 @@ Core::Core(HINSTANCE hInstance, int ShowWnd, int width, int height, bool fullscr
 	Running = true;
 	this->InitializeWindow(hInstance, ShowWnd, width, height, fullscreen);
 	this->InitializeDirectX();
+	this->CreateConsoleWindow(40, 120, 40, 120);
 
 	fpsFrameCount = 0;
 	fpsTimeElapsed = 0.0f;

@@ -13,6 +13,7 @@ protected:
 	Mesh* mesh;
 	Material* material;
 	void CalculateWorldMatrix();
+	BoundingBox boundingBox;
 public:
 	Entity();
 	void SetMesh(Mesh* m);
@@ -23,6 +24,7 @@ public:
 	XMFLOAT4X4 GetWorldMatrix();
 	XMFLOAT4X4 GetWorldMatrixTransposed();
 	XMFLOAT3 GetPosition();
+	inline const BoundingBox& GetBoundingBox() { return boundingBox; };
 	void SetPosition(const XMFLOAT3& pos);
 	void SetRotation(const XMFLOAT3& rot);
 	void SetScale(const XMFLOAT3& scale);

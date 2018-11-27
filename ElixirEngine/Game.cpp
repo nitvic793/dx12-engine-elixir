@@ -132,6 +132,16 @@ void Game::Update()
 
 void Game::Draw()
 {
+	float distance = 10.f;
+	auto dir = XMVector3Normalize(XMLoadFloat3(&camera->GetDirection()));
+	if (entities[0]->GetBoundingBox().Intersects(XMLoadFloat3(&camera->GetPosition()), dir, distance))
+	{
+		printf("Intersection\r");
+	}
+	else
+	{
+		printf("None          \r");
+	}
 	std::vector<Entity*> entityList;
 	for (auto& entity : entities)
 	{
