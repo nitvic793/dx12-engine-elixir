@@ -23,10 +23,8 @@ Entity::Entity()
 void Entity::SetMesh(Mesh * m)
 {
 	mesh = m;
-	boundingBox.Center = position;
-	boundingBox.Extents.x = mesh->GetMaxDimension().x;
-	boundingBox.Extents.y = mesh->GetMaxDimension().y;
-	boundingBox.Extents.z = mesh->GetMaxDimension().z;
+	boundingBox = mesh->GetBoundingOrientedBox();
+	boundingSphere = mesh->GetBoundingSphere();
 }
 
 void Entity::SetMaterial(Material * mat)
@@ -79,6 +77,7 @@ void Entity::SetPosition(const XMFLOAT3& pos)
 {
 	position = pos;
 	boundingBox.Center = position;
+	boundingSphere.Center = position;
 	//boundingBox.Extents.x = mesh->GetMaxDimension().x;
 	//boundingBox.Extents.y = mesh->GetMaxDimension().y;
 	//boundingBox.Extents.z = mesh->GetMaxDimension().z;

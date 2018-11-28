@@ -132,44 +132,37 @@ void Game::Update()
 
 bool IsIntersecting(Entity* entity, Camera* camera, int mouseX, int mouseY)
 {
-	auto projMatrix = camera->GetProjectionMatrix();
-	auto pointX = ((2.0f * (float)mouseX) / (float)1280) - 1.0f;
-	auto pointY = (((2.0f * (float)mouseY) / (float)720) - 1.0f) * -1.0f;
+	uint16_t screenWidth = 1280;
+	uint16_t screenHeight = 720;
+	auto viewMatrix = XMLoadFloat4x4(&camera->GetViewMatrix());
+	auto projMatrix = XMLoadFloat4x4(&camera->GetProjectionMatrix());
 
-	pointX = pointX / projMatrix._11;
-	pointY = pointY / projMatrix._22;
-	
-	auto viewMatrix = camera->GetViewMatrix();
-	XMFLOAT4X4 inverseViewMatrix;
-	auto invView = XMMatrixInverse(nullptr, XMLoadFloat4x4(&viewMatrix));
-	XMStoreFloat4x4(&inverseViewMatrix, invView);
-	XMFLOAT3 direction;
+	auto orig = XMVector3Unproject(XMVectorSet(mouseX, mouseY, 0.f, 0.f),
+		0,
+		0,
+		screenWidth,
+		screenHeight,
+		0,
+		1,
+		projMatrix,
+		viewMatrix,
+		XMMatrixIdentity());
 
-	// Calculate the direction of the picking ray in view space.
-	direction.x = (pointX * inverseViewMatrix._11) + (pointY * inverseViewMatrix._21) + inverseViewMatrix._31;
-	direction.y = (pointX * inverseViewMatrix._12) + (pointY * inverseViewMatrix._22) + inverseViewMatrix._32;
-	direction.z = (pointX * inverseViewMatrix._13) + (pointY * inverseViewMatrix._23) + inverseViewMatrix._33;
+	auto dest = XMVector3Unproject(XMVectorSet(mouseX, mouseY, 1.f, 0.f),
+		0,
+		0,
+		screenWidth,
+		screenHeight,
+		0,
+		1,
+		projMatrix,
+		viewMatrix,
+		XMMatrixIdentity());
 
-	// Get the origin of the picking ray which is the position of the camera.
-	auto origin = camera->GetPosition();
-
-	// Get the world matrix and translate to the location of the sphere.
-	auto worldMatrix = entity->GetWorldMatrix();
-	auto world = XMLoadFloat4x4(&worldMatrix);
-	auto invWorld = XMMatrixInverse(nullptr, world);
-	// Now get the inverse of the translated world matrix.
-
-	auto rayOrigin = XMVector3TransformCoord(XMLoadFloat3(&origin), invWorld);
-	auto rayDirection = XMVector3TransformCoord(XMLoadFloat3(&direction), invWorld);
-	// Now transform the ray origin and the ray direction from view space to world space.
-
-
-	// Normalize the ray direction.
-	rayDirection = XMVector3Normalize(rayDirection);
+	auto direction = dest - orig;
+	direction = XMVector3Normalize(direction);
 	float distance = 0.f;
-	return entity->GetBoundingBox().Intersects(rayOrigin, rayDirection, distance);
-	// Now perform the ray-sphere intersection test.
-
+	return entity->GetBoundingSphere().Intersects(orig, direction, distance);
 }
 
 void Game::Draw()
@@ -233,6 +226,7 @@ void Game::OnMouseDown(WPARAM buttonState, int x, int y)
 		if (IsIntersecting(entities[i].get(), camera, x, y))
 		{
 			printf("Intersecting %d\n", i);
+			break;
 		}
 	}
 	

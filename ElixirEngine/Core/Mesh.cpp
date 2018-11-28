@@ -4,15 +4,6 @@
 #define TINYOBJLOADER_IMPLEMENTATION
 #include <tiny_obj_loader.h>
 
-const XMFLOAT3& Mesh::GetMaxDimension()
-{
-	return maxDimensions;
-}
-
-const XMFLOAT3& Mesh::GetMinDimension()
-{
-	return minDimensions;
-}
 
 Mesh::Mesh(ID3D12Device * device)
 {
@@ -57,6 +48,7 @@ Mesh::Mesh(std::string objFile, ID3D12Device * device, ID3D12GraphicsCommandList
 				tinyobj::real_t ty = attrib.texcoords[2 * idx.texcoord_index + 1];
 				Vertex vertex;
 				vertex.pos = XMFLOAT3(vx, vy, vz);
+				positions.push_back(vertex.pos);
 				vertex.normal = XMFLOAT3(nx, ny, nz);
 				vertex.uv = XMFLOAT2(tx, ty);
 				vertices.push_back(vertex);
@@ -74,19 +66,8 @@ Mesh::Mesh(std::string objFile, ID3D12Device * device, ID3D12GraphicsCommandList
 		}
 	}
 
-	minDimensions = XMFLOAT3(FLT_MAX, FLT_MAX, FLT_MAX);
-	maxDimensions = XMFLOAT3(-FLT_MAX, -FLT_MAX, -FLT_MAX);
-	for (UINT i = 0; i < vertices.size(); ++i)
-	{
-		auto pos = vertices[i].pos;
-		if (pos.x < minDimensions.x)minDimensions.x = pos.x;
-		if (pos.y < minDimensions.y)minDimensions.y = pos.y;
-		if (pos.z < minDimensions.z)minDimensions.z = pos.z;
-		if (pos.x > maxDimensions.x)maxDimensions.x = pos.x;
-		if (pos.y > maxDimensions.y)maxDimensions.y = pos.y;
-		if (pos.z > maxDimensions.z)maxDimensions.z = pos.z;
-	}
-
+	BoundingOrientedBox::CreateFromPoints(boundingBox, positions.size(), positions.data(), sizeof(XMFLOAT3));
+	BoundingSphere::CreateFromPoints(boundingSphere, positions.size(), positions.data(), sizeof(XMFLOAT3));
 	this->device = device;
 
 	//// File input object
@@ -407,6 +388,16 @@ const D3D12_INDEX_BUFFER_VIEW& Mesh::GetIndexBufferView()
 const UINT& Mesh::GetIndexCount()
 {
 	return indexCount;
+}
+
+const BoundingSphere & Mesh::GetBoundingSphere()
+{
+	return boundingSphere;
+}
+
+const BoundingOrientedBox & Mesh::GetBoundingOrientedBox()
+{
+	return boundingBox;
 }
 
 Mesh::~Mesh()
