@@ -11,6 +11,7 @@
 class Core
 {
 public:
+	HWND GetHWND() { return hwnd; };
 	static Core* coreInstance;
 	Core(HINSTANCE hInstance, int ShowWnd, int width, int height, bool fullscreen);
 	void Run(std::function<void(Core*)> coreLogicCallback);
