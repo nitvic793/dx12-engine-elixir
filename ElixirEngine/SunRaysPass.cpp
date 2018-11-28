@@ -95,7 +95,7 @@ Texture* SunRaysPass::Apply(ID3D12GraphicsCommandList* commandList, Texture* dep
 	auto vSunPos = -200.f * sunDir;
 	auto eyePos = XMLoadFloat3(&camera->GetPosition());
 	XMVectorSetX(vSunPos, XMVectorGetX(vSunPos) + XMVectorGetX(eyePos));
-	XMVectorSetX(vSunPos, XMVectorGetZ(vSunPos) + XMVectorGetZ(eyePos));
+	XMVectorSetZ(vSunPos, XMVectorGetZ(vSunPos) + XMVectorGetZ(eyePos));
 	auto vSunPosSS = XMVector3TransformCoord(vSunPos, viewProj);
 	static const float MaxSunDist = 1.7f;
 	auto sunColor = XMVectorSet(0.5f, 0.5f, 0.05f, 0.f);
