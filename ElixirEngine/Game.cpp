@@ -43,8 +43,8 @@ void Game::InitializeAssets()
 				textureList[i + 1].c_str(),
 				textureList[i + 2].c_str(),
 				textureList[i + 3].c_str()
-			}, 
-			device, 
+			},
+			device,
 			commandQueue)));
 	}
 
@@ -71,7 +71,7 @@ void Game::InitializeAssets()
 	pixelCb.light.AmbientColor = XMFLOAT4(0.1f, 0.1f, 0.1f, 0);
 	pixelCb.light.DiffuseColor = XMFLOAT4(0.1f, 0.1f, 0.1f, 0.f);
 	pixelCb.light.Direction = XMFLOAT3(0.5f, 0.5f, 1.f);
-	pixelCb.pointLight = PointLight{ {0.99f, 0.2f, 0.2f, 0.f} , {0.0f, 2.f, 1.f}, 10.f };
+	pixelCb.pointLight = PointLight{ {0.99f, 0.2f, 0.2f, 0.f} , {0.0f, 1.f, -1.f}, 6.f };
 
 	ResourceUploadBatch uploadBatch(device);
 	uploadBatch.Begin();
@@ -130,14 +130,14 @@ void Game::Update()
 	}
 }
 
-bool IsIntersecting(Entity* entity, Camera* camera, int mouseX, int mouseY)
+bool IsIntersecting(Entity* entity, Camera* camera, int mouseX, int mouseY, float& distance)
 {
 	uint16_t screenWidth = 1280;
 	uint16_t screenHeight = 720;
 	auto viewMatrix = XMLoadFloat4x4(&camera->GetViewMatrix());
 	auto projMatrix = XMLoadFloat4x4(&camera->GetProjectionMatrix());
 
-	auto orig = XMVector3Unproject(XMVectorSet(mouseX, mouseY, 0.f, 0.f),
+	auto orig = XMVector3Unproject(XMVectorSet((float)mouseX, (float)mouseY, 0.f, 0.f),
 		0,
 		0,
 		screenWidth,
@@ -148,7 +148,7 @@ bool IsIntersecting(Entity* entity, Camera* camera, int mouseX, int mouseY)
 		viewMatrix,
 		XMMatrixIdentity());
 
-	auto dest = XMVector3Unproject(XMVectorSet(mouseX, mouseY, 1.f, 0.f),
+	auto dest = XMVector3Unproject(XMVectorSet((float)mouseX, (float)mouseY, 1.f, 0.f),
 		0,
 		0,
 		screenWidth,
@@ -161,8 +161,8 @@ bool IsIntersecting(Entity* entity, Camera* camera, int mouseX, int mouseY)
 
 	auto direction = dest - orig;
 	direction = XMVector3Normalize(direction);
-	float distance = 0.f;
-	return entity->GetBoundingSphere().Intersects(orig, direction, distance);
+	bool intersecting = entity->GetBoundingSphere().Intersects(orig, direction, distance);
+	return intersecting;
 }
 
 void Game::Draw()
@@ -187,7 +187,7 @@ void Game::Draw()
 
 	commandList->RSSetViewports(1, &viewport);
 	commandList->RSSetScissorRects(1, &scissorRect);
-	
+
 	pixelCb.cameraPosition = camera->GetPosition();
 	pixelCb.invProjView = camera->GetInverseProjectionViewMatrix();
 
@@ -220,16 +220,18 @@ void Game::OnMouseDown(WPARAM buttonState, int x, int y)
 	prevMousePos.x = x;
 	prevMousePos.y = y;
 	SetCapture(hwnd);
-
+	selectedEntities.clear();
 	for (int i = 0; i < entities.size(); ++i)
 	{
-		if (IsIntersecting(entities[i].get(), camera, x, y))
+		float distance;
+		if (IsIntersecting(entities[i].get(), camera, x, y, distance))
 		{
+			selectedEntities.push_back(entities[i].get());
 			printf("Intersecting %d\n", i);
 			break;
 		}
 	}
-	
+
 }
 
 void Game::OnMouseUp(WPARAM buttonState, int x, int y)

@@ -37,6 +37,7 @@ class DeferredRenderer
 	ID3D12Resource* postProcessTexture;
 	ID3D12Resource* shadowMapTexture;
 	ID3D12Resource* shadowPosTexture;
+	ID3D12Resource* selectedDepthTexture;
 
 	ID3D12PipelineState* deferredPSO;
 	ID3D12PipelineState* dirLightPassPSO;
@@ -45,6 +46,7 @@ class DeferredRenderer
 	ID3D12PipelineState* skyboxPSO;
 	ID3D12PipelineState* prefilterEnvMapPSO;
 	ID3D12PipelineState* shadowMapDirLightPSO;
+	ID3D12PipelineState* selectionFilterPSO;
 
 	CDescriptorHeapWrapper prefilterRTVHeap;
 	CDescriptorHeapWrapper rtvHeap;
@@ -115,6 +117,7 @@ class DeferredRenderer
 	void CreateDSV();
 	void CreateRootSignature();
 	void CreateShadowBuffers();
+	void CreateSelectionFilterBuffers();
 	void Draw(Mesh* m, const ConstantBuffer& cb, ID3D12GraphicsCommandList* commandList);
 public:
 	DeferredRenderer(ID3D12Device *dxDevice, int width, int height);

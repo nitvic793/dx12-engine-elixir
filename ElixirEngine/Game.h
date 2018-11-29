@@ -24,6 +24,7 @@ protected:
 	POINT			prevMousePos;
 	BlurFilter*		blurFilter;
 
+	std::vector<Entity*> selectedEntities;
 	std::vector<std::unique_ptr<Entity>> entities;
 	std::vector<std::unique_ptr<Material>> materials;
 	std::vector<std::unique_ptr<Mesh>> meshes;

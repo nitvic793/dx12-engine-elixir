@@ -40,6 +40,9 @@
     <Filter Include="Shaders\Shadows">
       <UniqueIdentifier>{b761ac17-5b36-4fc4-a7d4-d66c6a04c211}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Shaders\Common">
+      <UniqueIdentifier>{d992bc4f-1ea8-46d2-b04a-5893870b06a4}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Main.cpp">
@@ -223,11 +226,14 @@
     <FxCompile Include="ShadowVS.hlsl">
       <Filter>Shaders\Shadows</Filter>
     </FxCompile>
+    <FxCompile Include="DepthOnlyVS.hlsl">
+      <Filter>Shaders\Common</Filter>
+    </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
     <None Include="Lighting.hlsli">
-      <Filter>Shaders</Filter>
+      <Filter>Shaders\Common</Filter>
     </None>
   </ItemGroup>
 </Project>

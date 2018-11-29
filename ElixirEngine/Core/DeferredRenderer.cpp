@@ -164,6 +164,7 @@ void DeferredRenderer::Initialize(ID3D12GraphicsCommandList* command)
 	CreateDSV();
 	CreatePrefilterResources(command);
 	CreateShadowBuffers();
+	CreateSelectionFilterBuffers();
 
 	sphereMesh = new Mesh("../../Assets/sphere.obj", device, command);
 	cubeMesh = new Mesh("../../Assets/cube.obj", device, command);
@@ -1192,6 +1193,86 @@ void DeferredRenderer::CreateShadowBuffers()
 	device->CreateSampler(&shadowSampDesc, samplerHeap.hCPUHeapStart);
 }
 
+void DeferredRenderer::CreateSelectionFilterBuffers()
+{
+	//Create PSO (DepthOnlyVS) without Pixel Shader, draw only depth
+	//Create Depth Texture along with SRV
+	//Send Depth Texture to edge detection Compute Shader along with final color texture which returns an texture with edge colored
+	//https://gamedev.stackexchange.com/questions/159585/sobel-edge-detection-on-depth-texture
+	D3D12_INPUT_ELEMENT_DESC inputLayout[] =
+	{
+		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+		{ "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 20, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+		{ "TANGENT", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 32, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
+	};
+
+	D3D12_GRAPHICS_PIPELINE_STATE_DESC descPipelineState;
+	ZeroMemory(&descPipelineState, sizeof(descPipelineState));
+
+	descPipelineState.VS = ShaderManager::LoadShader(L"DepthOnlyVS.cso");
+	descPipelineState.InputLayout.pInputElementDescs = inputLayout;
+	descPipelineState.InputLayout.NumElements = _countof(inputLayout);
+	descPipelineState.pRootSignature = rootSignature;
+	descPipelineState.DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
+	descPipelineState.DepthStencilState.DepthEnable = true;
+	descPipelineState.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
+	descPipelineState.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
+	descPipelineState.RasterizerState.FillMode = D3D12_FILL_MODE_SOLID;
+	descPipelineState.RasterizerState.CullMode = D3D12_CULL_MODE_BACK;
+	descPipelineState.RasterizerState.DepthClipEnable = true;
+	descPipelineState.RasterizerState.DepthBias = 1000;
+	descPipelineState.RasterizerState.DepthBiasClamp = 0.f;
+	descPipelineState.RasterizerState.SlopeScaledDepthBias = 1.f;
+	descPipelineState.SampleMask = UINT_MAX;
+	descPipelineState.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+	descPipelineState.NumRenderTargets = 0;
+	//descPipelineState.RTVFormats[0] = mDsvFormat;
+	descPipelineState.DSVFormat = mDsvFormat;
+	descPipelineState.SampleDesc.Count = 1;
+
+	device->CreateGraphicsPipelineState(&descPipelineState, IID_PPV_ARGS(&selectionFilterPSO));
+
+	CD3DX12_HEAP_PROPERTIES heapProperty(D3D12_HEAP_TYPE_DEFAULT);
+
+	D3D12_RESOURCE_DESC resourceDesc;
+	ZeroMemory(&resourceDesc, sizeof(resourceDesc));
+	resourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+	resourceDesc.Alignment = 0;
+	resourceDesc.SampleDesc.Count = 1;
+	resourceDesc.SampleDesc.Quality = 0;
+	resourceDesc.MipLevels = 1;
+	resourceDesc.Format = mDsvFormat;
+	resourceDesc.DepthOrArraySize = 1;
+	resourceDesc.Width = shadowMapSize;
+	resourceDesc.Height = shadowMapSize;
+	resourceDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
+	resourceDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
+
+	D3D12_CLEAR_VALUE clearVal;
+	clearVal = { mDsvFormat , mClearDepth };
+
+	D3D12_SHADER_RESOURCE_VIEW_DESC descSRV;
+
+	ZeroMemory(&descSRV, sizeof(descSRV));
+	descSRV.Texture2D.MipLevels = resourceDesc.MipLevels;
+	descSRV.Texture2D.MostDetailedMip = 0;
+	descSRV.Format = DXGI_FORMAT_R24_UNORM_X8_TYPELESS;
+	descSRV.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+	descSRV.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+
+	device->CreateCommittedResource(&heapProperty, D3D12_HEAP_FLAG_NONE, &resourceDesc, D3D12_RESOURCE_STATE_GENERIC_READ, &clearVal, IID_PPV_ARGS(&selectedDepthTexture));
+
+	D3D12_DEPTH_STENCIL_VIEW_DESC desc;
+	ZeroMemory(&desc, sizeof(desc));
+	desc.Texture2D.MipSlice = 0;
+	desc.Format = resourceDesc.Format;
+	desc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
+	desc.Flags = D3D12_DSV_FLAG_NONE;
+
+	device->CreateDepthStencilView(selectedDepthTexture, &desc, dsvHeap.handleCPU(2)); // 0 is the main depth target, 1 is the shadow map
+}
+
 DeferredRenderer::~DeferredRenderer()
 {
 	for (int i = 0; i < numRTV; ++i)
@@ -1199,6 +1280,7 @@ DeferredRenderer::~DeferredRenderer()
 	depthStencilTexture->Release();
 	shadowMapTexture->Release();
 	shadowPosTexture->Release();
+	selectedDepthTexture->Release();
 	rootSignature->Release();
 
 	/*rtvHeap.pDescriptorHeap->Release();
@@ -1222,6 +1304,7 @@ DeferredRenderer::~DeferredRenderer()
 	screenQuadPSO->Release();
 	prefilterEnvMapPSO->Release();
 	shadowMapDirLightPSO->Release();
+	selectionFilterPSO->Release();
 
 	//prefilterRTVHeap.pDescriptorHeap->Release();
 	prefilterTexture->Release();
