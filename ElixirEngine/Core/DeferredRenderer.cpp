@@ -108,6 +108,11 @@ void DeferredRenderer::SetIBLTextures(ID3D12Resource* irradianceTextureCube, ID3
 	device->CreateShaderResourceView(prefilterTextureCube, &srvDesc, gBufferHeap.handleCPU(prefilterIndex));
 }
 
+Texture * DeferredRenderer::GetSelectionDepthBufferSRV()
+{
+	return selectedDepthBufferSRV.get();
+}
+
 Texture * DeferredRenderer::GetResultUAV()
 {
 	return resultUAV;
@@ -322,6 +327,34 @@ void DeferredRenderer::SetLightShapePassPSO(ID3D12GraphicsCommandList * command,
 	command->SetDescriptorHeaps(1, ppHeaps);
 	command->SetGraphicsRootDescriptorTable(2, gBufferHeap.handleGPU(0));
 
+}
+
+void DeferredRenderer::RenderSelectionDepthBuffer(ID3D12GraphicsCommandList* commandList, std::vector<Entity*> entities, Camera* camera)
+{
+	commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(selectedDepthTexture, D3D12_RESOURCE_STATE_GENERIC_READ, D3D12_RESOURCE_STATE_DEPTH_WRITE));
+
+	commandList->ClearDepthStencilView(dsvHeap.handleCPU(2), D3D12_CLEAR_FLAGS::D3D12_CLEAR_FLAG_DEPTH, mClearDepth, 0xff, 0, nullptr);
+	commandList->OMSetRenderTargets(0, nullptr, false, &dsvHeap.handleCPU(2));
+	commandList->SetPipelineState(selectionFilterPSO);
+
+	ConstantBuffer cb;
+	cb.view = camera->GetViewMatrixTransposed();
+	cb.projection = camera->GetProjectionMatrixTransposed();
+
+	int index = constBufferIndex;
+	for (auto e : entities)
+	{
+		cb.world = e->GetWorldMatrixTransposed();
+		cbWrapper.CopyData(&cb, ConstantBufferSize, index);
+		commandList->SetGraphicsRootDescriptorTable(0, cbHeap.handleGPU(index));
+		commandList->SetGraphicsRootDescriptorTable(1, cbHeap.handleGPU(index));
+		commandList->SetGraphicsRootDescriptorTable(3, cbHeap.handleGPU(ConstBufferCount - 1)); //Per frame const buffer
+		Draw(e->GetMesh(), cb, commandList);
+		index++;
+	}
+	constBufferIndex = index;
+
+	commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(selectedDepthTexture, D3D12_RESOURCE_STATE_DEPTH_WRITE, D3D12_RESOURCE_STATE_GENERIC_READ));
 }
 
 void DeferredRenderer::RenderShadowMap(ID3D12GraphicsCommandList * commandList, std::vector<Entity*> entities)
@@ -1244,23 +1277,13 @@ void DeferredRenderer::CreateSelectionFilterBuffers()
 	resourceDesc.MipLevels = 1;
 	resourceDesc.Format = mDsvFormat;
 	resourceDesc.DepthOrArraySize = 1;
-	resourceDesc.Width = shadowMapSize;
-	resourceDesc.Height = shadowMapSize;
+	resourceDesc.Width = viewportWidth;
+	resourceDesc.Height = viewportHeight;
 	resourceDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
 	resourceDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
 
 	D3D12_CLEAR_VALUE clearVal;
 	clearVal = { mDsvFormat , mClearDepth };
-
-	D3D12_SHADER_RESOURCE_VIEW_DESC descSRV;
-
-	ZeroMemory(&descSRV, sizeof(descSRV));
-	descSRV.Texture2D.MipLevels = resourceDesc.MipLevels;
-	descSRV.Texture2D.MostDetailedMip = 0;
-	descSRV.Format = DXGI_FORMAT_R24_UNORM_X8_TYPELESS;
-	descSRV.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-	descSRV.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-
 	device->CreateCommittedResource(&heapProperty, D3D12_HEAP_FLAG_NONE, &resourceDesc, D3D12_RESOURCE_STATE_GENERIC_READ, &clearVal, IID_PPV_ARGS(&selectedDepthTexture));
 
 	D3D12_DEPTH_STENCIL_VIEW_DESC desc;
@@ -1271,6 +1294,8 @@ void DeferredRenderer::CreateSelectionFilterBuffers()
 	desc.Flags = D3D12_DSV_FLAG_NONE;
 
 	device->CreateDepthStencilView(selectedDepthTexture, &desc, dsvHeap.handleCPU(2)); // 0 is the main depth target, 1 is the shadow map
+	auto heapIndex = SetSRV(selectedDepthTexture, DXGI_FORMAT_R24_UNORM_X8_TYPELESS);
+	selectedDepthBufferSRV = std::unique_ptr<Texture>(new Texture(this, device, selectedDepthTexture, heapIndex, TextureTypeSRV));
 }
 
 DeferredRenderer::~DeferredRenderer()

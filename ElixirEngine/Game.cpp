@@ -192,6 +192,7 @@ void Game::Draw()
 	pixelCb.invProjView = camera->GetInverseProjectionViewMatrix();
 
 	// draw
+	deferredRenderer->RenderSelectionDepthBuffer(commandList, selectedEntities, camera);
 	deferredRenderer->SetGBUfferPSO(commandList, camera, pixelCb);
 	deferredRenderer->Draw(commandList, entityList);
 

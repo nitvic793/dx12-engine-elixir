@@ -61,13 +61,13 @@ class DeferredRenderer
 	ConstantBufferWrapper pixelCbWrapper;
 	ConstantBufferWrapper perFrameCbWrapper;
 
-
+	std::unique_ptr<Texture> selectedDepthBufferSRV;
 	std::unique_ptr<Texture> gDepthSRV;
 	Texture* resultUAV;
 	Texture* resultSRV;
 	Texture* postProcessUAV;
 	Texture* postProcessSRV;
-
+	
 	XMFLOAT4X4 shadowViewTransposed;
 	XMFLOAT4X4 shadowProjTransposed;
 
@@ -131,6 +131,7 @@ public:
 	uint32_t SetUAV(ID3D12Resource* textureSRV, bool isTextureCube = false, DXGI_FORMAT format = DXGI_FORMAT_R32G32B32A32_FLOAT);
 	uint32_t SetSRVs(ID3D12Resource** textureSRV, int textureCount, bool isTextureCube = false);
 	
+	Texture*				GetSelectionDepthBufferSRV();
 	Texture*				GetResultUAV();
 	Texture*				GetResultSRV();
 	Texture*				GetPostProcessSRV();
@@ -146,6 +147,7 @@ public:
 	void SetLightPassPSO(ID3D12GraphicsCommandList* command, const PixelConstantBuffer& pixelCb);
 	void SetLightShapePassPSO(ID3D12GraphicsCommandList* command, const PixelConstantBuffer& pixelCb);
 
+	void RenderSelectionDepthBuffer(ID3D12GraphicsCommandList* commandList, std::vector<Entity*> entities, Camera* camera);
 	void RenderShadowMap(ID3D12GraphicsCommandList* commandList, std::vector<Entity*> entities);
 	void Draw(ID3D12GraphicsCommandList* commandList, std::vector<Entity*> entities);
 	void DrawSkybox(ID3D12GraphicsCommandList* commandList, Texture* skybox);
