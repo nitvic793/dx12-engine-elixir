@@ -15,6 +15,7 @@ protected:
 	void CalculateWorldMatrix();
 	BoundingOrientedBox boundingBox;
 	BoundingSphere boundingSphere;
+	bool bCastsShadow = false;
 public:
 	Entity();
 	void SetMesh(Mesh* m);
@@ -30,5 +31,7 @@ public:
 	void SetPosition(const XMFLOAT3& pos);
 	void SetRotation(const XMFLOAT3& rot);
 	void SetScale(const XMFLOAT3& scale);
+	const bool &CastsShadow() { return bCastsShadow; }
+	void SetCastsShadow(bool enable) { bCastsShadow = enable; }
 	~Entity();
 };

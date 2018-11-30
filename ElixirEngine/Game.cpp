@@ -90,8 +90,10 @@ void Game::InitializeAssets()
 		entities[i]->SetPosition(pos);
 		int matId = entityMaterialMap[i];
 		entities[i]->SetMaterial(materials[matId].get());
+		entities[i]->SetCastsShadow(true);
 	}
 
+	entities[9]->SetCastsShadow(false);
 	entities[9]->SetMesh(meshes[1].get());
 	entities[9]->SetPosition(XMFLOAT3(5, -1, 0));
 	entities[9]->SetScale(XMFLOAT3(15, 15, 15));

@@ -106,7 +106,7 @@ Texture* SunRaysPass::Apply(ID3D12GraphicsCommandList* commandList, Texture* dep
 		return pixels;
 	}
 
-	if (maxDist > 1.f)
+	if (maxDist > 0.5f)
 	{
 		sunColor *= (MaxSunDist - maxDist);
 	}

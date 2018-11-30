@@ -381,6 +381,7 @@ void DeferredRenderer::RenderShadowMap(ID3D12GraphicsCommandList * commandList, 
 		XMVectorSet(0, 1, 0, 0));	// Up is up
 	XMStoreFloat4x4(&shadowViewTransposed, XMMatrixTranspose(shView));
 
+
 	XMMATRIX shProj = XMMatrixOrthographicLH(20.0f, 20.0f, 0.1f, 100.0f);
 	XMStoreFloat4x4(&shadowProjTransposed, XMMatrixTranspose(shProj));
 
@@ -401,6 +402,7 @@ void DeferredRenderer::RenderShadowMap(ID3D12GraphicsCommandList * commandList, 
 	int index = constBufferIndex;
 	for (auto e : entities)
 	{
+		if (!e->CastsShadow()) continue;
 		cb.world = e->GetWorldMatrixTransposed();
 		cbWrapper.CopyData(&cb, ConstantBufferSize, index);
 		commandList->SetGraphicsRootDescriptorTable(0, cbHeap.handleGPU(index));
@@ -1131,7 +1133,7 @@ void DeferredRenderer::CreateShadowBuffers()
 	descPipelineState.RasterizerState.DepthClipEnable = true;
 	descPipelineState.RasterizerState.DepthBias = 1000;
 	descPipelineState.RasterizerState.DepthBiasClamp = 0.f;
-	descPipelineState.RasterizerState.SlopeScaledDepthBias = 1.f;
+	descPipelineState.RasterizerState.SlopeScaledDepthBias = 5.f;
 	descPipelineState.SampleMask = UINT_MAX;
 	descPipelineState.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
 	descPipelineState.NumRenderTargets = 0;
