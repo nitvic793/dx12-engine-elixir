@@ -6,5 +6,5 @@ RWTexture2D<float> OcclusionRW	: register(u0);
 void main( uint3 dThreadId : SV_DispatchThreadID )
 {
 	float depth = DepthTex[dThreadId.xy];
-	OcclusionRW[dThreadId.xy].r = depth > 0.99f;
+	OcclusionRW[dThreadId.xy].r = depth > 0.9999f;
 }
