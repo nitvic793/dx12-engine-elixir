@@ -37,6 +37,8 @@ public:
 	Texture* GetUAV(int index);
 	D3D12_CPU_DESCRIPTOR_HANDLE GetRTVHandle(int index);
 	Texture* Request(DXGI_FORMAT format, int width, int height, TextureViewType type, int *index = nullptr, bool getCached = true);
+
+	void ResetIndex();
 	~TexturePool();
 };
 

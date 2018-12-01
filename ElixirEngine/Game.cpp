@@ -59,12 +59,13 @@ void Game::InitializeAssets()
 		entityMaterialMap.push_back(i % materialCount);
 	}
 
-	texturePool = new TexturePool(device, deferredRenderer);
+	texturePool = new TexturePool(device, deferredRenderer, 12);
 	isBlurEnabled = false;
 	computeCore = new ComputeCore(device);
 
 	dofPass = std::unique_ptr<DepthOfFieldPass>(new DepthOfFieldPass(computeCore));
 	sunRaysPass = std::unique_ptr<SunRaysPass>(new SunRaysPass(computeCore, deferredRenderer));
+	edgeFilter = std::unique_ptr<EdgeFilter>(new EdgeFilter(computeCore));
 	blurFilter = new BlurFilter(computeCore);
 	camera = new Camera((float)Width, (float)Height);
 
@@ -213,9 +214,11 @@ void Game::Draw()
 		auto blurTexture = blurFilter->Apply(commandList, finalTexture, texturePool, 4, 3, 2);
 		finalTexture = dofPass->Apply(commandList, finalTexture, blurTexture, texturePool, 3, 0.2f);
 	}
-	auto sunRaysTex = sunRaysPass->Apply(commandList, deferredRenderer->GetGBufferDepthSRV(), finalTexture, texturePool, camera);
-	deferredRenderer->DrawResult(commandList, rtvHandle, sunRaysTex); //Draw renderer result to given main Render Target handle
+	finalTexture = sunRaysPass->Apply(commandList, deferredRenderer->GetGBufferDepthSRV(), finalTexture, texturePool, camera);
+	finalTexture = edgeFilter->Apply(commandList, deferredRenderer->GetSelectionDepthBufferSRV(), finalTexture, texturePool);
+	deferredRenderer->DrawResult(commandList, rtvHandle, finalTexture); //Draw renderer result to given main Render Target handle
 	deferredRenderer->ResetRenderTargetStates(commandList);
+	texturePool->ResetIndex();
 }
 
 void Game::OnMouseDown(WPARAM buttonState, int x, int y)

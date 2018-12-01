@@ -96,6 +96,9 @@
     <ClCompile Include="SunRaysPass.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="EdgeFilter.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
@@ -164,6 +167,9 @@
     <ClInclude Include="SunRaysPass.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="EdgeFilter.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="BlurHorizontalCS.hlsl">
@@ -228,6 +234,9 @@
     </FxCompile>
     <FxCompile Include="DepthOnlyVS.hlsl">
       <Filter>Shaders\Common</Filter>
+    </FxCompile>
+    <FxCompile Include="EdgeDetectionCS.hlsl">
+      <Filter>Shaders</Filter>
     </FxCompile>
   </ItemGroup>
   <ItemGroup>

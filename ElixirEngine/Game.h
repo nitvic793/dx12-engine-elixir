@@ -7,6 +7,7 @@
 #include "DepthOfFieldPass.h"
 #include "SunRaysPass.h"
 #include "TexturePool.h"
+#include "EdgeFilter.h"
 
 class Game : public Core
 {
@@ -30,6 +31,7 @@ protected:
 	std::vector<std::unique_ptr<Mesh>> meshes;
 	std::unique_ptr<DepthOfFieldPass> dofPass;
 	std::unique_ptr<SunRaysPass> sunRaysPass;
+	std::unique_ptr<EdgeFilter> edgeFilter;
 
 	bool			isBlurEnabled;
 	void InitializeAssets();

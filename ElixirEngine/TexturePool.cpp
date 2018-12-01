@@ -96,11 +96,13 @@ TextureResourceBunch TexturePool::GetNext()
 
 Texture * TexturePool::GetSRV(int index)
 {
+	srvIndex = index;
 	return textureSRVs[index];
 }
 
 Texture * TexturePool::GetUAV(int index)
 {
+	uavIndex = index;
 	return textureUAVs[index];
 }
 
@@ -140,6 +142,11 @@ Texture* TexturePool::Request(DXGI_FORMAT format, int width, int height, Texture
 	return nullptr;
 }
 
+
+void TexturePool::ResetIndex()
+{
+	srvIndex = uavIndex = 0;
+}
 
 TexturePool::~TexturePool()
 {
