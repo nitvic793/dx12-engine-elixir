@@ -54,18 +54,44 @@ void TexturePool::AddTexture(DXGI_FORMAT format, int width, int height)
 	device->CreateRenderTargetView(texture, &desc, rtvHeap.handleCPU((UINT)textures.size() - 1));
 }
 
-TexturePool::TexturePool(ID3D12Device* device, DeferredRenderer* renderContext, int totalTextureCount)
+TexturePool::TexturePool(ID3D12Device* device, DeferredRenderer* renderContext, int totalTextureCount) :
+	uavIndex(0),
+	srvIndex(0)
 {
 	this->device = device;
 	this->renderContext = renderContext;
 	descriptorHeap = &renderContext->GetSRVHeap();
 	rtvHeap.Create(device, D3D12_DESCRIPTOR_HEAP_TYPE_RTV, totalTextureCount);
-
+	maxTextureCount = totalTextureCount;
 	for (int i = 0; i < totalTextureCount; ++i)
 	{
 		AddTexture();
 	}
 
+}
+
+Texture* TexturePool::GetNextSRV()
+{
+	auto srv = GetSRV(srvIndex);
+	srvIndex = (srvIndex + 1) % maxTextureCount;
+	return srv;
+}
+
+Texture* TexturePool::GetNextUAV()
+{
+	auto uav = GetUAV(uavIndex);
+	uavIndex = (uavIndex + 1) % maxTextureCount;
+	return uav;
+}
+
+TextureResourceBunch TexturePool::GetNext()
+{
+	auto srv = GetSRV(srvIndex);
+	auto uav = GetUAV(srvIndex);
+	auto rtv = GetRTVHandle(srvIndex);
+	srvIndex = (srvIndex + 1) % maxTextureCount;
+	uavIndex = srvIndex; 	//Moves UAV index to SRV Index
+	return TextureResourceBunch { srv, uav, rtv };
 }
 
 Texture * TexturePool::GetSRV(int index)

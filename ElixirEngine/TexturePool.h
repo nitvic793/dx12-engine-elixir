@@ -5,6 +5,13 @@
 #include "DirectXHelper.h"
 #include <unordered_map>
 
+struct TextureResourceBunch
+{
+	Texture* SRV;
+	Texture* UAV;
+	D3D12_CPU_DESCRIPTOR_HANDLE RTV;
+};
+
 class TexturePool
 {
 	std::vector<ID3D12Resource*> textures;
@@ -12,6 +19,8 @@ class TexturePool
 	std::vector<Texture*> textureUAVs;
 	int maxTextureCount;
 
+	int srvIndex;
+	int uavIndex;
 	ID3D12Device* device;
 	CDescriptorHeapWrapper* descriptorHeap;
 	CDescriptorHeapWrapper rtvHeap;
@@ -21,6 +30,9 @@ class TexturePool
 	void AddTexture(DXGI_FORMAT format = DXGI_FORMAT_R32G32B32A32_FLOAT, int width = 1280, int height = 720);
 public:
 	TexturePool(ID3D12Device* device, DeferredRenderer* renderContext, int totalTextureCount = 6);
+	Texture* GetNextSRV();
+	Texture* GetNextUAV();
+	TextureResourceBunch GetNext();
 	Texture* GetSRV(int index);
 	Texture* GetUAV(int index);
 	D3D12_CPU_DESCRIPTOR_HANDLE GetRTVHandle(int index);
