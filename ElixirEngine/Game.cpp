@@ -25,12 +25,17 @@ void Game::InitializeAssets()
 			L"../../Assets/Textures/cement_albedo.png" , //4
 			L"../../Assets/Textures/cement_normals.png" ,
 			L"../../Assets/Textures/cement_roughness.png" ,
-			L"../../Assets/Textures/cement_metal.png"
+			L"../../Assets/Textures/cement_metal.png",
+			L"../../Assets/Textures/marble_albedo.jpg" , //5
+			L"../../Assets/Textures/marble_normals.jpg" ,
+			L"../../Assets/Textures/marble_roughness.jpg",
+			L"../../Assets/Textures/marble_metal.png"
 	};
 
 	std::vector<std::string> meshList = {
 		"../../Assets/sphere.obj",
-		"../../Assets/quad.obj"
+		"../../Assets/quad.obj",
+		"../../Assets/column.obj",
 	};
 
 	size_t materialCount = 3;
@@ -93,6 +98,16 @@ void Game::InitializeAssets()
 		entities[i]->SetMaterial(materials[matId].get());
 		entities[i]->SetCastsShadow(true);
 	}
+
+	entities[8]->SetMesh(meshes[2].get());
+	entities[7]->SetMesh(meshes[2].get());
+	entities[6]->SetMesh(meshes[2].get());
+	entities[8]->SetY(-1);
+	entities[7]->SetY(-1);
+	entities[6]->SetY(-1);
+	entities[8]->SetMaterial(materials[5].get());
+	entities[7]->SetMaterial(materials[5].get());
+	entities[6]->SetMaterial(materials[5].get());
 
 	entities[9]->SetCastsShadow(false);
 	entities[9]->SetMesh(meshes[1].get());

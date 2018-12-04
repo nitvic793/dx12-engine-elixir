@@ -31,6 +31,9 @@ public:
 	void SetPosition(const XMFLOAT3& pos);
 	void SetRotation(const XMFLOAT3& rot);
 	void SetScale(const XMFLOAT3& scale);
+	void SetX(float x);
+	void SetY(float y);
+	void SetZ(float z);
 	const bool &CastsShadow() { return bCastsShadow; }
 	void SetCastsShadow(bool enable) { bCastsShadow = enable; }
 	~Entity();

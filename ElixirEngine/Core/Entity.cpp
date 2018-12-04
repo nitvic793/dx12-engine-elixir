@@ -93,6 +93,21 @@ void Entity::SetScale(const XMFLOAT3 & scale)
 	this->scale = scale;
 }
 
+void Entity::SetX(float x)
+{
+	position.x = x;
+}
+
+void Entity::SetY(float y)
+{
+	position.y = y;
+}
+
+void Entity::SetZ(float z)
+{
+	position.z = z;
+}
+
 Entity::~Entity()
 {
 }

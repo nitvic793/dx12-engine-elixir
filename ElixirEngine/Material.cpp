@@ -28,7 +28,7 @@ Material::Material(DeferredRenderer* renderContext, std::vector<std::wstring> te
 	descriptorHeap = renderContext->GetSRVHeap();
 	ResourceUploadBatch uploadBatch(device);
 	uploadBatch.Begin();
-	CreateWICTextureFromFile(device, uploadBatch, textureList[MATERIAL_ALBEDO].c_str(), &albedoTexture, false);
+	CreateWICTextureFromFile(device, uploadBatch, textureList[MATERIAL_ALBEDO].c_str(), &albedoTexture, true);
 	CreateWICTextureFromFile(device, uploadBatch, textureList[MATERIAL_NORMAL].c_str(), &normalTexture, true);
 	CreateWICTextureFromFile(device, uploadBatch, textureList[MATERIAL_ROUGHNESS].c_str(), &roughnessTexture, true);
 	CreateWICTextureFromFile(device, uploadBatch, textureList[MATERIAL_METALNESS].c_str(), &metalnessTexture, true);
