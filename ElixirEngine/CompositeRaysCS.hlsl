@@ -13,7 +13,8 @@ void main( uint3 dThreadId : SV_DispatchThreadID )
 {
 	float3 rayColor = RayColor;
 	float rayIntensity = LightRaysTex[dThreadId.xy].r;
-	rayIntensity = min(0.5f, rayIntensity);
+	//rayIntensity = min(0.5f, rayIntensity);
+	rayIntensity = rayIntensity/10.f;
 	float3 pixel = Pixels[dThreadId.xy].rgb;
 	float3 rayWithColor = rayColor * rayIntensity;
 	OutputRW[dThreadId.xy] = float4(rayWithColor + pixel, 1.f);

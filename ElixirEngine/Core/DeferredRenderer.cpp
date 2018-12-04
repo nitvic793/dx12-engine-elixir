@@ -376,12 +376,12 @@ void DeferredRenderer::RenderShadowMap(ID3D12GraphicsCommandList * commandList, 
 	scissorRect.bottom = shadowMapSize;
 
 	XMMATRIX shView = XMMatrixLookAtLH(
-		XMVectorSet(0, 5, 10, 0),	// Start back and in the air
+		XMVectorSet(0, 3, 5, 0),	// Start back and in the air
 		XMVectorSet(0, 0, 0, 0),	// Look at the origin
 		XMVectorSet(0, 1, 0, 0));	// Up is up
 	XMStoreFloat4x4(&shadowViewTransposed, XMMatrixTranspose(shView));
 
-
+	
 	XMMATRIX shProj = XMMatrixOrthographicLH(20.0f, 20.0f, 0.1f, 100.0f);
 	XMStoreFloat4x4(&shadowProjTransposed, XMMatrixTranspose(shProj));
 
@@ -1119,7 +1119,7 @@ void DeferredRenderer::CreateShadowBuffers()
 
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC descPipelineState;
 	ZeroMemory(&descPipelineState, sizeof(descPipelineState));
-
+	auto shadowMapFormat = DXGI_FORMAT_D32_FLOAT;
 	descPipelineState.VS = ShaderManager::LoadShader(L"ShadowVS.cso");
 	descPipelineState.InputLayout.pInputElementDescs = inputLayout;
 	descPipelineState.InputLayout.NumElements = _countof(inputLayout);
@@ -1130,6 +1130,7 @@ void DeferredRenderer::CreateShadowBuffers()
 	descPipelineState.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
 	descPipelineState.RasterizerState.FillMode = D3D12_FILL_MODE_SOLID;
 	descPipelineState.RasterizerState.CullMode = D3D12_CULL_MODE_BACK;
+	descPipelineState.RasterizerState.AntialiasedLineEnable = TRUE;
 	descPipelineState.RasterizerState.DepthClipEnable = true;
 	descPipelineState.RasterizerState.DepthBias = 1000;
 	descPipelineState.RasterizerState.DepthBiasClamp = 0.f;
@@ -1138,7 +1139,7 @@ void DeferredRenderer::CreateShadowBuffers()
 	descPipelineState.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
 	descPipelineState.NumRenderTargets = 0;
 	//descPipelineState.RTVFormats[0] = mDsvFormat;
-	descPipelineState.DSVFormat = mDsvFormat;
+	descPipelineState.DSVFormat = shadowMapFormat;
 	descPipelineState.SampleDesc.Count = 1;
 
 	device->CreateGraphicsPipelineState(&descPipelineState, IID_PPV_ARGS(&shadowMapDirLightPSO));
@@ -1152,7 +1153,7 @@ void DeferredRenderer::CreateShadowBuffers()
 	resourceDesc.SampleDesc.Count = 1;
 	resourceDesc.SampleDesc.Quality = 0;
 	resourceDesc.MipLevels = 1;
-	resourceDesc.Format = mDsvFormat;
+	resourceDesc.Format = shadowMapFormat;
 	resourceDesc.DepthOrArraySize = 1;
 	resourceDesc.Width = shadowMapSize;
 	resourceDesc.Height = shadowMapSize;
@@ -1160,14 +1161,14 @@ void DeferredRenderer::CreateShadowBuffers()
 	resourceDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
 
 	D3D12_CLEAR_VALUE clearVal;
-	clearVal = { mDsvFormat , mClearDepth };
+	clearVal = { shadowMapFormat , mClearDepth };
 
 	D3D12_SHADER_RESOURCE_VIEW_DESC descSRV;
 
 	ZeroMemory(&descSRV, sizeof(descSRV));
 	descSRV.Texture2D.MipLevels = resourceDesc.MipLevels;
 	descSRV.Texture2D.MostDetailedMip = 0;
-	descSRV.Format = DXGI_FORMAT_R24_UNORM_X8_TYPELESS;
+	descSRV.Format = DXGI_FORMAT_R32_FLOAT;
 	descSRV.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
 	descSRV.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
 
