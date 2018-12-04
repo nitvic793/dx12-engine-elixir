@@ -16,6 +16,8 @@ protected:
 	BoundingOrientedBox boundingBox;
 	BoundingSphere boundingSphere;
 	bool bCastsShadow = false;
+	XMFLOAT3 boxCenter;
+	XMFLOAT3 sphereCenter;
 public:
 	Entity();
 	void SetMesh(Mesh* m);

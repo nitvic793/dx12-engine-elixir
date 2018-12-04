@@ -180,6 +180,7 @@ bool IsIntersecting(Entity* entity, Camera* camera, int mouseX, int mouseY, floa
 	auto direction = dest - orig;
 	direction = XMVector3Normalize(direction);
 	bool intersecting = entity->GetBoundingSphere().Intersects(orig, direction, distance);
+	//intersecting = intersecting || entity->GetBoundingBox().Intersects(orig, direction, distance);
 	return intersecting;
 }
 
