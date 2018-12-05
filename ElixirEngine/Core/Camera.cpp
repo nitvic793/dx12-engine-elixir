@@ -1,6 +1,7 @@
 #include "Camera.h"
 #include <Windows.h>
-
+#include <algorithm>
+using namespace std;
 XMFLOAT3 Camera::GetPosition()
 {
 	return position;

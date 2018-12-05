@@ -5,6 +5,88 @@
 #include <tiny_obj_loader.h>
 
 
+#include <assimp/Importer.hpp>      // C++ importer interface
+#include <assimp/scene.h>           // Output data structure
+#include <assimp/postprocess.h>     // Post processing flags
+
+/**
+TO DO:
+Use Assimp to load FBX models
+*/
+Mesh* ProcessMesh(aiMesh* mesh, const aiScene * scene)
+{
+	// Data to fill
+	std::vector<Vertex> vertices;
+	std::vector<UINT> indices;
+	//std::vector<Texture> textures;
+	// Walk through each of the mesh's vertices
+	for (UINT i = 0; i < mesh->mNumVertices; i++)
+	{
+		Vertex vertex;
+
+		vertex.pos.x = mesh->mVertices[i].x;
+		vertex.pos.y = mesh->mVertices[i].y;
+		vertex.pos.z = mesh->mVertices[i].z;
+
+		vertex.normal = XMFLOAT3(mesh->mNormals[i].x, mesh->mNormals[i].y, mesh->mNormals[i].z);
+
+		if (mesh->mTextureCoords[0])
+		{
+			vertex.uv.x = (float)mesh->mTextureCoords[0][i].x;
+			vertex.uv.y = (float)mesh->mTextureCoords[0][i].y;
+		}
+
+		vertices.push_back(vertex);
+	}
+
+	for (UINT i = 0; i < mesh->mNumFaces; i++)
+	{
+		aiFace face = mesh->mFaces[i];
+
+		for (UINT j = 0; j < face.mNumIndices; j++)
+			indices.push_back(face.mIndices[j]);
+	}
+
+
+	return new Mesh(nullptr);
+}
+
+void ProcessNode(aiNode * node, const aiScene * scene)
+{
+	std::vector<Mesh*> meshes;
+	for (UINT i = 0; i < node->mNumMeshes; i++)
+	{
+		aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
+		meshes.push_back(ProcessMesh(mesh, scene));
+	}
+
+	for (UINT i = 0; i < node->mNumChildren; i++)
+	{
+		ProcessNode(node->mChildren[i], scene);
+	}
+}
+
+bool Load(std::string filename)
+{
+	Assimp::Importer importer;
+
+	const aiScene* pScene = importer.ReadFile(filename,
+		aiProcess_Triangulate |
+		aiProcess_ConvertToLeftHanded);
+
+	if (pScene == NULL)
+		return false;
+
+	ProcessNode(pScene->mRootNode, pScene);
+
+	return true;
+}
+
+////
+/// END TODO
+////
+
+
 Mesh::Mesh(ID3D12Device * device)
 {
 	this->device = device;
@@ -53,7 +135,7 @@ Mesh::Mesh(std::string objFile, ID3D12Device * device, ID3D12GraphicsCommandList
 				vertex.uv = XMFLOAT2(tx, ty);
 				vertices.push_back(vertex);
 
-				indexVals.push_back(index_offset + v);
+				indexVals.push_back((UINT)index_offset + (UINT)v);
 				// Optional: vertex colors
 				// tinyobj::real_t red = attrib.colors[3*idx.vertex_index+0];
 				// tinyobj::real_t green = attrib.colors[3*idx.vertex_index+1];

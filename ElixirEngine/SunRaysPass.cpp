@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "SunRaysPass.h"
 #include "Core/DeferredRenderer.h"
+#include <algorithm>
 
 struct SunRayConstBuffer
 {
@@ -100,7 +101,7 @@ Texture* SunRaysPass::Apply(ID3D12GraphicsCommandList* commandList, Texture* dep
 	static const float MaxSunDist = 1.7f;
 	auto sunColor = XMVectorSet(0.5f, 0.5f, 0.05f, 0.f);
 	XMFLOAT2 sunPos(0.5f * XMVectorGetX(vSunPosSS) + 0.5f, -0.5f * XMVectorGetY(vSunPosSS) + 0.5f);
-	float maxDist = max(XMVectorGetX(vSunPosSS), XMVectorGetY(vSunPosSS));
+	float maxDist = std::max(XMVectorGetX(vSunPosSS), XMVectorGetY(vSunPosSS));
 	if ((MaxSunDist - maxDist) < 0.f)
 	{
 		return pixels;

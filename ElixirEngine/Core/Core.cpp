@@ -3,6 +3,9 @@
 #include "ImageHelpers.h"
 #include "ShaderManager.h"
 #include <WindowsX.h>
+#include <algorithm>
+
+using namespace std;
 
 Core* Core::coreInstance = nullptr;
 
