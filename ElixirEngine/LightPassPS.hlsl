@@ -94,13 +94,13 @@ float4 main(VertexToPixel pIn) : SV_TARGET
 
 	float3 specColor = lerp(F0_NON_METAL.rrr, albedo.rgb, metal);
 	float3 irradiance = skyIrradianceTexture.Sample(basicSampler, normal).rgb;
-	float visibility = max(shadowAmount, 0.2f);
+	//float visibility = max(shadowAmount, 0.9f);
 	float3 finalColor = DirLightPBR(dirLight, normalize(normal), worldPos, 
 		cameraPosition, roughness, metal, albedo, 
-		specColor, irradiance, prefilter, brdf);
-	finalColor = finalColor / (finalColor + float3(1.f, 1.f, 1.f));
-	float3 totalColor = finalColor * visibility  + otherlights;
+		specColor, irradiance, prefilter, brdf, shadowAmount);
+	float3 totalColor = finalColor + otherlights;
+	totalColor = totalColor / (totalColor + float3(1.f, 1.f, 1.f));
 	float3 gammaCorrect = lerp(totalColor, pow(totalColor, 1.0 / 2.2), 0.4f); 
-	return float4(gammaCorrect, packedAlbedo.a);
+	return float4(totalColor, packedAlbedo.a);
 
 }

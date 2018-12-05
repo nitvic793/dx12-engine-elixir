@@ -102,7 +102,7 @@ float3 AmbientPBR(float3 kD, float metalness, float3 diffuse, float ao, float3 s
 
 float3 DirLightPBR(DirectionalLight light, float3 normal, float3 worldPos, 
 	float3 camPos, float roughness, float metalness, 
-	float3 surfaceColor, float3 specularColor, float3 irradiance, float3 prefilteredColor, float2 brdf)
+	float3 surfaceColor, float3 specularColor, float3 irradiance, float3 prefilteredColor, float2 brdf, float shadowAmount)
 {
 	float ao = 1.0f;
 	float3 toLight = normalize(-light.Direction);
@@ -116,7 +116,7 @@ float3 DirLightPBR(DirectionalLight light, float3 normal, float3 worldPos,
 	float3 diffuse = irradiance * surfaceColor;
 	float3 ambient = AmbientPBR(kD, metalness, diffuse, ao, specular);
 
-	return (balancedDiff * surfaceColor + spec) * 1/*light.Intensity*/ * light.DiffuseColor.rgb + ambient;
+	return (balancedDiff * surfaceColor + spec) * 1 * light.DiffuseColor.rgb * shadowAmount + ambient;
 }
 
 float3 PointLightPBR(PointLight light, float3 normal, float3 worldPos, float3 camPos, float roughness, float metalness, float3 surfaceColor, float3 specularColor, float3 irradiance)

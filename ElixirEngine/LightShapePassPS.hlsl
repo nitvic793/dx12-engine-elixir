@@ -71,7 +71,7 @@ float4 main(VertexToPixel pIn) : SV_TARGET
 	//float3 pointLightValue = calculatePointLight(normal, worldPos, pointLight).rgb;
 	//float3 finalColor = pointLightValue * albedo;
 	float3 finalColor = PointLightPBR(pointLight, normalize(normal), worldPos, cameraPosition, roughness, metal, albedo, specColor, irradiance);
-	finalColor = finalColor / (finalColor + float3(1.f, 1.f, 1.f));
-	float3 gammaCorrect = lerp(finalColor, pow(finalColor, 1.0 / 2.2), 0.4f);
-	return float4(gammaCorrect, 1.0f);
+	//finalColor = finalColor / (finalColor + float3(1.f, 1.f, 1.f));
+	//float3 gammaCorrect = lerp(finalColor, pow(finalColor, 1.0 / 2.2), 0.4f);
+	return float4(finalColor, 1.0f);
 }
