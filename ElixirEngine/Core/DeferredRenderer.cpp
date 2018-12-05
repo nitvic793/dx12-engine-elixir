@@ -376,7 +376,7 @@ void DeferredRenderer::RenderShadowMap(ID3D12GraphicsCommandList * commandList, 
 	scissorRect.bottom = shadowMapSize;
 
 	XMMATRIX shView = XMMatrixLookAtLH(
-		XMVectorSet(0, 3, 5, 0),	// Start back and in the air
+		XMVectorSet(2, 3, 5, 0),	// Start back and in the air
 		XMVectorSet(0, 0, 0, 0),	// Look at the origin
 		XMVectorSet(0, 1, 0, 0));	// Up is up
 	XMStoreFloat4x4(&shadowViewTransposed, XMMatrixTranspose(shView));
