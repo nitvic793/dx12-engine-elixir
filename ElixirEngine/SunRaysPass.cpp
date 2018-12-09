@@ -134,7 +134,7 @@ Texture* SunRaysPass::Apply(ID3D12GraphicsCommandList* commandList, Texture* dep
 	commandList->SetGraphicsRootDescriptorTable(2, occlusionTex->GetGPUDescriptorHandle());
 	commandList->SetDescriptorHeaps(1, cbheaps);
 	commandList->SetGraphicsRootDescriptorTable(0, cbHeap.handleGPU(0));
-	renderer->DrawLightPass(commandList);
+	renderer->DrawScreenQuad(commandList);
 	commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(lightRaysSRV->GetTextureResource(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_UNORDERED_ACCESS));
 
 	compositeRaysCS->SetShader(commandList);

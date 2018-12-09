@@ -277,12 +277,12 @@ void DeferredRenderer::SetGBUfferPSO(ID3D12GraphicsCommandList* command, Camera*
 	command->SetGraphicsRootSignature(rootSignature);
 
 	command->SetDescriptorHeaps(1, ppHeaps);
-	command->SetGraphicsRootDescriptorTable(1, pixelCbHeap.handleGPU(0));
+	command->SetGraphicsRootDescriptorTable(RootSigCBPixel0, pixelCbHeap.handleGPU(0));
 
 	pixelCbWrapper.CopyData((void*)&pixelCb, sizeof(PixelConstantBuffer), 0);
 }
 
-void DeferredRenderer::SetLightPassPSO(ID3D12GraphicsCommandList * command, const PixelConstantBuffer & pixelCb)
+void DeferredRenderer::RenderLightPass(ID3D12GraphicsCommandList * command, const PixelConstantBuffer & pixelCb)
 {
 
 	/*for (int i = 0; i < numRTV; i++)
@@ -298,17 +298,19 @@ void DeferredRenderer::SetLightPassPSO(ID3D12GraphicsCommandList * command, cons
 	ID3D12DescriptorHeap* samplerHeaps[] = { samplerHeap.pDescriptorHeap.Get() };
 
 	command->SetDescriptorHeaps(1, ppHeap2);
-	command->SetGraphicsRootDescriptorTable(1, pixelCbHeap.handleGPU(0)); //Set Pixel Shader Constants
+	command->SetGraphicsRootDescriptorTable(RootSigCBPixel0, pixelCbHeap.handleGPU(0)); //Set Pixel Shader Constants
 	ID3D12DescriptorHeap* ppHeaps[] = { gBufferHeap.pDescriptorHeap.Get() };
 
 	command->SetDescriptorHeaps(1, ppHeaps);
-	command->SetGraphicsRootDescriptorTable(2, gBufferHeap.handleGPU(0)); // Set G-Buffer Textures
+	command->SetGraphicsRootDescriptorTable(RootSigSRVPixel1, gBufferHeap.handleGPU(0)); // Set G-Buffer Textures
 
 	//command->SetDescriptorHeaps(1, samplerHeaps);
 	//command->SetGraphicsRootDescriptorTable(4, samplerHeap.hGPUHeapStart); //Set Shadow Sampler
+
+	DrawScreenQuad(command);
 }
 
-void DeferredRenderer::SetLightShapePassPSO(ID3D12GraphicsCommandList * command, const PixelConstantBuffer & pixelCb)
+void DeferredRenderer::RenderLightShapePass(ID3D12GraphicsCommandList * command, const PixelConstantBuffer & pixelCb)
 {
 	for (int i = 0; i < numRTV; i++)
 		command->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(gBufferTextures[i], D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_GENERIC_READ));
@@ -322,11 +324,12 @@ void DeferredRenderer::SetLightShapePassPSO(ID3D12GraphicsCommandList * command,
 
 	ID3D12DescriptorHeap* ppHeap2[] = { pixelCbHeap.pDescriptorHeap.Get() };
 	command->SetDescriptorHeaps(1, ppHeap2);
-	command->SetGraphicsRootDescriptorTable(1, pixelCbHeap.handleGPU(0));
+	command->SetGraphicsRootDescriptorTable(RootSigCBPixel0, pixelCbHeap.handleGPU(0));
 	ID3D12DescriptorHeap* ppHeaps[] = { gBufferHeap.pDescriptorHeap.Get() };
 	command->SetDescriptorHeaps(1, ppHeaps);
-	command->SetGraphicsRootDescriptorTable(2, gBufferHeap.handleGPU(0));
+	command->SetGraphicsRootDescriptorTable(RootSigSRVPixel1, gBufferHeap.handleGPU(0));
 
+	DrawLightShapePass(command, pixelCb);
 }
 
 void DeferredRenderer::RenderSelectionDepthBuffer(ID3D12GraphicsCommandList* commandList, std::vector<Entity*> entities, Camera* camera)
@@ -346,9 +349,9 @@ void DeferredRenderer::RenderSelectionDepthBuffer(ID3D12GraphicsCommandList* com
 	{
 		cb.world = e->GetWorldMatrixTransposed();
 		cbWrapper.CopyData(&cb, ConstantBufferSize, index);
-		commandList->SetGraphicsRootDescriptorTable(0, cbHeap.handleGPU(index));
-		commandList->SetGraphicsRootDescriptorTable(1, cbHeap.handleGPU(index));
-		commandList->SetGraphicsRootDescriptorTable(3, cbHeap.handleGPU(ConstBufferCount - 1)); //Per frame const buffer
+		commandList->SetGraphicsRootDescriptorTable(RootSigCBVertex0, cbHeap.handleGPU(index));
+		//commandList->SetGraphicsRootDescriptorTable(1, cbHeap.handleGPU(index));
+		commandList->SetGraphicsRootDescriptorTable(RootSigCBVertex1, cbHeap.handleGPU(ConstBufferCount - 1)); //Per frame const buffer
 		Draw(e->GetMesh(), cb, commandList);
 		index++;
 	}
@@ -405,9 +408,7 @@ void DeferredRenderer::RenderShadowMap(ID3D12GraphicsCommandList * commandList, 
 		if (!e->CastsShadow()) continue;
 		cb.world = e->GetWorldMatrixTransposed();
 		cbWrapper.CopyData(&cb, ConstantBufferSize, index);
-		commandList->SetGraphicsRootDescriptorTable(0, cbHeap.handleGPU(index));
-		commandList->SetGraphicsRootDescriptorTable(1, cbHeap.handleGPU(index));
-		commandList->SetGraphicsRootDescriptorTable(3, cbHeap.handleGPU(ConstBufferCount - 1)); //Per frame const buffer
+		commandList->SetGraphicsRootDescriptorTable(RootSigCBVertex0, cbHeap.handleGPU(index));
 		Draw(e->GetMesh(), cb, commandList);
 		index++;
 	}
@@ -427,11 +428,11 @@ void DeferredRenderer::Draw(ID3D12GraphicsCommandList* commandList, std::vector<
 	int index = constBufferIndex;
 	ID3D12DescriptorHeap* ppHeaps[] = { cbHeap.pDescriptorHeap.Get() };
 	ID3D12DescriptorHeap* ppSrvHeaps[] = { srvHeap.pDescriptorHeap.Get() };
-	//ConstantBuffer cb;
+
 	for (auto e : entities)
 	{
 		commandList->SetDescriptorHeaps(1, ppSrvHeaps);
-		commandList->SetGraphicsRootDescriptorTable(2, e->GetMaterial()->GetGPUDescriptorHandle()); //Set start of material texture in root descriptor
+		commandList->SetGraphicsRootDescriptorTable(RootSigSRVPixel1, e->GetMaterial()->GetGPUDescriptorHandle()); //Set start of material texture in root descriptor
 
 		commandList->SetDescriptorHeaps(1, ppHeaps);
 		auto cb = ConstantBuffer
@@ -443,13 +444,15 @@ void DeferredRenderer::Draw(ID3D12GraphicsCommandList* commandList, std::vector<
 			shadowViewTransposed,
 			shadowProjTransposed
 		};
+
 		cbWrapper.CopyData(&cb, ConstantBufferPerObjectAlignedSize, index);
-		commandList->SetGraphicsRootDescriptorTable(0, cbHeap.handleGPU(index));
-		commandList->SetGraphicsRootDescriptorTable(3, cbHeap.handleGPU(ConstBufferCount - 1)); //Per frame const buffer
+		commandList->SetGraphicsRootDescriptorTable(RootSigCBVertex0, cbHeap.handleGPU(index));
+		commandList->SetGraphicsRootDescriptorTable(RootSigCBVertex1, cbHeap.handleGPU(ConstBufferCount - 1)); //Per frame const buffer
 
 		Draw(e->GetMesh(), cb, commandList);
 		index++;
 	}
+
 	constBufferIndex = index;
 }
 
@@ -471,16 +474,16 @@ void DeferredRenderer::DrawSkybox(ID3D12GraphicsCommandList * commandList, Textu
 	};
 
 	commandList->SetDescriptorHeaps(1, ppSrvHeaps);
-	commandList->SetGraphicsRootDescriptorTable(2, skybox->GetGPUDescriptorHandle()); //Set skybox texture
+	commandList->SetGraphicsRootDescriptorTable(RootSigSRVPixel1, skybox->GetGPUDescriptorHandle()); //Set skybox texture
 	commandList->SetDescriptorHeaps(1, ppHeaps);
 
 	cbWrapper.CopyData(&cb, ConstantBufferPerObjectAlignedSize, constBufferIndex);
-	commandList->SetGraphicsRootDescriptorTable(0, cbHeap.handleGPU(constBufferIndex)); // set constant buffer with view and projection matrices
+	commandList->SetGraphicsRootDescriptorTable(RootSigCBVertex0, cbHeap.handleGPU(constBufferIndex)); // set constant buffer with view and projection matrices
 	constBufferIndex++;
 	Draw(cubeMesh, cb, commandList);
 }
 
-void DeferredRenderer::DrawLightPass(ID3D12GraphicsCommandList * commandList)
+void DeferredRenderer::DrawScreenQuad(ID3D12GraphicsCommandList * commandList)
 {
 	D3D12_INDEX_BUFFER_VIEW ibv;
 	ibv.Format = DXGI_FORMAT_R32_UINT;
@@ -510,7 +513,7 @@ void DeferredRenderer::DrawLightShapePass(ID3D12GraphicsCommandList * commandLis
 	e.SetScale(XMFLOAT3(range, range, range));
 	auto cb = ConstantBuffer{ e.GetWorldViewProjectionTransposed(camera->GetProjectionMatrix(), camera->GetViewMatrix()), e.GetWorldMatrixTransposed() };
 	cbWrapper.CopyData(&cb, ConstantBufferPerObjectAlignedSize, constBufferIndex);
-	commandList->SetGraphicsRootDescriptorTable(0, cbHeap.handleGPU(constBufferIndex));
+	commandList->SetGraphicsRootDescriptorTable(RootSigCBVertex0, cbHeap.handleGPU(constBufferIndex));
 	Draw(e.GetMesh(), cb, commandList);
 	constBufferIndex++;
 
@@ -527,8 +530,8 @@ void DeferredRenderer::DrawResult(ID3D12GraphicsCommandList* commandList, D3D12_
 	commandList->SetPipelineState(screenQuadPSO);
 	ID3D12DescriptorHeap* ppHeaps[] = { gBufferHeap.pDescriptorHeap.Get() };
 	commandList->SetDescriptorHeaps(1, ppHeaps);
-	commandList->SetGraphicsRootDescriptorTable(2, gBufferHeap.handleGPU(RTV_ORDER_QUAD));
-	DrawLightPass(commandList); // Draws full screen quad with null vertex buffer.
+	commandList->SetGraphicsRootDescriptorTable(RootSigSRVPixel1, gBufferHeap.handleGPU(RTV_ORDER_QUAD));
+	DrawScreenQuad(commandList); // Draws full screen quad with null vertex buffer.
 }
 
 void DeferredRenderer::DrawResult(ID3D12GraphicsCommandList * commandList, D3D12_CPU_DESCRIPTOR_HANDLE & rtvHandle, Texture* resultTex)
@@ -539,8 +542,8 @@ void DeferredRenderer::DrawResult(ID3D12GraphicsCommandList * commandList, D3D12
 	commandList->SetPipelineState(screenQuadPSO);
 	ID3D12DescriptorHeap* ppHeaps[] = { resultTex->GetTextureDescriptorHeap()->pDescriptorHeap.Get() };
 	commandList->SetDescriptorHeaps(1, ppHeaps);
-	commandList->SetGraphicsRootDescriptorTable(2, resultTex->GetGPUDescriptorHandle());
-	DrawLightPass(commandList); // Draws full screen quad with null vertex buffer.
+	commandList->SetGraphicsRootDescriptorTable(RootSigSRVPixel1, resultTex->GetGPUDescriptorHandle());
+	DrawScreenQuad(commandList); // Draws full screen quad with null vertex buffer.
 }
 
 void DeferredRenderer::Draw(Mesh * m, const ConstantBuffer & cb, ID3D12GraphicsCommandList* commandList)
@@ -548,24 +551,6 @@ void DeferredRenderer::Draw(Mesh * m, const ConstantBuffer & cb, ID3D12GraphicsC
 	commandList->IASetVertexBuffers(0, 1, &m->GetVertexBufferView());
 	commandList->IASetIndexBuffer(&m->GetIndexBufferView());
 	commandList->DrawIndexedInstanced(m->GetIndexCount(), 1, 0, 0, 0);
-}
-
-void DeferredRenderer::UpdateConstantBuffer(const PixelConstantBuffer & pixelBuffer, ID3D12GraphicsCommandList* command)
-{
-	void* mapped = nullptr;
-	lightCB->Map(0, nullptr, &mapped);
-	if (mapped == nullptr) return;
-	memcpy(mapped, &pixelBuffer, sizeof(PixelConstantBuffer));
-	lightCB->Unmap(0, nullptr);
-}
-
-void DeferredRenderer::UpdateConstantBufferPerObject(ConstantBuffer& buffer, int index)
-{
-	int ConstantBufferPerObjectAlignedSize = (sizeof(ConstantBuffer) + 255) & ~255;
-	UINT8 *cbvGPUAddress;
-	CD3DX12_RANGE readRange(0, 0);
-	worldViewCB->Map(0, &readRange, reinterpret_cast<void**>(&cbvGPUAddress));
-	memcpy(cbvGPUAddress + ConstantBufferPerObjectAlignedSize * index, &buffer, sizeof(ConstantBuffer));
 }
 
 CDescriptorHeapWrapper& DeferredRenderer::GetSRVHeap()

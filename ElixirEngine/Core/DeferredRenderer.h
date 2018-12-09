@@ -20,6 +20,13 @@ enum GBufferRenderTargetOrder
 	RTV_ORDER_COUNT
 };
 
+enum DefaultRootSignatureSlotType {
+	RootSigCBVertex0 = 0,
+	RootSigCBPixel0,
+	RootSigSRVPixel1,
+	RootSigCBVertex1,
+};
+
 typedef GBufferRenderTargetOrder GBufferType;
 
 class DeferredRenderer
@@ -144,20 +151,18 @@ public:
 	void Initialize(ID3D12GraphicsCommandList* command);
 	void GeneratePreFilterEnvironmentMap(ID3D12GraphicsCommandList* command, int envTextureIndex);
 	void SetGBUfferPSO(ID3D12GraphicsCommandList* command, Camera* camera, const PixelConstantBuffer& pixelCb);
-	void SetLightPassPSO(ID3D12GraphicsCommandList* command, const PixelConstantBuffer& pixelCb);
-	void SetLightShapePassPSO(ID3D12GraphicsCommandList* command, const PixelConstantBuffer& pixelCb);
+	void RenderLightPass(ID3D12GraphicsCommandList* command, const PixelConstantBuffer& pixelCb);
+	void RenderLightShapePass(ID3D12GraphicsCommandList* command, const PixelConstantBuffer& pixelCb);
 
 	void RenderSelectionDepthBuffer(ID3D12GraphicsCommandList* commandList, std::vector<Entity*> entities, Camera* camera);
 	void RenderShadowMap(ID3D12GraphicsCommandList* commandList, std::vector<Entity*> entities);
 	void Draw(ID3D12GraphicsCommandList* commandList, std::vector<Entity*> entities);
 	void DrawSkybox(ID3D12GraphicsCommandList* commandList, Texture* skybox);
-	void DrawLightPass(ID3D12GraphicsCommandList* commandList);
+	void DrawScreenQuad(ID3D12GraphicsCommandList* commandList);
 	void DrawLightShapePass(ID3D12GraphicsCommandList* commandList, const PixelConstantBuffer & pixelCb);
 	void DrawResult(ID3D12GraphicsCommandList* commandList, D3D12_CPU_DESCRIPTOR_HANDLE &rtvHandle);
 	void DrawResult(ID3D12GraphicsCommandList* commandList, D3D12_CPU_DESCRIPTOR_HANDLE &rtvHandle, Texture* resultTex);
 
-	void UpdateConstantBuffer(const PixelConstantBuffer& pixelBuffer, ID3D12GraphicsCommandList* command);
-	void UpdateConstantBufferPerObject(ConstantBuffer& buffer, int index);
 	CDescriptorHeapWrapper& GetSRVHeap();
 	CDescriptorHeapWrapper& GetGBufferHeap();
 	CDescriptorHeapWrapper& GetCBHeap();

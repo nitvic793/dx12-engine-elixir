@@ -215,12 +215,8 @@ void Game::Draw()
 	deferredRenderer->SetGBUfferPSO(commandList, camera, pixelCb);
 	deferredRenderer->Draw(commandList, entityList);
 
-	deferredRenderer->SetLightShapePassPSO(commandList, pixelCb);
-	deferredRenderer->DrawLightShapePass(commandList, pixelCb);
-
-	deferredRenderer->SetLightPassPSO(commandList, pixelCb);
-	deferredRenderer->DrawLightPass(commandList);
-
+	deferredRenderer->RenderLightShapePass(commandList, pixelCb);
+	deferredRenderer->RenderLightPass(commandList, pixelCb);
 	deferredRenderer->DrawSkybox(commandList, skyTexture);
 
 	Texture* finalTexture = deferredRenderer->GetResultSRV();
@@ -233,6 +229,7 @@ void Game::Draw()
 	finalTexture = sunRaysPass->Apply(commandList, deferredRenderer->GetGBufferDepthSRV(), finalTexture, texturePool, camera);
 	finalTexture = edgeFilter->Apply(commandList, deferredRenderer->GetSelectionDepthBufferSRV(), finalTexture, texturePool);
 	deferredRenderer->DrawResult(commandList, rtvHandle, finalTexture); //Draw renderer result to given main Render Target handle
+
 	deferredRenderer->ResetRenderTargetStates(commandList);
 	texturePool->ResetIndex();
 }
