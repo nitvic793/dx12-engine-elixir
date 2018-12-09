@@ -15,6 +15,5 @@ float4 main(VertexToPixel input) : SV_TARGET
 	float3 finalColor =  Sky.Sample(basicSampler, input.uvw).rgb;
 	finalColor = finalColor / (finalColor + float3(1.f, 1.f, 1.f));
 	float3 gammaCorrect = lerp(finalColor, pow(finalColor, 1.0 / 2.2), 0.4f);
-	//float3 gammaCorrect = pow(finalColor, 1.0 / 2.2);
 	return float4(finalColor, 0.f);
 }

@@ -8,7 +8,7 @@ struct DirectionalLight
 	float4 AmbientColor;
 	float4 DiffuseColor;
 	float3 Direction;
-	float Padding;
+	float Intensity;
 };
 
 struct PointLight
@@ -116,7 +116,7 @@ float3 DirLightPBR(DirectionalLight light, float3 normal, float3 worldPos,
 	float3 diffuse = irradiance * surfaceColor;
 	float3 ambient = AmbientPBR(kD, metalness, diffuse, ao, specular);
 
-	return (balancedDiff * surfaceColor + spec) * 1 * light.DiffuseColor.rgb * shadowAmount + ambient;
+	return (balancedDiff * surfaceColor + spec) * light.DiffuseColor.rgb * light.Intensity * shadowAmount + ambient;
 }
 
 float3 PointLightPBR(PointLight light, float3 normal, float3 worldPos, float3 camPos, float roughness, float metalness, float3 surfaceColor, float3 specularColor, float3 irradiance)

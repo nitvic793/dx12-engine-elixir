@@ -22,8 +22,8 @@ float4 main(VertexShaderInput input) : SV_POSITION
 {
 	// Calculate output position
 	matrix worldViewProj = mul(mul(world, view), projection);
-	input.position = input.position + normalize(input.normal) * 0.01f;
+	//input.position = input.position + normalize(input.normal) * 0.01f;
 	float4 position = mul(float4(input.position, 1.0f), worldViewProj);
-	//position.z = position.w;
+	position.z = position.w;
 	return position;
 }

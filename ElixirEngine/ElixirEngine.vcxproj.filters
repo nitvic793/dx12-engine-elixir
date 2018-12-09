@@ -238,11 +238,17 @@
     <FxCompile Include="EdgeDetectionCS.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
+    <FxCompile Include="MaxDepthVS.hlsl">
+      <Filter>Shaders\Common</Filter>
+    </FxCompile>
+    <FxCompile Include="SelectionPS.hlsl">
+      <Filter>Shaders\Common</Filter>
+    </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
     <None Include="Lighting.hlsli">
-      <Filter>Shaders\Common</Filter>
+      <Filter>Shaders\Deferred</Filter>
     </None>
   </ItemGroup>
 </Project>

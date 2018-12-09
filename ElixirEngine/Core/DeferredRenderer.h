@@ -20,7 +20,7 @@ enum GBufferRenderTargetOrder
 	RTV_ORDER_COUNT
 };
 
-enum DefaultRootSignatureSlotType {
+enum DefaultRootParameterSlotType {
 	RootSigCBVertex0 = 0,
 	RootSigCBPixel0,
 	RootSigSRVPixel1,
@@ -40,23 +40,23 @@ class DeferredRenderer
 
 	ID3D12Resource* gBufferTextures[numRTV];
 	ID3D12Resource* depthStencilTexture;
-	ID3D12Resource* prefilterTexture;
 	ID3D12Resource* postProcessTexture;
 	ID3D12Resource* shadowMapTexture;
 	ID3D12Resource* shadowPosTexture;
 	ID3D12Resource* selectedDepthTexture;
+	ID3D12Resource* selectedOutlineTexture;
 
 	ID3D12PipelineState* deferredPSO;
 	ID3D12PipelineState* dirLightPassPSO;
 	ID3D12PipelineState* shapeLightPassPSO;
 	ID3D12PipelineState* screenQuadPSO;
 	ID3D12PipelineState* skyboxPSO;
-	ID3D12PipelineState* prefilterEnvMapPSO;
 	ID3D12PipelineState* shadowMapDirLightPSO;
 	ID3D12PipelineState* selectionFilterPSO;
 
-	CDescriptorHeapWrapper prefilterRTVHeap;
-	CDescriptorHeapWrapper rtvHeap;
+	CDescriptorHeapWrapper pRTVHeap;
+
+	CDescriptorHeapWrapper gRTVHeap;
 	CDescriptorHeapWrapper dsvHeap;
 	CDescriptorHeapWrapper srvHeap;
 	CDescriptorHeapWrapper gBufferHeap;
@@ -81,7 +81,7 @@ class DeferredRenderer
 	std::vector<Texture*> textureVector;
 	std::vector<Texture*> gBufferTextureVector;
 
-	static const int ConstBufferCount = 32;
+	static const int ConstBufferCount = 64;
 	//Constant buffer must be larger than 256 bytes
 	static const int ConstantBufferSize = (sizeof(ConstantBuffer) + 255) & ~255;
 	static const int PixelConstantBufferSize = (sizeof(PixelConstantBuffer) + 255) & ~255;
@@ -115,8 +115,6 @@ class DeferredRenderer
 	void CreateCB();
 	void CreateViews();
 	void CreatePSO();
-	void CreatePrefilterEnvironmentPSO();
-	void CreatePrefilterResources(ID3D12GraphicsCommandList* command);
 	void CreateSkyboxPSO();
 	void CreateLightPassPSO();
 	void CreateScreenQuadPSO();
@@ -149,7 +147,6 @@ public:
 	ID3D12RootSignature*	GetRootSignature();
 
 	void Initialize(ID3D12GraphicsCommandList* command);
-	void GeneratePreFilterEnvironmentMap(ID3D12GraphicsCommandList* command, int envTextureIndex);
 	void SetGBUfferPSO(ID3D12GraphicsCommandList* command, Camera* camera, const PixelConstantBuffer& pixelCb);
 	void RenderLightPass(ID3D12GraphicsCommandList* command, const PixelConstantBuffer& pixelCb);
 	void RenderLightShapePass(ID3D12GraphicsCommandList* command, const PixelConstantBuffer& pixelCb);

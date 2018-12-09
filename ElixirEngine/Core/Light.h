@@ -7,7 +7,7 @@ struct DirectionalLight
 	XMFLOAT4 AmbientColor;
 	XMFLOAT4 DiffuseColor;
 	XMFLOAT3 Direction;
-	float Padding;
+	float Intensity;
 };
 
 struct PointLight
