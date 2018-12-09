@@ -43,5 +43,5 @@ float4 main(VertexToPixel input) : SV_TARGET
 		decay = saturate(decay - stepDecay);
 	}
 
-	return float4(rayIntensity, 0.0, 0.0, 0.0);
+	return float4(rayIntensity.rrr, 0.0);
 }
