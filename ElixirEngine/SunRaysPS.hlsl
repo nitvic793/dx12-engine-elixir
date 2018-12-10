@@ -22,7 +22,7 @@ float4 main(VertexToPixel input) : SV_TARGET
 	float DistDecay = 0.8f;
 	float3 RayColor = float3(1, 1, 1);
 
-	float2 dirToSun = (SunPos - input.uv);
+	float2 dirToSun = (normalize(SunPos) - input.uv);
 	float lengthToSun = length(dirToSun);
 	dirToSun /= lengthToSun;
 

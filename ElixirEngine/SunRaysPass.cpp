@@ -89,7 +89,7 @@ Texture* SunRaysPass::Apply(ID3D12GraphicsCommandList* commandList, Texture* dep
 	
 	auto viewProjT = camera->GetViewProjectionMatrix();
 	auto viewProj = XMLoadFloat4x4(&viewProjT);
-	auto sunDir = XMVector3Normalize(XMVectorSet(0.2f, 0.5f, 1.f, 0.f));
+	auto sunDir = XMVector3Normalize(XMVectorSet(1.f, 1.0f, 1.f, 0.f));
 	float dotCamSun = XMVectorGetX(XMVector3Dot(camDir, sunDir));
 	if (dotCamSun < 0.f) return pixels;
 
