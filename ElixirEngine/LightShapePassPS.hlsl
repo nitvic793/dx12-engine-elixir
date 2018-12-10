@@ -1,6 +1,9 @@
 #define POINT_INTENSITY 0.5
 #include "Lighting.hlsli"
 
+
+static const int MaxPointLights = 16;
+
 struct SpotLight
 {
 	float4 Color;
@@ -14,9 +17,11 @@ struct SpotLight
 cbuffer externalData : register(b0)
 {
 	DirectionalLight dirLight;
-	PointLight pointLight;
+	PointLight pointLight[MaxPointLights];
 	float4x4 invProjView;
 	float3 cameraPosition;
+	int pointLightCount;
+	int pointLightIndex;
 }
 
 struct VertexToPixel
@@ -70,7 +75,7 @@ float4 main(VertexToPixel pIn) : SV_TARGET
 	float3 specColor = lerp(F0_NON_METAL.rrr, albedo.rgb, metal);
 	//float3 pointLightValue = calculatePointLight(normal, worldPos, pointLight).rgb;
 	//float3 finalColor = pointLightValue * albedo;
-	float3 finalColor = PointLightPBR(pointLight, normalize(normal), worldPos, cameraPosition, roughness, metal, albedo, specColor, irradiance);
+	float3 finalColor = PointLightPBR(pointLight[pointLightIndex], normalize(normal), worldPos, cameraPosition, roughness, metal, albedo, specColor, irradiance);
 	//finalColor = finalColor / (finalColor + float3(1.f, 1.f, 1.f));
 	//float3 gammaCorrect = lerp(finalColor, pow(finalColor, 1.0 / 2.2), 0.4f);
 	return float4(finalColor, 1.0f);

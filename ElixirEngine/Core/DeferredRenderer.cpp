@@ -222,7 +222,7 @@ void DeferredRenderer::RenderLightPass(ID3D12GraphicsCommandList * command, cons
 	DrawScreenQuad(command);
 }
 
-void DeferredRenderer::RenderLightShapePass(ID3D12GraphicsCommandList * command, const PixelConstantBuffer & pixelCb)
+void DeferredRenderer::RenderLightShapePass(ID3D12GraphicsCommandList * command, PixelConstantBuffer & pixelCb)
 {
 	for (int i = 0; i < numRTV; i++)
 		command->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(gBufferTextures[i], D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_GENERIC_READ));
@@ -413,22 +413,37 @@ void DeferredRenderer::DrawScreenQuad(ID3D12GraphicsCommandList * commandList)
 
 }
 
-void DeferredRenderer::DrawLightShapePass(ID3D12GraphicsCommandList * commandList, const PixelConstantBuffer & pixelCb)
+void DeferredRenderer::DrawLightShapePass(ID3D12GraphicsCommandList * commandList, PixelConstantBuffer & pixelCb)
 {
 	int ConstantBufferPerObjectAlignedSize = (sizeof(ConstantBuffer) + 255) & ~255;
 	int index = 0;
 	ID3D12DescriptorHeap* ppHeaps[] = { cbHeap.pDescriptorHeap.Get() };
 	commandList->SetDescriptorHeaps(1, ppHeaps);
+
+	ID3D12DescriptorHeap* pixelHeaps[] = { pixelCbHeap.pDescriptorHeap.Get() };
+	commandList->SetDescriptorHeaps(1, pixelHeaps);
 	Entity e;
-	e.SetMesh(sphereMesh);
-	e.SetPosition(pixelCb.pointLight.Position);
-	float range = pixelCb.pointLight.Range;
-	e.SetScale(XMFLOAT3(range, range, range));
-	auto cb = ConstantBuffer{ e.GetWorldViewProjectionTransposed(camera->GetProjectionMatrix(), camera->GetViewMatrix()), e.GetWorldMatrixTransposed() };
-	cbWrapper.CopyData(&cb, ConstantBufferPerObjectAlignedSize, constBufferIndex);
-	commandList->SetGraphicsRootDescriptorTable(RootSigCBVertex0, cbHeap.handleGPU(constBufferIndex));
-	Draw(e.GetMesh(), cb, commandList);
-	constBufferIndex++;
+
+	for (auto i = 0u; i < pixelCb.pointLightCount; ++i)
+	{
+		e.SetMesh(sphereMesh);
+		e.SetPosition(pixelCb.pointLight[i].Position);
+		float range = pixelCb.pointLight[i].Range;
+		pixelCb.pointLightIndex = i;
+		e.SetScale(XMFLOAT3(range, range, range));
+
+		auto cb = ConstantBuffer{ e.GetWorldViewProjectionTransposed(camera->GetProjectionMatrix(), camera->GetViewMatrix()), e.GetWorldMatrixTransposed() };
+		pixelCbWrapper.CopyData((void*)(&pixelCb), PixelConstantBufferSize, i + 1);
+		cbWrapper.CopyData(&cb, ConstantBufferPerObjectAlignedSize, constBufferIndex);
+
+		commandList->SetDescriptorHeaps(1, ppHeaps);
+		commandList->SetGraphicsRootDescriptorTable(RootSigCBVertex0, cbHeap.handleGPU(constBufferIndex));
+
+		commandList->SetDescriptorHeaps(1, pixelHeaps);
+		commandList->SetGraphicsRootDescriptorTable(RootSigCBPixel0, pixelCbHeap.handleGPU(i + 1));
+		Draw(e.GetMesh(), cb, commandList);
+		constBufferIndex++;
+	}
 
 	//numRTV - 2 is the lightshape pass RTV
 	commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(gBufferTextures[RTV_ORDER_LIGHTSHAPE], D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_GENERIC_READ));
@@ -499,8 +514,10 @@ void DeferredRenderer::CreateCB()
 
 	device->CreateCommittedResource(&heapProperty, D3D12_HEAP_FLAG_NONE, &resourceDesc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(&worldViewCB));
 
-	resourceDesc.Width = 1024 * 128;
+	resourceDesc.Width = 1024 * 1024 * 2;
 	device->CreateCommittedResource(&heapProperty, D3D12_HEAP_FLAG_NONE, &resourceDesc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(&lightCB));
+
+	resourceDesc.Width = 1024 * 128;
 	device->CreateCommittedResource(&heapProperty, D3D12_HEAP_FLAG_NONE, &resourceDesc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(&perFrameCB));
 
 }
@@ -657,11 +674,26 @@ void DeferredRenderer::CreateLightPassPSO()
 		{ "TANGENT", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 32, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
 	};
 
+	auto blendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
+	blendState.AlphaToCoverageEnable = false;
+	blendState.IndependentBlendEnable = false;
+
+	blendState.RenderTarget[0].BlendEnable = true;
+	blendState.RenderTarget[0].BlendOp = D3D12_BLEND_OP_ADD;
+	blendState.RenderTarget[0].BlendOpAlpha = D3D12_BLEND_OP_ADD;
+	blendState.RenderTarget[0].SrcBlend = D3D12_BLEND_ONE;
+	blendState.RenderTarget[0].DestBlend = D3D12_BLEND_ONE;
+
+	blendState.RenderTarget[0].SrcBlendAlpha = D3D12_BLEND_ONE; 
+	blendState.RenderTarget[0].DestBlendAlpha = D3D12_BLEND_ONE;
+	blendState.RenderTarget[0].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
+
 	auto rasterizer = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
 	rasterizer.CullMode = D3D12_CULL_MODE_NONE; // Disable culling for point light
 	rasterizer.DepthClipEnable = false;
 	descPipelineState.VS = ShaderManager::LoadShader(L"LightShapeVS.cso");
 	descPipelineState.PS = ShaderManager::LoadShader(L"LightShapePassPS.cso");
+	descPipelineState.BlendState = blendState;
 	descPipelineState.InputLayout.pInputElementDescs = inputLayout;
 	descPipelineState.RasterizerState = rasterizer;
 	descPipelineState.RTVFormats[0] = DXGI_FORMAT_R32G32B32A32_FLOAT;

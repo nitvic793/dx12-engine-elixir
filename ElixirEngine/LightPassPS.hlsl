@@ -1,11 +1,15 @@
 #include "Lighting.hlsli"
 
+static const int MaxPointLights = 16;
+
 cbuffer externalData : register(b0)
 {
 	DirectionalLight dirLight;
-	PointLight pointLight;
+	PointLight pointLight[MaxPointLights];
 	float4x4 invProjView;
 	float3 cameraPosition;
+	int pointLightCount;
+	int pointLightIndex;
 }
 
 struct VertexToPixel

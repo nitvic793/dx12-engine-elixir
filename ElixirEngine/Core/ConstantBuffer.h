@@ -2,6 +2,8 @@
 #include "../stdafx.h"
 #include "Light.h"
 
+static const int MaxPointLights = 16;
+
 struct ConstantBuffer 
 {
 	DirectX::XMFLOAT4X4 worldViewProjection;
@@ -15,9 +17,11 @@ struct ConstantBuffer
 struct PixelConstantBuffer
 {
 	DirectionalLight light;
-	PointLight pointLight;
+	PointLight pointLight[MaxPointLights];
 	XMFLOAT4X4 invProjView;
 	XMFLOAT3 cameraPosition;
+	uint32_t pointLightCount;
+	uint32_t pointLightIndex;
 };
 
 struct PerFrameConstantBuffer

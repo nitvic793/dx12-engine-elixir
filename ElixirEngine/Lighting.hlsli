@@ -124,7 +124,7 @@ float3 PointLightPBR(PointLight light, float3 normal, float3 worldPos, float3 ca
 	float ao = 1.0f;
 	float3 toLight = normalize(light.Position - worldPos);
 	float3 toCam = normalize(camPos - worldPos);
-	float atten = Attenuate(light.Position, light.Range/2, worldPos);
+	float atten = Attenuate(light.Position, light.Range/1.5, worldPos);
 	float diff = DiffusePBR(normal, toLight);
 	float3 kS = float3(0.f, 0.f, 0.f);
 	float3 spec = MicrofacetBRDF(normal, toLight, toCam, roughness, metalness, specularColor, kS);

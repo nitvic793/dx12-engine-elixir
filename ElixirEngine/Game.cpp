@@ -78,7 +78,10 @@ void Game::InitializeAssets()
 	pixelCb.light.DiffuseColor = XMFLOAT4(1.0f, 1.0f, 1.0f, 0.f);
 	pixelCb.light.Intensity = 1.5f;
 	pixelCb.light.Direction = XMFLOAT3(0.3f, -0.5f, -1.f);
-	pixelCb.pointLight = PointLight{ {0.99f, 0.2f, 0.2f, 0.f} , {0.0f, 0.0f, -1.f}, 6.f };
+	pixelCb.pointLight[0] = PointLight{ {0.99f, 0.2f, 0.2f, 0.f} , {0.0f, 0.0f, -1.f}, 6.f };
+	pixelCb.pointLight[1] = PointLight{ {0.0f, 0.99f, 0.2f, 0.f} , {5.0f, 0.0f, -1.f}, 6.f };
+	pixelCb.pointLightCount = 2u;
+	pixelCb.pointLightIndex = 0;
 
 	ResourceUploadBatch uploadBatch(device);
 	uploadBatch.Begin();
