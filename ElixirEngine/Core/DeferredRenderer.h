@@ -69,6 +69,7 @@ class DeferredRenderer
 	ConstantBufferWrapper perFrameCbWrapper;
 
 	std::unique_ptr<Texture> selectedDepthBufferSRV;
+	std::unique_ptr<Texture> selectedOutlineSRV;
 	std::unique_ptr<Texture> gDepthSRV;
 	Texture* resultUAV;
 	Texture* resultSRV;
@@ -136,6 +137,7 @@ public:
 	uint32_t SetUAV(ID3D12Resource* textureSRV, bool isTextureCube = false, DXGI_FORMAT format = DXGI_FORMAT_R32G32B32A32_FLOAT);
 	uint32_t SetSRVs(ID3D12Resource** textureSRV, int textureCount, bool isTextureCube = false);
 	
+	Texture*				GetSelectionOutlineSRV();
 	Texture*				GetSelectionDepthBufferSRV();
 	Texture*				GetResultUAV();
 	Texture*				GetResultSRV();

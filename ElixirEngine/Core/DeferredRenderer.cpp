@@ -109,6 +109,11 @@ void DeferredRenderer::SetIBLTextures(ID3D12Resource* irradianceTextureCube, ID3
 	device->CreateShaderResourceView(prefilterTextureCube, &srvDesc, gBufferHeap.handleCPU(prefilterIndex));
 }
 
+Texture * DeferredRenderer::GetSelectionOutlineSRV()
+{
+	return selectedOutlineSRV.get();
+}
+
 Texture * DeferredRenderer::GetSelectionDepthBufferSRV()
 {
 	return selectedDepthBufferSRV.get();
@@ -680,12 +685,8 @@ void DeferredRenderer::CreateLightPassPSO()
 
 	blendState.RenderTarget[0].BlendEnable = true;
 	blendState.RenderTarget[0].BlendOp = D3D12_BLEND_OP_ADD;
-	blendState.RenderTarget[0].BlendOpAlpha = D3D12_BLEND_OP_ADD;
 	blendState.RenderTarget[0].SrcBlend = D3D12_BLEND_ONE;
 	blendState.RenderTarget[0].DestBlend = D3D12_BLEND_ONE;
-
-	blendState.RenderTarget[0].SrcBlendAlpha = D3D12_BLEND_ONE; 
-	blendState.RenderTarget[0].DestBlendAlpha = D3D12_BLEND_ONE;
 	blendState.RenderTarget[0].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
 
 	auto rasterizer = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
@@ -1112,6 +1113,9 @@ void DeferredRenderer::CreateSelectionFilterBuffers()
 	resourceDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET; 
 	device->CreateCommittedResource(&heapProperty, D3D12_HEAP_FLAG_NONE, &resourceDesc, D3D12_RESOURCE_STATE_RENDER_TARGET, &clearVal, IID_PPV_ARGS(&selectedOutlineTexture));
 
+	auto heapIndex = SetSRV(selectedOutlineTexture, DXGI_FORMAT_R32G32B32A32_FLOAT);
+	selectedOutlineSRV = std::unique_ptr<Texture>(new Texture(this, device, selectedOutlineTexture, heapIndex, TextureTypeSRV));
+
 	D3D12_RENDER_TARGET_VIEW_DESC descRT = {};
 	descRT.Texture2D.MipSlice = 0;
 	descRT.Texture2D.PlaneSlice = 0;
@@ -1120,7 +1124,7 @@ void DeferredRenderer::CreateSelectionFilterBuffers()
 	device->CreateRenderTargetView(selectedOutlineTexture, &descRT, pRTVHeap.handleCPU(0));
 
 	device->CreateDepthStencilView(selectedDepthTexture, &desc, dsvHeap.handleCPU(2)); // 0 is the main depth target, 1 is the shadow map
-	auto heapIndex = SetSRV(selectedDepthTexture, DXGI_FORMAT_R24_UNORM_X8_TYPELESS);
+	heapIndex = SetSRV(selectedDepthTexture, DXGI_FORMAT_R24_UNORM_X8_TYPELESS);
 	selectedDepthBufferSRV = std::unique_ptr<Texture>(new Texture(this, device, selectedDepthTexture, heapIndex, TextureTypeSRV));
 }
 

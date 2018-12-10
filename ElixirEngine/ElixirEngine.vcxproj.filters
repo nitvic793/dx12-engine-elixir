@@ -43,6 +43,12 @@
     <Filter Include="Shaders\Common">
       <UniqueIdentifier>{d992bc4f-1ea8-46d2-b04a-5893870b06a4}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\PostProcess">
+      <UniqueIdentifier>{38924cf3-2b96-46c4-b7dd-83b00d2908fb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\PostProcess">
+      <UniqueIdentifier>{ff2c0404-0b0b-45c0-b8f1-aa98d621e2ff}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Main.cpp">
@@ -81,22 +87,25 @@
     <ClCompile Include="ComputeProcess.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="BlurFilter.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="ComputeCore.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="TexturePool.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="DepthOfFieldPass.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="BlurFilter.cpp">
+      <Filter>Source Files\PostProcess</Filter>
     </ClCompile>
-    <ClCompile Include="SunRaysPass.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="DepthOfFieldPass.cpp">
+      <Filter>Source Files\PostProcess</Filter>
     </ClCompile>
     <ClCompile Include="EdgeFilter.cpp">
+      <Filter>Source Files\PostProcess</Filter>
+    </ClCompile>
+    <ClCompile Include="SunRaysPass.cpp">
+      <Filter>Source Files\PostProcess</Filter>
+    </ClCompile>
+    <ClCompile Include="ComputeCore.cpp">
+      <Filter>Source Files\Core</Filter>
+    </ClCompile>
+    <ClCompile Include="CompositeTextures.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -152,22 +161,25 @@
     <ClInclude Include="ComputeProcess.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="BlurFilter.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="ComputeCore.h">
       <Filter>Header Files\Core</Filter>
     </ClInclude>
     <ClInclude Include="TexturePool.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="BlurFilter.h">
+      <Filter>Header Files\PostProcess</Filter>
+    </ClInclude>
     <ClInclude Include="DepthOfFieldPass.h">
-      <Filter>Header Files</Filter>
+      <Filter>Header Files\PostProcess</Filter>
     </ClInclude>
     <ClInclude Include="SunRaysPass.h">
-      <Filter>Header Files</Filter>
+      <Filter>Header Files\PostProcess</Filter>
     </ClInclude>
     <ClInclude Include="EdgeFilter.h">
+      <Filter>Header Files\PostProcess</Filter>
+    </ClInclude>
+    <ClInclude Include="CompositeTextures.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -242,6 +254,9 @@
       <Filter>Shaders\Common</Filter>
     </FxCompile>
     <FxCompile Include="SelectionPS.hlsl">
+      <Filter>Shaders\Common</Filter>
+    </FxCompile>
+    <FxCompile Include="CompositeCS.hlsl">
       <Filter>Shaders\Common</Filter>
     </FxCompile>
   </ItemGroup>

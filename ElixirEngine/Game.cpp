@@ -72,6 +72,7 @@ void Game::InitializeAssets()
 	sunRaysPass = std::unique_ptr<SunRaysPass>(new SunRaysPass(computeCore, deferredRenderer));
 	edgeFilter = std::unique_ptr<EdgeFilter>(new EdgeFilter(computeCore));
 	blurFilter = new BlurFilter(computeCore);
+	compositeTextures = std::unique_ptr<CompositeTextures>(new CompositeTextures(computeCore));
 	camera = new Camera((float)Width, (float)Height);
 
 	pixelCb.light.AmbientColor = XMFLOAT4(0.1f, 0.1f, 0.1f, 0);
@@ -231,7 +232,9 @@ void Game::Draw()
 		finalTexture = dofPass->Apply(commandList, finalTexture, blurTexture, texturePool, 3, 0.2f);
 	}
 	finalTexture = sunRaysPass->Apply(commandList, deferredRenderer->GetGBufferDepthSRV(), finalTexture, texturePool, camera);
-	finalTexture = edgeFilter->Apply(commandList, deferredRenderer->GetSelectionDepthBufferSRV(), finalTexture, texturePool);
+	//finalTexture = edgeFilter->Apply(commandList, deferredRenderer->GetSelectionDepthBufferSRV(), finalTexture, texturePool);
+	finalTexture = compositeTextures->Composite(commandList, finalTexture, deferredRenderer->GetSelectionOutlineSRV(), texturePool);
+
 	deferredRenderer->DrawResult(commandList, rtvHandle, finalTexture); //Draw renderer result to given main Render Target handle
 
 	deferredRenderer->ResetRenderTargetStates(commandList);
