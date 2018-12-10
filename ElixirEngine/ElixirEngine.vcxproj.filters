@@ -106,7 +106,7 @@
       <Filter>Source Files\Core</Filter>
     </ClCompile>
     <ClCompile Include="CompositeTextures.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\PostProcess</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -180,7 +180,7 @@
       <Filter>Header Files\PostProcess</Filter>
     </ClInclude>
     <ClInclude Include="CompositeTextures.h">
-      <Filter>Header Files</Filter>
+      <Filter>Header Files\PostProcess</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -247,9 +247,6 @@
     <FxCompile Include="DepthOnlyVS.hlsl">
       <Filter>Shaders\Common</Filter>
     </FxCompile>
-    <FxCompile Include="EdgeDetectionCS.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
     <FxCompile Include="MaxDepthVS.hlsl">
       <Filter>Shaders\Common</Filter>
     </FxCompile>
@@ -257,6 +254,9 @@
       <Filter>Shaders\Common</Filter>
     </FxCompile>
     <FxCompile Include="CompositeCS.hlsl">
+      <Filter>Shaders\Common</Filter>
+    </FxCompile>
+    <FxCompile Include="EdgeDetectionCS.hlsl">
       <Filter>Shaders\Common</Filter>
     </FxCompile>
   </ItemGroup>

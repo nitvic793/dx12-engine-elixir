@@ -685,9 +685,11 @@ void DeferredRenderer::CreateLightPassPSO()
 
 	blendState.RenderTarget[0].BlendEnable = true;
 	blendState.RenderTarget[0].BlendOp = D3D12_BLEND_OP_ADD;
-	blendState.RenderTarget[0].SrcBlend = D3D12_BLEND_ONE;
+	//blendState.RenderTarget[0].SrcBlend = D3D12_BLEND_ONE;
+	//blendState.RenderTarget[0].DestBlend = D3D12_BLEND_ONE;
+	blendState.RenderTarget[0].SrcBlend = D3D12_BLEND_SRC_ALPHA;
 	blendState.RenderTarget[0].DestBlend = D3D12_BLEND_ONE;
-	blendState.RenderTarget[0].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
+	//blendState.RenderTarget[0].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
 
 	auto rasterizer = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
 	rasterizer.CullMode = D3D12_CULL_MODE_NONE; // Disable culling for point light
