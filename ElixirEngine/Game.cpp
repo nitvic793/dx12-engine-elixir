@@ -143,6 +143,7 @@ void Game::Update()
 {
 	CurrentTime += deltaTime;
 	camera->Update(deltaTime);
+	entities[0]->SetPosition(XMFLOAT3(2 * sin(totalTime) + 2, 1.f, cos(totalTime)));
 	if (GetAsyncKeyState(VK_TAB))
 	{
 		isBlurEnabled = true;

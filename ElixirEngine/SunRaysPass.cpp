@@ -89,7 +89,7 @@ Texture* SunRaysPass::Apply(ID3D12GraphicsCommandList* commandList, Texture* dep
 	
 	auto viewProjT = camera->GetViewProjectionMatrix();
 	auto viewProj = XMLoadFloat4x4(&viewProjT);
-	auto sunDir = XMVector3Normalize(XMVectorSet(1.f, 1.0f, 1.f, 0.f));
+	auto sunDir = XMVector3Normalize(XMVectorSet(1.5f, 1.5f, 4.f, 0.f));
 	float dotCamSun = XMVectorGetX(XMVector3Dot(camDir, sunDir));
 	if (dotCamSun < 0.f) return pixels;
 
@@ -131,9 +131,9 @@ Texture* SunRaysPass::Apply(ID3D12GraphicsCommandList* commandList, Texture* dep
 	commandList->ClearRenderTargetView(outRTV, mClearColor, 0, nullptr);
 	commandList->OMSetRenderTargets(1, &outRTV, true, nullptr);
 	commandList->SetDescriptorHeaps(1, heaps);
-	commandList->SetGraphicsRootDescriptorTable(2, occlusionTex->GetGPUDescriptorHandle());
+	commandList->SetGraphicsRootDescriptorTable(RootSigSRVPixel1, occlusionTex->GetGPUDescriptorHandle());
 	commandList->SetDescriptorHeaps(1, cbheaps);
-	commandList->SetGraphicsRootDescriptorTable(0, cbHeap.handleGPU(0));
+	commandList->SetGraphicsRootDescriptorTable(RootSigCBPixel0, cbHeap.handleGPU(0));
 	renderer->DrawScreenQuad(commandList);
 	commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(lightRaysSRV->GetTextureResource(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_UNORDERED_ACCESS));
 

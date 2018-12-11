@@ -7,7 +7,7 @@ struct VertexToPixel
 Texture2D OcclusionTex		: register(t0);
 SamplerState basicSampler	: register(s0);
 
-cbuffer externalData
+cbuffer externalData : register(b0)
 {
 	float2 SunPos;
 };
@@ -21,8 +21,8 @@ float4 main(VertexToPixel input) : SV_TARGET
 	float InitDecay = 0.2f;
 	float DistDecay = 0.8f;
 	float3 RayColor = float3(1, 1, 1);
-
-	float2 dirToSun = (normalize(SunPos) - input.uv);
+	float2 sunPos = SunPos;
+	float2 dirToSun = ((sunPos) - input.uv);
 	float lengthToSun = length(dirToSun);
 	dirToSun /= lengthToSun;
 
@@ -35,6 +35,7 @@ float4 main(VertexToPixel input) : SV_TARGET
 	float decay = InitDecay;
 	float rayIntensity = 0.0f;
 
+	[unroll]
 	for (int i = 0; i < NUM_STEPS; ++i)
 	{
 		float fCurIntensity = OcclusionTex.Sample(basicSampler, input.uv + rayOffset).r;
