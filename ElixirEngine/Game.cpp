@@ -82,7 +82,7 @@ void Game::InitializeAssets()
 
 	pixelCb.light.AmbientColor = XMFLOAT4(0.1f, 0.1f, 0.1f, 0);
 	pixelCb.light.DiffuseColor = XMFLOAT4(1.0f, 1.0f, 1.0f, 0.f);
-	pixelCb.light.Intensity = 1.5f;
+	pixelCb.light.Intensity = 3.5f;
 	pixelCb.light.Direction = XMFLOAT3(0.3f, -0.5f, -1.f);
 	pixelCb.pointLight[0] = PointLight{ {0.99f, 0.2f, 0.2f, 0.f} , {0.0f, 0.0f, -1.f}, 6.f };
 	pixelCb.pointLight[1] = PointLight{ {0.0f, 0.99f, 0.2f, 0.f} , {5.0f, 0.0f, -1.f}, 6.f };
@@ -156,6 +156,8 @@ void Game::Update()
 	CurrentTime += deltaTime;
 	camera->Update(deltaTime);
 	entities[0]->SetPosition(XMFLOAT3(2 * sin(totalTime) + 2, 1.f, cos(totalTime)));
+	pixelCb.pointLight[1].Position = XMFLOAT3(2 * sin(totalTime * 2) + 5, 0, -1);
+	pixelCb.pointLight[0].Position = XMFLOAT3(2 * cos(totalTime * 2), 0, -1);
 	if (GetAsyncKeyState(VK_TAB))
 	{
 		isBlurEnabled = true;
