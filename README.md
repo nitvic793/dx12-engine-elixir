@@ -4,7 +4,11 @@
 
 ## In Action
 
+Depth Of Field
+
 ![alt text](https://github.com/nitvic793/dx12-engine-elixir/raw/master/Images/dof.gif "Depth of Field")
+
+Sun Rays
 
 ![alt text](https://github.com/nitvic793/dx12-engine-elixir/raw/master/Images/scene.gif "Sample Scene")
 
