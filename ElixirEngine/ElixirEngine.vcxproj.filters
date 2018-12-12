@@ -259,6 +259,9 @@
     <FxCompile Include="EdgeDetectionCS.hlsl">
       <Filter>Shaders\Common</Filter>
     </FxCompile>
+    <FxCompile Include="ShadowGS.hlsl">
+      <Filter>Shaders\Shadows</Filter>
+    </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

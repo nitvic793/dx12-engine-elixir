@@ -43,8 +43,12 @@ class DeferredRenderer
 	ID3D12Resource* postProcessTexture;
 	ID3D12Resource* shadowMapTexture;
 	ID3D12Resource* shadowPosTexture;
+
+	ID3D12Resource* shadowMapPointTexture;
+
 	ID3D12Resource* selectedDepthTexture;
 	ID3D12Resource* selectedOutlineTexture;
+
 
 	ID3D12PipelineState* deferredPSO;
 	ID3D12PipelineState* dirLightPassPSO;
@@ -52,6 +56,7 @@ class DeferredRenderer
 	ID3D12PipelineState* screenQuadPSO;
 	ID3D12PipelineState* skyboxPSO;
 	ID3D12PipelineState* shadowMapDirLightPSO;
+	ID3D12PipelineState* shadowMapPointLightPSO;
 	ID3D12PipelineState* selectionFilterPSO;
 
 	CDescriptorHeapWrapper pRTVHeap;

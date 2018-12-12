@@ -9,9 +9,10 @@ XMFLOAT3 Camera::GetPosition()
 
 XMFLOAT3 Camera::GetDirection()
 {
-	auto dir = XMVector3Rotate(XMLoadFloat3(&direction), DirectX::XMLoadFloat4(&rotation));
+	auto rotQuaternion = XMQuaternionRotationRollPitchYaw(rotationX, rotationY, 0);
+	auto dir = XMVector3Rotate(XMLoadFloat3(&direction), rotQuaternion);
 	XMFLOAT3 dirV;
-	XMStoreFloat3(&dirV, dir);
+	XMStoreFloat3(&dirV, XMVector3Normalize(dir));
 	return dirV;
 }
 

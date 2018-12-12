@@ -917,6 +917,7 @@ void DeferredRenderer::CreateRootSignature()
 
 void DeferredRenderer::CreateShadowBuffers()
 {
+	int shadowMapPointTextureIndex = numRTV + 6;
 	int shadowPosTextureIndex = numRTV + 5;
 	int shadowMapTextureIndex = numRTV + 4; //// numRTV + 1,2,3 taken up by IBL textures
 
@@ -955,6 +956,9 @@ void DeferredRenderer::CreateShadowBuffers()
 
 	device->CreateGraphicsPipelineState(&descPipelineState, IID_PPV_ARGS(&shadowMapDirLightPSO));
 
+	descPipelineState.GS = ShaderManager::LoadShader(L"ShadowGS.cso");
+	device->CreateGraphicsPipelineState(&descPipelineState, IID_PPV_ARGS(&shadowMapPointLightPSO));
+
 	CD3DX12_HEAP_PROPERTIES heapProperty(D3D12_HEAP_TYPE_DEFAULT);
 
 	D3D12_RESOURCE_DESC resourceDesc;
@@ -984,6 +988,10 @@ void DeferredRenderer::CreateShadowBuffers()
 	descSRV.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
 
 	device->CreateCommittedResource(&heapProperty, D3D12_HEAP_FLAG_NONE, &resourceDesc, D3D12_RESOURCE_STATE_GENERIC_READ, &clearVal, IID_PPV_ARGS(&shadowMapTexture));
+	resourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+	resourceDesc.DepthOrArraySize = 6;
+	device->CreateCommittedResource(&heapProperty, D3D12_HEAP_FLAG_NONE, &resourceDesc, D3D12_RESOURCE_STATE_GENERIC_READ, &clearVal, IID_PPV_ARGS(&shadowMapPointTexture));
+
 
 	D3D12_DEPTH_STENCIL_VIEW_DESC desc;
 	ZeroMemory(&desc, sizeof(desc));
@@ -1140,7 +1148,7 @@ DeferredRenderer::~DeferredRenderer()
 	selectedDepthTexture->Release();
 	selectedOutlineTexture->Release();
 	rootSignature->Release();
-
+	shadowMapPointTexture->Release();
 	/*rtvHeap.pDescriptorHeap->Release();
 	dsvHeap.pDescriptorHeap->Release();
 	srvHeap.pDescriptorHeap->Release();
@@ -1161,6 +1169,7 @@ DeferredRenderer::~DeferredRenderer()
 	skyboxPSO->Release();
 	screenQuadPSO->Release();
 	shadowMapDirLightPSO->Release();
+	shadowMapPointLightPSO->Release();
 	selectionFilterPSO->Release();
 
 	perFrameCB->Release();

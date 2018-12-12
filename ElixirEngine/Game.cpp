@@ -26,16 +26,21 @@ void Game::InitializeAssets()
 			L"../../Assets/Textures/cement_normals.png" ,
 			L"../../Assets/Textures/cement_roughness.png" ,
 			L"../../Assets/Textures/cement_metal.png",
-			L"../../Assets/Textures/marble_albedo.jpg" , //5
+			L"../../Assets/Textures/asw_albedo.png" , //5
 			L"../../Assets/Textures/marble_normals.jpg" ,
 			L"../../Assets/Textures/marble_roughness.jpg",
-			L"../../Assets/Textures/marble_metal.png"
+			L"../../Assets/Textures/marble_metal.png",
+			L"../../Assets/Textures/hammer_albedo.png" , //6
+			L"../../Assets/Textures/hammer_normals.png" ,
+			L"../../Assets/Textures/cement_roughness.png",
+			L"../../Assets/Textures/hammer_metal.png"
 	};
 
 	std::vector<std::string> meshList = {
 		"../../Assets/sphere.obj",
 		"../../Assets/quad.obj",
-		"../../Assets/column.obj",
+		"../../Assets/sw.obj",
+		"../../Assets/hammer.obj",
 	};
 
 	size_t materialCount = 3;
@@ -104,13 +109,20 @@ void Game::InitializeAssets()
 		entities[i]->SetCastsShadow(true);
 	}
 
-	entities[8]->SetMesh(meshes[2].get());
+	entities[8]->SetMesh(meshes[3].get());
 	entities[7]->SetMesh(meshes[2].get());
 	entities[6]->SetMesh(meshes[2].get());
-	entities[8]->SetY(-1);
-	entities[7]->SetY(-1);
-	entities[6]->SetY(-1);
-	entities[8]->SetMaterial(materials[5].get());
+
+	entities[8]->SetRotation(XMFLOAT3(-XM_PIDIV2 / 4, -XM_PIDIV2 / 4, 0.f));
+	entities[8]->SetPosition(XMFLOAT3(0, -1, 0));
+	entities[7]->SetPosition(XMFLOAT3(15, 1, 5));
+	entities[6]->SetPosition(XMFLOAT3(0, 2, 5));
+
+	//entities[8]->SetScale(XMFLOAT3(0.01f, 0.01f, 0.01f));
+	entities[7]->SetScale(XMFLOAT3(0.01f, 0.01f, 0.01f));
+	entities[6]->SetScale(XMFLOAT3(0.01f, 0.01f, 0.01f));
+
+	entities[8]->SetMaterial(materials[6].get());
 	entities[7]->SetMaterial(materials[5].get());
 	entities[6]->SetMaterial(materials[5].get());
 
@@ -185,8 +197,8 @@ bool IsIntersecting(Entity* entity, Camera* camera, int mouseX, int mouseY, floa
 
 	auto direction = dest - orig;
 	direction = XMVector3Normalize(direction);
-	bool intersecting = entity->GetBoundingSphere().Intersects(orig, direction, distance);
-	//intersecting = intersecting || entity->GetBoundingBox().Intersects(orig, direction, distance);
+	bool intersecting = false;// entity->GetBoundingSphere().Intersects(orig, direction, distance);
+	//bool intersecting = /*intersecting ||*/ entity->GetBoundingBox().Intersects(orig, direction, distance);
 	return intersecting;
 }
 
