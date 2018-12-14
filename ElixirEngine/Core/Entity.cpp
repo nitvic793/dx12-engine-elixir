@@ -92,6 +92,11 @@ void Entity::SetRotation(const XMFLOAT3 & rot)
 void Entity::SetScale(const XMFLOAT3 & scale)
 {
 	this->scale = scale;
+	boundingBox.Extents.x = boundingBox.Extents.x * scale.x;
+	boundingBox.Extents.y = boundingBox.Extents.y * scale.y;
+	boundingBox.Extents.z = boundingBox.Extents.z * scale.z;
+
+	boundingSphere.Radius *= scale.x;
 }
 
 void Entity::SetX(float x)

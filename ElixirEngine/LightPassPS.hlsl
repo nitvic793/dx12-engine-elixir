@@ -105,6 +105,7 @@ float4 main(VertexToPixel pIn) : SV_TARGET
 	float3 totalColor = finalColor + otherlights;
 	totalColor = totalColor / (totalColor + float3(1.f, 1.f, 1.f));
 	float3 gammaCorrect = lerp(totalColor, pow(totalColor, 1.0 / 2.2), 0.4f); 
+	totalColor = saturate(totalColor);
 	return float4(totalColor, packedAlbedo.a);
 
 }
