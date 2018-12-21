@@ -150,7 +150,7 @@ void TexturePool::ResetIndex()
 
 TexturePool::~TexturePool()
 {
-	rtvHeap.pDescriptorHeap->Release();
+	//rtvHeap.pDescriptorHeap->Release();
 	for (auto t : textureSRVs)
 		delete t;
 
