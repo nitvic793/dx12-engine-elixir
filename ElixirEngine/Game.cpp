@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "Game.h"
+#include "StringHash.h"
 
 //Initializes assets. This function's scope has access to commandList which is not closed. 
 void Game::InitializeAssets()

@@ -108,6 +108,9 @@
     <ClCompile Include="CompositeTextures.cpp">
       <Filter>Source Files\PostProcess</Filter>
     </ClCompile>
+    <ClCompile Include="StringHash.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
@@ -181,6 +184,9 @@
     </ClInclude>
     <ClInclude Include="CompositeTextures.h">
       <Filter>Header Files\PostProcess</Filter>
+    </ClInclude>
+    <ClInclude Include="StringHash.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
