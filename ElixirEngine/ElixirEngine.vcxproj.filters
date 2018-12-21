@@ -111,6 +111,12 @@
     <ClCompile Include="StringHash.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ResourceManager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="FileUtility.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
@@ -186,6 +192,12 @@
       <Filter>Header Files\PostProcess</Filter>
     </ClInclude>
     <ClInclude Include="StringHash.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ResourceManager.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="FileUtility.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

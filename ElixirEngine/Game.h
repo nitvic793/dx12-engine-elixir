@@ -9,10 +9,12 @@
 #include "TexturePool.h"
 #include "EdgeFilter.h"
 #include "CompositeTextures.h"
+#include "ResourceManager.h"
 
 class Game : public Core
 {
 protected:
+	ResourceManager* resourceManager;
 	ID3D12Resource* skyboxTexture;
 	ID3D12Resource* skyboxIRTexture;
 	ID3D12Resource* brdfLutTexture;

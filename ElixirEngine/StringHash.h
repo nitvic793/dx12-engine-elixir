@@ -29,7 +29,8 @@ public:
 	}
 
 	StringID(const char* stringValue) :
-		hash(GenerateHash(stringValue, strlen(stringValue)))
+		hash(SID(stringValue))
+		//hash(GenerateHash(stringValue, strlen(stringValue)))
 	{
 	}
 

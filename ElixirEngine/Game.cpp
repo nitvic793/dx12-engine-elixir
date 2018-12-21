@@ -5,6 +5,7 @@
 //Initializes assets. This function's scope has access to commandList which is not closed. 
 void Game::InitializeAssets()
 {
+	auto rm = resourceManager;
 	int entityCount = 10;
 	std::vector<std::wstring> textureList = {
 			L"../../Assets/Textures/floor_albedo.png" , //0
@@ -59,10 +60,7 @@ void Game::InitializeAssets()
 			commandQueue)));
 	}
 
-	for (int i = 0; i < meshList.size(); ++i)
-	{
-		meshes.push_back(std::unique_ptr<Mesh>(new Mesh(meshList[i], device, commandList)));
-	}
+	rm->LoadMeshes(commandList, meshList);
 
 	std::vector<int> entityMaterialMap;
 	for (int i = 0; i < entityCount; ++i)
@@ -102,7 +100,7 @@ void Game::InitializeAssets()
 	for (int i = 0; i < entityCount; ++i)
 	{
 		entities.push_back(std::unique_ptr<Entity>(new Entity()));
-		entities[i]->SetMesh(meshes[0].get());
+		entities[i]->SetMesh(rm->GetMesh(SID("sphere")));
 		auto pos = XMFLOAT3((float)i, 0, 0);
 		entities[i]->SetPosition(pos);
 		int matId = entityMaterialMap[i];
@@ -110,9 +108,9 @@ void Game::InitializeAssets()
 		entities[i]->SetCastsShadow(true);
 	}
 
-	entities[8]->SetMesh(meshes[3].get());
-	entities[7]->SetMesh(meshes[2].get());
-	entities[6]->SetMesh(meshes[2].get());
+	entities[8]->SetMesh(rm->GetMesh(SID("hammer")));
+	entities[7]->SetMesh(rm->GetMesh(SID("sw")));
+	entities[6]->SetMesh(rm->GetMesh(SID("sw")));
 
 	entities[8]->SetRotation(XMFLOAT3(-XM_PIDIV2 / 4, -XM_PIDIV2 / 4, 0.f));
 	entities[8]->SetPosition(XMFLOAT3(0, -1, 0));
@@ -128,7 +126,7 @@ void Game::InitializeAssets()
 	entities[6]->SetMaterial(materials[5].get());
 
 	entities[9]->SetCastsShadow(false);
-	entities[9]->SetMesh(meshes[1].get());
+	entities[9]->SetMesh(rm->GetMesh(SID("quad")));
 	entities[9]->SetPosition(XMFLOAT3(5, -1, 0));
 	entities[9]->SetScale(XMFLOAT3(15, 15, 15));
 	entities[9]->SetMaterial(materials[4].get());
@@ -141,6 +139,7 @@ void Game::InitializeAssets()
 Game::Game(HINSTANCE hInstance, int ShowWnd, int width, int height, bool fullscreen) :
 	Core(hInstance, ShowWnd, width, height, fullscreen)
 {
+	resourceManager = ResourceManager::CreateInstance(device);
 }
 
 void Game::Initialize()
@@ -311,4 +310,5 @@ Game::~Game()
 	skyboxIRTexture->Release();
 	brdfLutTexture->Release();
 	skyboxPreFilter->Release();
+	delete resourceManager;
 }

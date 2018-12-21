@@ -137,9 +137,11 @@
     <ClCompile Include="Core\ShaderManager.cpp" />
     <ClCompile Include="DepthOfFieldPass.cpp" />
     <ClCompile Include="EdgeFilter.cpp" />
+    <ClCompile Include="FileUtility.cpp" />
     <ClCompile Include="Game.cpp" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="Material.cpp" />
+    <ClCompile Include="ResourceManager.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
     </ClCompile>
@@ -167,8 +169,10 @@
     <ClInclude Include="DepthOfFieldPass.h" />
     <ClInclude Include="DirectXHelper.h" />
     <ClInclude Include="EdgeFilter.h" />
+    <ClInclude Include="FileUtility.h" />
     <ClInclude Include="Game.h" />
     <ClInclude Include="Material.h" />
+    <ClInclude Include="ResourceManager.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="StringHash.h" />
     <ClInclude Include="SunRaysPass.h" />
