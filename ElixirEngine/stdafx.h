@@ -19,7 +19,6 @@
 #include "DirectXHelpers.h"
 #include <dxgidebug.h>
 #include <DirectXCollision.h>
-#include "StringHash.h"
 #include "FileUtility.h"
 
 using namespace DirectX;

@@ -7,35 +7,57 @@ void Game::InitializeAssets()
 {
 	auto rm = resourceManager;
 	int entityCount = 10;
-	std::vector<std::wstring> textureList = {
-			L"../../Assets/Textures/floor_albedo.png" , //0
+
+	std::vector<MaterialLoadData> materialLoadData = {
+		{
+			StringID("floor"),
+			L"../../Assets/Textures/floor_albedo.png" ,
 			L"../../Assets/Textures/floor_normals.png" ,
 			L"../../Assets/Textures/floor_roughness.png" ,
-			L"../../Assets/Textures/floor_metal.png",
+			L"../../Assets/Textures/floor_metal.png"
+		},
+		{
+			StringID("wood"),
 			L"../../Assets/Textures/wood_albedo.png" , //1
 			L"../../Assets/Textures/wood_normals.png" ,
 			L"../../Assets/Textures/wood_roughness.png" ,
 			L"../../Assets/Textures/wood_metal.png",
+		},
+		{
+			StringID("scratched"),
 			L"../../Assets/Textures/scratched_albedo.png" , //2
 			L"../../Assets/Textures/scratched_normals.png" ,
 			L"../../Assets/Textures/scratched_roughness.png" ,
-			L"../../Assets/Textures/scratched_metal.png",
+			L"../../Assets/Textures/scratched_metal.png"
+		},
+		{
+			StringID("bronze"),
 			L"../../Assets/Textures/bronze_albedo.png" , //3
 			L"../../Assets/Textures/bronze_normals.png" ,
 			L"../../Assets/Textures/bronze_roughness.png" ,
 			L"../../Assets/Textures/bronze_metal.png",
+		},
+		{
+			StringID("cement"),
 			L"../../Assets/Textures/cement_albedo.png" , //4
 			L"../../Assets/Textures/cement_normals.png" ,
 			L"../../Assets/Textures/cement_roughness.png" ,
 			L"../../Assets/Textures/cement_metal.png",
+		},
+		{	
+			StringID("arc"),
 			L"../../Assets/Textures/asw_albedo.png" , //5
 			L"../../Assets/Textures/marble_normals.jpg" ,
 			L"../../Assets/Textures/marble_roughness.jpg",
 			L"../../Assets/Textures/marble_metal.png",
+		},
+		{
+			StringID("hammer"),
 			L"../../Assets/Textures/hammer_albedo.png" , //6
 			L"../../Assets/Textures/hammer_normals.png" ,
 			L"../../Assets/Textures/cement_roughness.png",
 			L"../../Assets/Textures/hammer_metal.png"
+		}
 	};
 
 	std::vector<std::string> meshList = {
@@ -45,27 +67,14 @@ void Game::InitializeAssets()
 		"../../Assets/hammer.obj",
 	};
 
-	size_t materialCount = 3;
-	for (int i = 0; i < textureList.size(); i += 4)
-	{
-		materials.push_back(std::unique_ptr<Material>(new Material(
-			deferredRenderer,
-			{
-				textureList[i].c_str(),
-				textureList[i + 1].c_str(),
-				textureList[i + 2].c_str(),
-				textureList[i + 3].c_str()
-			},
-			device,
-			commandQueue)));
-	}
-
 	rm->LoadMeshes(commandList, meshList);
+	rm->LoadMaterials(commandQueue, deferredRenderer, materialLoadData);
 
-	std::vector<int> entityMaterialMap;
+	std::vector<HashID> materialIds = { StringID("floor"), StringID("wood"), StringID("scratched"), StringID("bronze") };
+	std::vector<HashID> entityMaterialMap;
 	for (int i = 0; i < entityCount; ++i)
 	{
-		entityMaterialMap.push_back(i % materialCount);
+		entityMaterialMap.push_back(materialIds[i % materialIds.size()]);
 	}
 
 	texturePool = new TexturePool(device, deferredRenderer, 12);
@@ -100,17 +109,18 @@ void Game::InitializeAssets()
 	for (int i = 0; i < entityCount; ++i)
 	{
 		entities.push_back(std::unique_ptr<Entity>(new Entity()));
-		entities[i]->SetMesh(rm->GetMesh(SID("sphere")));
+		entities[i]->SetMesh(rm->GetMesh(StringID("sphere")));
 		auto pos = XMFLOAT3((float)i, 0, 0);
 		entities[i]->SetPosition(pos);
-		int matId = entityMaterialMap[i];
-		entities[i]->SetMaterial(materials[matId].get());
+		auto matId = entityMaterialMap[i];
+		entities[i]->SetMaterial(rm->GetMaterial(matId));
 		entities[i]->SetCastsShadow(true);
 	}
+	entities[0]->SetMaterial(rm->GetMaterial(StringID("floor")));
 
-	entities[8]->SetMesh(rm->GetMesh(SID("hammer")));
-	entities[7]->SetMesh(rm->GetMesh(SID("sw")));
-	entities[6]->SetMesh(rm->GetMesh(SID("sw")));
+	entities[8]->SetMesh(rm->GetMesh(StringID("hammer")));
+	entities[7]->SetMesh(rm->GetMesh(StringID("sw")));
+	entities[6]->SetMesh(rm->GetMesh(StringID("sw")));
 
 	entities[8]->SetRotation(XMFLOAT3(-XM_PIDIV2 / 4, -XM_PIDIV2 / 4, 0.f));
 	entities[8]->SetPosition(XMFLOAT3(0, -1, 0));
@@ -121,19 +131,19 @@ void Game::InitializeAssets()
 	entities[7]->SetScale(XMFLOAT3(0.01f, 0.01f, 0.01f));
 	entities[6]->SetScale(XMFLOAT3(0.01f, 0.01f, 0.01f));
 
-	entities[8]->SetMaterial(materials[6].get());
-	entities[7]->SetMaterial(materials[5].get());
-	entities[6]->SetMaterial(materials[5].get());
+	entities[8]->SetMaterial(rm->GetMaterial(StringID("hammer")));
+	entities[7]->SetMaterial(rm->GetMaterial(StringID("arc")));
+	entities[6]->SetMaterial(rm->GetMaterial(StringID("arc")));
 
 	entities[9]->SetCastsShadow(false);
-	entities[9]->SetMesh(rm->GetMesh(SID("quad")));
+	entities[9]->SetMesh(rm->GetMesh(StringID("quad")));
 	entities[9]->SetPosition(XMFLOAT3(5, -1, 0));
 	entities[9]->SetScale(XMFLOAT3(15, 15, 15));
-	entities[9]->SetMaterial(materials[4].get());
+	entities[9]->SetMaterial(rm->GetMaterial(StringID("cement")));
 
 	deferredRenderer->SetIBLTextures(skyboxIRTexture, skyboxPreFilter, brdfLutTexture);
-	skyTexture = new Texture(deferredRenderer, device);
-	skyTexture->CreateTexture(L"../../Assets/envEnvHDR.dds", TexFileTypeDDS, commandQueue, true);
+	rm->LoadTexture(commandQueue, deferredRenderer, StringID("skybox"), L"../../Assets/envEnvHDR.dds", TexFileTypeDDS, true);
+	skyTexture = rm->GetTexture(StringID("skybox"));
 }
 
 Game::Game(HINSTANCE hInstance, int ShowWnd, int width, int height, bool fullscreen) :
@@ -304,7 +314,6 @@ Game::~Game()
 	delete blurFilter;
 	delete computeCore;
 	delete camera;
-	delete skyTexture;
 
 	skyboxTexture->Release();
 	skyboxIRTexture->Release();

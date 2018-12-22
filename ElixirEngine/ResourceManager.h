@@ -4,6 +4,7 @@
 #include "Core/Mesh.h"
 #include "Material.h"
 #include <unordered_map>
+#include "StringHash.h"
 
 // Engine Specific
 typedef std::unordered_map<unsigned int, Mesh*> MeshMap;
@@ -32,10 +33,26 @@ public:
 	static ResourceManager* CreateInstance(ID3D12Device* device);
 	static ResourceManager* GetInstance();
 
+	void LoadTexture(
+		ID3D12CommandQueue* commandQueue,
+		DeferredRenderer* renderer,
+		HashID textureID, 
+		std::wstring filepath,
+		TextureFileType texFileType,
+		bool isCubeMap = false,
+		TextureViewType viewType = TextureTypeSRV
+	);
+
+	void LoadMaterial(ID3D12CommandQueue* commandQueue, DeferredRenderer* renderer, MaterialLoadData loadData);
+	void LoadMaterials(ID3D12CommandQueue* commandQueue, DeferredRenderer* renderer, std::vector<MaterialLoadData> materials);
+
 	void LoadMeshes(ID3D12GraphicsCommandList* commandList, std::vector<std::string> meshList);
 	void LoadMesh(ID3D12GraphicsCommandList* commandList, std::string filePath);
 	void LoadMesh(ID3D12GraphicsCommandList* commandList, HashID hashId, std::string filePath);
+
 	Mesh* GetMesh(HashID hashId);
+	Material* GetMaterial(HashID materialID);
+	Texture* GetTexture(HashID textureID);
 	~ResourceManager();
 };
 

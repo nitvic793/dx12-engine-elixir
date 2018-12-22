@@ -1,6 +1,7 @@
 #pragma once
 #include "stdafx.h"
 #include "DirectXHelper.h"
+#include "StringHash.h"
 
 class DeferredRenderer;
 
@@ -10,6 +11,15 @@ enum MaterialTextureType {
 	MATERIAL_ROUGHNESS,
 	MATERIAL_METALNESS,
 	MATERIAL_COUNT
+};
+
+struct MaterialLoadData
+{
+	HashID MaterialID;
+	std::wstring AlbedoFile;
+	std::wstring NormalFile;
+	std::wstring RoughnessFile;
+	std::wstring MetalnessFile;
 };
 
 class Material
