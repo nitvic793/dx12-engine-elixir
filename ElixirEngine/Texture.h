@@ -6,13 +6,13 @@ class DeferredRenderer;
 
 enum TextureViewType
 {
-	TextureTypeSRV,
+	TextureTypeSRV = 0,
 	TextureTypeUAV
 };
 
 enum TextureFileType
 {
-	TexFileTypeWIC,
+	TexFileTypeWIC = 0,
 	TexFileTypeDDS
 };
 

@@ -97,14 +97,13 @@ void Game::InitializeAssets()
 	pixelCb.pointLightCount = 2u;
 	pixelCb.pointLightIndex = 0;
 
-	ResourceUploadBatch uploadBatch(device);
-	uploadBatch.Begin();
-	CreateDDSTextureFromFile(device, uploadBatch, L"../../Assets/envEnvHDR.dds", &skyboxTexture);
-	CreateDDSTextureFromFile(device, uploadBatch, L"../../Assets/envDiffuseHDR.dds", &skyboxIRTexture);
-	CreateDDSTextureFromFile(device, uploadBatch, L"../../Assets/envBrdf.dds", &brdfLutTexture);
-	CreateDDSTextureFromFile(device, uploadBatch, L"../../Assets/envSpecularHDR.dds", &skyboxPreFilter);
-	auto uploadOperation = uploadBatch.End(commandQueue);
-	uploadOperation.wait();
+	rm->LoadTextures(commandQueue, deferredRenderer, 
+		{
+			{ StringID("skybox"), L"../../Assets/envEnvHDR.dds", TexFileTypeDDS, true },
+			{ StringID("Irradiance"), L"../../Assets/envDiffuseHDR.dds", TexFileTypeDDS, true },
+			{ StringID("Brdf"), L"../../Assets/envBrdf.dds", TexFileTypeDDS, true },
+			{ StringID("Prefilter"), L"../../Assets/envSpecularHDR.dds", TexFileTypeDDS, true }
+		});
 
 	for (int i = 0; i < entityCount; ++i)
 	{
@@ -141,8 +140,12 @@ void Game::InitializeAssets()
 	entities[9]->SetScale(XMFLOAT3(15, 15, 15));
 	entities[9]->SetMaterial(rm->GetMaterial(StringID("cement")));
 
-	deferredRenderer->SetIBLTextures(skyboxIRTexture, skyboxPreFilter, brdfLutTexture);
-	rm->LoadTexture(commandQueue, deferredRenderer, StringID("skybox"), L"../../Assets/envEnvHDR.dds", TexFileTypeDDS, true);
+	deferredRenderer->SetIBLTextures(
+		rm->GetTexture(StringID("Irradiance"))->GetTextureResource(), 
+		rm->GetTexture(StringID("Prefilter"))->GetTextureResource(),
+		rm->GetTexture(StringID("Brdf"))->GetTextureResource()
+	);
+
 	skyTexture = rm->GetTexture(StringID("skybox"));
 }
 
@@ -315,9 +318,9 @@ Game::~Game()
 	delete computeCore;
 	delete camera;
 
-	skyboxTexture->Release();
-	skyboxIRTexture->Release();
-	brdfLutTexture->Release();
-	skyboxPreFilter->Release();
+	//skyboxTexture->Release();
+	//skyboxIRTexture->Release();
+	//brdfLutTexture->Release();
+	//skyboxPreFilter->Release();
 	delete resourceManager;
 }

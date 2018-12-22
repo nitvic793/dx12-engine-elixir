@@ -40,6 +40,20 @@ void ResourceManager::LoadTexture(
 	textures.insert(std::pair<HashID, Texture*>(textureID, texture));
 }
 
+void ResourceManager::LoadTextures(ID3D12CommandQueue* commandQueue, DeferredRenderer* renderer, std::vector<TextureLoadData> textureLoadData)
+{
+	ResourceUploadBatch uploadBatch(device);
+	uploadBatch.Begin();
+	for (auto& t : textureLoadData)
+	{
+		auto texture = new Texture(renderer, device);
+		texture->CreateTexture(t.FilePath, t.FileType, commandQueue, uploadBatch, t.IsCubeMap);
+		textures.insert(std::pair<HashID, Texture*>(t.TextureID, texture));
+	}
+	auto uploadOperation = uploadBatch.End(commandQueue);
+	uploadOperation.wait();
+}
+
 void ResourceManager::LoadMaterial(ID3D12CommandQueue* commandQueue, DeferredRenderer* renderer, MaterialLoadData loadData)
 {
 	auto material = new Material(

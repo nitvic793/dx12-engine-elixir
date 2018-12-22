@@ -18,6 +18,14 @@ typedef std::unordered_map<unsigned int, ID3D12Resource*> ResourceMap;
 typedef std::unordered_map<unsigned int, CDescriptorHeapWrapper> DescriptorHeapMap;
 typedef std::unordered_map<unsigned int, ConstantBufferWrapper> ConstantBufferMap;
 
+struct TextureLoadData
+{
+	HashID TextureID;
+	std::wstring FilePath;
+	TextureFileType FileType;
+	bool IsCubeMap;
+};
+
 class ResourceManager
 {
 private:
@@ -42,6 +50,7 @@ public:
 		bool isCubeMap = false,
 		TextureViewType viewType = TextureTypeSRV
 	);
+	void LoadTextures(ID3D12CommandQueue* commandQueue, DeferredRenderer* renderer, std::vector<TextureLoadData> textureLoadData);
 
 	void LoadMaterial(ID3D12CommandQueue* commandQueue, DeferredRenderer* renderer, MaterialLoadData loadData);
 	void LoadMaterials(ID3D12CommandQueue* commandQueue, DeferredRenderer* renderer, std::vector<MaterialLoadData> materials);
