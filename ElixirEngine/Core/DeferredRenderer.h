@@ -6,6 +6,7 @@
 #include "ConstantBuffer.h"
 #include "Camera.h"
 #include "../Texture.h"
+#include "../FrameManager.h"
 
 
 enum GBufferRenderTargetOrder
@@ -37,6 +38,8 @@ class DeferredRenderer
 	int shadowMapSize = 2048;
 	ID3D12RootSignature* rootSignature;
 	uint32_t srvHeapIndex;
+
+	std::unique_ptr<FrameManager> frame;
 
 	ID3D12Resource* gBufferTextures[numRTV];
 	ID3D12Resource* depthStencilTexture;
@@ -166,6 +169,9 @@ public:
 	void DrawLightShapePass(ID3D12GraphicsCommandList* commandList, PixelConstantBuffer & pixelCb);
 	void DrawResult(ID3D12GraphicsCommandList* commandList, D3D12_CPU_DESCRIPTOR_HANDLE &rtvHandle);
 	void DrawResult(ID3D12GraphicsCommandList* commandList, D3D12_CPU_DESCRIPTOR_HANDLE &rtvHandle, Texture* resultTex);
+
+	void StartFrame(ID3D12GraphicsCommandList* commandList);
+	void EndFrame(ID3D12GraphicsCommandList* commandList);
 
 	CDescriptorHeapWrapper& GetSRVHeap();
 	CDescriptorHeapWrapper& GetGBufferHeap();

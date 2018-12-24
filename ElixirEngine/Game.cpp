@@ -219,6 +219,7 @@ bool IsIntersecting(Entity* entity, Camera* camera, int mouseX, int mouseY, floa
 
 void Game::Draw()
 {
+	deferredRenderer->StartFrame(commandList);
 	std::vector<Entity*> entityList;
 	for (auto& entity : entities)
 	{
@@ -265,8 +266,8 @@ void Game::Draw()
 
 	deferredRenderer->DrawResult(commandList, rtvHandle, finalTexture); //Draw renderer result to given main Render Target handle
 
-	deferredRenderer->ResetRenderTargetStates(commandList);
 	texturePool->ResetIndex();
+	deferredRenderer->EndFrame(commandList);
 }
 
 void Game::OnMouseDown(WPARAM buttonState, int x, int y)

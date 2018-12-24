@@ -175,6 +175,7 @@ void DeferredRenderer::Initialize(ID3D12GraphicsCommandList* command)
 	CreateShadowBuffers();
 	CreateSelectionFilterBuffers();
 
+	frame = std::unique_ptr<FrameManager>(new FrameManager(device));
 	sphereMesh = new Mesh("../../Assets/sphere.obj", device, command);
 	cubeMesh = new Mesh("../../Assets/cube.obj", device, command);
 }
@@ -216,10 +217,10 @@ void DeferredRenderer::RenderLightPass(ID3D12GraphicsCommandList * command, cons
 
 	command->SetDescriptorHeaps(1, ppHeap2);
 	command->SetGraphicsRootDescriptorTable(RootSigCBPixel0, pixelCbHeap.handleGPU(0)); //Set Pixel Shader Constants
-	ID3D12DescriptorHeap* ppHeaps[] = { gBufferHeap.pDescriptorHeap.Get() };
+	ID3D12DescriptorHeap* ppHeaps[] = { frame->GetDescriptorHeap() };
 
 	command->SetDescriptorHeaps(1, ppHeaps);
-	command->SetGraphicsRootDescriptorTable(RootSigSRVPixel1, gBufferHeap.handleGPU(0)); // Set G-Buffer Textures
+	command->SetGraphicsRootDescriptorTable(RootSigSRVPixel1, frame->GetGPUHandle()); // Set G-Buffer Textures
 
 	//command->SetDescriptorHeaps(1, samplerHeaps);
 	//command->SetGraphicsRootDescriptorTable(4, samplerHeap.hGPUHeapStart); //Set Shadow Sampler
@@ -242,9 +243,9 @@ void DeferredRenderer::RenderLightShapePass(ID3D12GraphicsCommandList * command,
 	ID3D12DescriptorHeap* ppHeap2[] = { pixelCbHeap.pDescriptorHeap.Get() };
 	command->SetDescriptorHeaps(1, ppHeap2);
 	command->SetGraphicsRootDescriptorTable(RootSigCBPixel0, pixelCbHeap.handleGPU(0));
-	ID3D12DescriptorHeap* ppHeaps[] = { gBufferHeap.pDescriptorHeap.Get() };
+	ID3D12DescriptorHeap* ppHeaps[] = { frame->GetDescriptorHeap() };
 	command->SetDescriptorHeaps(1, ppHeaps);
-	command->SetGraphicsRootDescriptorTable(RootSigSRVPixel1, gBufferHeap.handleGPU(0));
+	command->SetGraphicsRootDescriptorTable(RootSigSRVPixel1, frame->GetGPUHandle());
 
 	DrawLightShapePass(command, pixelCb);
 }
@@ -372,6 +373,7 @@ void DeferredRenderer::Draw(ID3D12GraphicsCommandList* commandList, std::vector<
 	}
 
 	constBufferIndex = index;
+	frame->CopySimple(13, gBufferHeap);
 }
 
 void DeferredRenderer::DrawSkybox(ID3D12GraphicsCommandList * commandList, Texture* skybox)
@@ -461,9 +463,10 @@ void DeferredRenderer::DrawResult(ID3D12GraphicsCommandList* commandList, D3D12_
 	commandList->ClearRenderTargetView(rtvHandle, mClearColor, 0, nullptr);
 	commandList->OMSetRenderTargets(1, &rtvHandle, true, nullptr);
 	commandList->SetPipelineState(screenQuadPSO);
-	ID3D12DescriptorHeap* ppHeaps[] = { gBufferHeap.pDescriptorHeap.Get() };
+	ID3D12DescriptorHeap* ppHeaps[] = { frame->GetDescriptorHeap() };
 	commandList->SetDescriptorHeaps(1, ppHeaps);
-	commandList->SetGraphicsRootDescriptorTable(RootSigSRVPixel1, gBufferHeap.handleGPU(RTV_ORDER_QUAD));
+	//commandList->SetGraphicsRootDescriptorTable(RootSigSRVPixel1, gBufferHeap.handleGPU(RTV_ORDER_QUAD));
+	commandList->SetGraphicsRootDescriptorTable(RootSigSRVPixel1, frame->GetGPUHandle(RTV_ORDER_QUAD));
 	DrawScreenQuad(commandList); // Draws full screen quad with null vertex buffer.
 }
 
@@ -477,6 +480,17 @@ void DeferredRenderer::DrawResult(ID3D12GraphicsCommandList * commandList, D3D12
 	commandList->SetDescriptorHeaps(1, ppHeaps);
 	commandList->SetGraphicsRootDescriptorTable(RootSigSRVPixel1, resultTex->GetGPUDescriptorHandle());
 	DrawScreenQuad(commandList); // Draws full screen quad with null vertex buffer.
+}
+
+void DeferredRenderer::StartFrame(ID3D12GraphicsCommandList* commandList)
+{
+	frame->StartFrame();
+}
+
+void DeferredRenderer::EndFrame(ID3D12GraphicsCommandList* commandList)
+{
+	ResetRenderTargetStates(commandList);
+	frame->EndFrame();
 }
 
 void DeferredRenderer::Draw(Mesh * m, const ConstantBuffer & cb, ID3D12GraphicsCommandList* commandList)
@@ -529,7 +543,7 @@ void DeferredRenderer::CreateCB()
 
 void DeferredRenderer::CreateViews()
 {
-	gBufferHeap.Create(device, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 32, true);
+	gBufferHeap.Create(device, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 32);// , true);
 
 	int numCBsForNow = ConstBufferCount;
 	cbHeap.Create(device, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, numCBsForNow, true);

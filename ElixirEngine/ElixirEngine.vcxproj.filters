@@ -117,6 +117,9 @@
     <ClCompile Include="FileUtility.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="FrameManager.cpp">
+      <Filter>Source Files\Core</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
@@ -199,6 +202,9 @@
     </ClInclude>
     <ClInclude Include="FileUtility.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="FrameManager.h">
+      <Filter>Header Files\Core</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
