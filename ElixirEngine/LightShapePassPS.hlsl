@@ -1,9 +1,6 @@
 #define POINT_INTENSITY 0.5
 #include "Lighting.hlsli"
 
-
-static const int MaxPointLights = 16;
-
 struct SpotLight
 {
 	float4 Color;

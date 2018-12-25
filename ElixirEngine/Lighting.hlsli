@@ -18,6 +18,8 @@ struct PointLight
 	float Range;
 };
 
+static const int MaxPointLights = 16;
+
 float Attenuate(float3 position, float range, float3 worldPos)
 {
 	float dist = distance(position, worldPos);

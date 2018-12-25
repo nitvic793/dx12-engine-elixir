@@ -17,9 +17,11 @@ LRESULT CALLBACK WindowsProcessMessage(HWND hWnd, UINT msg, WPARAM wParam, LPARA
 bool Core::InitializeDirectX()
 {
 	CoInitializeEx(nullptr, COINITBASE_MULTITHREADED);
-	ID3D12Debug* debugInterface;
+	ID3D12Debug1* debugInterface;
 	D3D12GetDebugInterface(IID_PPV_ARGS(&debugInterface));
 	debugInterface->EnableDebugLayer();
+	//debugInterface->SetEnableGPUBasedValidation(true);
+	//debugInterface->SetEnableSynchronizedCommandQueueValidation(true);
 
 	IDXGIFactory4* dxgiFactory;
 	auto hr = CreateDXGIFactory1(IID_PPV_ARGS(&dxgiFactory));
@@ -481,8 +483,6 @@ void Core::Cleanup()
 	commandQueue->Release();
 	swapChain->Release();
 	//textureBufferUploadHeap->Release();
-
-
 }
 
 void Core::WaitForPreviousFrame()

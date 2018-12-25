@@ -1,7 +1,5 @@
 #include "Lighting.hlsli"
 
-static const int MaxPointLights = 16;
-
 cbuffer externalData : register(b0)
 {
 	DirectionalLight dirLight;
