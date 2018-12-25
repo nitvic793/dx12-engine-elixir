@@ -48,6 +48,10 @@ D3D12_GPU_DESCRIPTOR_HANDLE Material::GetGPUDescriptorHandle()
 	return descriptorHeap.handleGPU(startIndex);
 }
 
+uint32_t Material::GetStartIndex()
+{
+	return startIndex;
+}
 
 Material::~Material()
 {

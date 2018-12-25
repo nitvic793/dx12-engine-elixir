@@ -26,6 +26,12 @@ public:
 		memcpy(ptr, data, size);
 	}
 
+	D3D12_GPU_VIRTUAL_ADDRESS GetIndex(uint32_t index)
+	{
+		char* ptr = reinterpret_cast<char*>(vAddressBegin) + bufferSize * index;
+		return (D3D12_GPU_VIRTUAL_ADDRESS)ptr;
+	}
+
 	~ConstantBufferWrapper()
 	{
 		/*if (constantBuffer)

@@ -353,7 +353,7 @@ void DeferredRenderer::Draw(ID3D12GraphicsCommandList* commandList, std::vector<
 		commandList->SetDescriptorHeaps(1, ppSrvHeaps);
 		commandList->SetGraphicsRootDescriptorTable(RootSigSRVPixel1, e->GetMaterial()->GetGPUDescriptorHandle()); //Set start of material texture in root descriptor
 
-		commandList->SetDescriptorHeaps(1, ppHeaps);
+		commandList->SetDescriptorHeaps(1, ppHeaps); 
 		auto cb = ConstantBuffer
 		{
 			e->GetWorldViewProjectionTransposed(camera->GetProjectionMatrix(), camera->GetViewMatrix()),

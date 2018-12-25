@@ -59,9 +59,9 @@ public:
 	void LoadMesh(ID3D12GraphicsCommandList* commandList, std::string filePath);
 	void LoadMesh(ID3D12GraphicsCommandList* commandList, HashID hashId, std::string filePath);
 
-	Mesh* GetMesh(HashID hashId);
-	Material* GetMaterial(HashID materialID);
-	Texture* GetTexture(HashID textureID);
+	Mesh*		GetMesh(HashID hashId);
+	Material*	GetMaterial(HashID materialID);
+	Texture*	GetTexture(HashID textureID);
 	~ResourceManager();
 };
 

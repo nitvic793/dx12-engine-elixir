@@ -81,6 +81,8 @@ bool Core::InitializeDirectX()
 		return false;
 	}
 
+	commandQueue->SetName(L"Default Command Queue");
+
 	DXGI_MODE_DESC backBufferDesc = {};
 	backBufferDesc.Width = Width;
 	backBufferDesc.Height = Height;

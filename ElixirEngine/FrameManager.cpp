@@ -21,13 +21,13 @@ void FrameManager::EndFrame()
 
 void FrameManager::CopySimple(uint32_t numDescriptors, CDescriptorHeapWrapper descriptorHeap, uint32_t offset)
 {
+	preIndex = currentHeapIndex;
 	auto futureIndex = currentHeapIndex + numDescriptors;
 	if (futureIndex >= DescriptorHeapSize)
 	{
 		currentHeapIndex = 0;
+		frameStartIndex = 0;
 	}
-
-	preIndex = currentHeapIndex;
 	device->CopyDescriptorsSimple(numDescriptors, gpuHeap.handleCPU(currentHeapIndex), descriptorHeap.handleCPU(offset), gpuHeapType);
 	currentHeapIndex += numDescriptors;
 }
@@ -44,7 +44,7 @@ D3D12_GPU_DESCRIPTOR_HANDLE FrameManager::GetCurrentGPUHandle()
 
 D3D12_GPU_DESCRIPTOR_HANDLE FrameManager::GetGPUHandle(uint32_t offset)
 {
-	return gpuHeap.handleGPU(preIndex + offset);
+	return gpuHeap.handleGPU(frameStartIndex + offset);
 }
 
 ID3D12DescriptorHeap* FrameManager::GetDescriptorHeap()
