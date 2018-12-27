@@ -6,6 +6,7 @@
 class Entity
 {
 protected:
+	uint32_t	entityID;
 	XMFLOAT4X4	worldMatrix;
 	XMFLOAT3	position;
 	XMFLOAT3	scale;
@@ -27,6 +28,7 @@ public:
 	XMFLOAT4X4	GetWorldMatrix();
 	XMFLOAT4X4	GetWorldMatrixTransposed();
 	XMFLOAT3	GetPosition();
+	uint32_t	GetID();
 
 
 	void		SetMesh(Mesh* m);
@@ -37,6 +39,7 @@ public:
 	void		SetX(float x);
 	void		SetY(float y);
 	void		SetZ(float z);
+	void		SetID(uint32_t id);
 
 	const bool& CastsShadow() { return bCastsShadow; }
 	void		SetCastsShadow(bool enable) { bCastsShadow = enable; }

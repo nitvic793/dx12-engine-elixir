@@ -77,6 +77,11 @@ XMFLOAT3 Entity::GetPosition()
 	return position;
 }
 
+uint32_t Entity::GetID()
+{
+	return entityID;
+}
+
 void Entity::SetPosition(const XMFLOAT3& pos)
 {
 	position = pos;
@@ -118,6 +123,11 @@ void Entity::SetZ(float z)
 	position.z = z;
 	boundingBox.Center.z = z;
 	boundingSphere.Center.z = z;
+}
+
+void Entity::SetID(uint32_t id)
+{
+	entityID = id;
 }
 
 Entity::~Entity()

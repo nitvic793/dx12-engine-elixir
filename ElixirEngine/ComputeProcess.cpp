@@ -42,7 +42,7 @@ void ComputeProcess::SetTextureUAV(ID3D12GraphicsCommandList* commandList, Textu
 {
 	auto frame = computeCore->GetRenderer()->GetFrameManager();
 	auto frameHeapParams = computeCore->GetRenderer()->GetFrameHeapParameters();
-	commandList->SetComputeRootDescriptorTable(1, frame->GetGPUHandle(frameHeapParams.SRVs, textureUAV->GetHeapIndex()));
+	commandList->SetComputeRootDescriptorTable(1, frame->GetGPUHandle(frameHeapParams.Textures, textureUAV->GetHeapIndex()));
 }
 
 void ComputeProcess::SetTextureSRV(ID3D12GraphicsCommandList* commandList, Texture* textureSRV)
@@ -50,7 +50,7 @@ void ComputeProcess::SetTextureSRV(ID3D12GraphicsCommandList* commandList, Textu
 	auto frame = computeCore->GetRenderer()->GetFrameManager();
 	auto frameHeapParams = computeCore->GetRenderer()->GetFrameHeapParameters();
 	//ID3D12DescriptorHeap* ppHeaps[] = { frame->GetDescriptorHeap() };
-	commandList->SetComputeRootDescriptorTable(0, frame->GetGPUHandle(frameHeapParams.SRVs, textureSRV->GetHeapIndex()));
+	commandList->SetComputeRootDescriptorTable(0, frame->GetGPUHandle(frameHeapParams.Textures, textureSRV->GetHeapIndex()));
 }
 
 void ComputeProcess::SetTextureSRVOffset(ID3D12GraphicsCommandList * commandList, Texture * textureSRV)
@@ -58,7 +58,7 @@ void ComputeProcess::SetTextureSRVOffset(ID3D12GraphicsCommandList * commandList
 	auto frame = computeCore->GetRenderer()->GetFrameManager();
 	auto frameHeapParams = computeCore->GetRenderer()->GetFrameHeapParameters();
 	//ID3D12DescriptorHeap* ppHeaps[] = { frame->GetDescriptorHeap() };
-	commandList->SetComputeRootDescriptorTable(3, frame->GetGPUHandle(frameHeapParams.SRVs, textureSRV->GetHeapIndex()));
+	commandList->SetComputeRootDescriptorTable(3, frame->GetGPUHandle(frameHeapParams.Textures, textureSRV->GetHeapIndex()));
 }
 
 void ComputeProcess::SetConstants(ID3D12GraphicsCommandList* commandList, void * data, UINT count, UINT offset)

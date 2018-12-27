@@ -135,7 +135,7 @@ Texture* SunRaysPass::Apply(ID3D12GraphicsCommandList* commandList, Texture* dep
 	commandList->ClearRenderTargetView(outRTV, mClearColor, 0, nullptr);
 	commandList->OMSetRenderTargets(1, &outRTV, true, nullptr);
 	commandList->SetDescriptorHeaps(1, heaps);
-	commandList->SetGraphicsRootDescriptorTable(RootSigSRVPixel1, frame->GetGPUHandle(fheapParams.SRVs, occlusionTex->GetHeapIndex()));
+	commandList->SetGraphicsRootDescriptorTable(RootSigSRVPixel1, frame->GetGPUHandle(fheapParams.Textures, occlusionTex->GetHeapIndex()));
 	commandList->SetDescriptorHeaps(1, cbheaps);
 	commandList->SetGraphicsRootDescriptorTable(RootSigCBPixel0, cbHeap.handleGPU(0));
 	renderer->DrawScreenQuad(commandList);

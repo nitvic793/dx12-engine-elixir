@@ -19,7 +19,7 @@ void FrameManager::EndFrame()
 {
 }
 
-uint32_t FrameManager::CopySimple(uint32_t numDescriptors, CDescriptorHeapWrapper descriptorHeap, uint32_t offset)
+uint32_t FrameManager::CopyAllocate(uint32_t numDescriptors, CDescriptorHeapWrapper descriptorHeap, uint32_t offset)
 {
 	auto futureIndex = currentHeapIndex + numDescriptors;
 	if (futureIndex >= DescriptorHeapSize)

@@ -134,7 +134,7 @@ class DeferredRenderer
 	void CreateRootSignature();
 	void CreateShadowBuffers();
 	void CreateSelectionFilterBuffers();
-	void Draw(Mesh* m, const ConstantBuffer& cb, ID3D12GraphicsCommandList* commandList);
+	void Draw(Mesh* m, ID3D12GraphicsCommandList* commandList);
 	void PrepareGPUHeap(std::vector<Entity*> entities, PixelConstantBuffer& pixelCb);
 public:
 	DeferredRenderer(ID3D12Device *dxDevice, int width, int height);
