@@ -202,12 +202,11 @@ void DeferredRenderer::SetGBUfferPSO(ID3D12GraphicsCommandList* command, Camera*
 
 void DeferredRenderer::RenderLightPass(ID3D12GraphicsCommandList * command, const PixelConstantBuffer & pixelCb)
 {
-
 	/*for (int i = 0; i < numRTV; i++)
 		command->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(gBufferTextures[i], D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_GENERIC_READ));*/
 		//command->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(depthStencilTexture, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_GENERIC_READ));
 	command->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(gBufferTextures[RTV_ORDER_QUAD], D3D12_RESOURCE_STATE_GENERIC_READ, D3D12_RESOURCE_STATE_RENDER_TARGET));
-	command->SetPipelineState(dirLightPassPSO);
+	command->SetPipelineState(dirLightPassPSO); 
 
 	//command->ClearRenderTargetView(rtvHeap.handleCPU(RTV_ORDER_QUAD), mClearColor, 0, nullptr);
 	command->OMSetRenderTargets(1, &gRTVHeap.handleCPU(RTV_ORDER_QUAD), true, nullptr);
@@ -215,12 +214,13 @@ void DeferredRenderer::RenderLightPass(ID3D12GraphicsCommandList * command, cons
 	ID3D12DescriptorHeap* ppHeap2[] = { pixelCbHeap.pDescriptorHeap.Get() };
 	ID3D12DescriptorHeap* samplerHeaps[] = { samplerHeap.pDescriptorHeap.Get() };
 
-	command->SetDescriptorHeaps(1, ppHeap2);
-	command->SetGraphicsRootDescriptorTable(RootSigCBPixel0, pixelCbHeap.handleGPU(0)); //Set Pixel Shader Constants
 	ID3D12DescriptorHeap* ppHeaps[] = { frame->GetDescriptorHeap() };
 
 	command->SetDescriptorHeaps(1, ppHeaps);
-	command->SetGraphicsRootDescriptorTable(RootSigSRVPixel1, frame->GetGPUHandle()); // Set G-Buffer Textures
+	command->SetGraphicsRootDescriptorTable(RootSigSRVPixel1, frame->GetGPUHandle(frameHeapParams.GBuffer)); // Set G-Buffer Textures
+
+	command->SetDescriptorHeaps(1, ppHeap2);
+	command->SetGraphicsRootDescriptorTable(RootSigCBPixel0, pixelCbHeap.handleGPU(0)); //Set Pixel Shader Constants
 
 	//command->SetDescriptorHeaps(1, samplerHeaps);
 	//command->SetGraphicsRootDescriptorTable(4, samplerHeap.hGPUHeapStart); //Set Shadow Sampler
@@ -245,7 +245,7 @@ void DeferredRenderer::RenderLightShapePass(ID3D12GraphicsCommandList * command,
 	command->SetGraphicsRootDescriptorTable(RootSigCBPixel0, pixelCbHeap.handleGPU(0));
 	ID3D12DescriptorHeap* ppHeaps[] = { frame->GetDescriptorHeap() };
 	command->SetDescriptorHeaps(1, ppHeaps);
-	command->SetGraphicsRootDescriptorTable(RootSigSRVPixel1, frame->GetGPUHandle());
+	command->SetGraphicsRootDescriptorTable(RootSigSRVPixel1, frame->GetGPUHandle(frameHeapParams.GBuffer));
 
 	DrawLightShapePass(command, pixelCb);
 }
@@ -466,7 +466,7 @@ void DeferredRenderer::DrawResult(ID3D12GraphicsCommandList* commandList, D3D12_
 	ID3D12DescriptorHeap* ppHeaps[] = { frame->GetDescriptorHeap() };
 	commandList->SetDescriptorHeaps(1, ppHeaps);
 	//commandList->SetGraphicsRootDescriptorTable(RootSigSRVPixel1, gBufferHeap.handleGPU(RTV_ORDER_QUAD));
-	commandList->SetGraphicsRootDescriptorTable(RootSigSRVPixel1, frame->GetGPUHandle(RTV_ORDER_QUAD));
+	commandList->SetGraphicsRootDescriptorTable(RootSigSRVPixel1, frame->GetGPUHandle(frameHeapParams.GBuffer, RTV_ORDER_QUAD));
 	DrawScreenQuad(commandList); // Draws full screen quad with null vertex buffer.
 }
 
@@ -487,6 +487,12 @@ void DeferredRenderer::StartFrame(ID3D12GraphicsCommandList* commandList)
 	frame->StartFrame();
 }
 
+void DeferredRenderer::PrepareFrame(std::vector<Entity*> entities, Camera * camera, PixelConstantBuffer & pixelCb)
+{
+	this->camera = camera;
+	PrepareGPUHeap(entities, pixelCb);
+}
+
 void DeferredRenderer::EndFrame(ID3D12GraphicsCommandList* commandList)
 {
 	ResetRenderTargetStates(commandList);
@@ -498,6 +504,74 @@ void DeferredRenderer::Draw(Mesh * m, const ConstantBuffer & cb, ID3D12GraphicsC
 	commandList->IASetVertexBuffers(0, 1, &m->GetVertexBufferView());
 	commandList->IASetIndexBuffer(&m->GetIndexBufferView());
 	commandList->DrawIndexedInstanced(m->GetIndexCount(), 1, 0, 0, 0);
+}
+
+void DeferredRenderer::PrepareGPUHeap(std::vector<Entity*> entities, PixelConstantBuffer & pixelCb)
+{
+
+	//Copy entity CBVs
+	//Copy Pixel Shader CBV
+	//Copy Material texture SRVs
+	//Copy per frame CBV
+	//Into frame GPU heap
+	//Use frame GPU descriptor heap everywhere
+	// Set Descriptor heap only once at SetGBufferPSO(?)
+	// Call this function at Start Frame (?)
+	
+	//Note: Need to handle Post processing differently
+
+	auto currentGBufferIndex = frame->CopySimple(13, gBufferHeap);
+	//auto index = constBufferIndex;
+	////Create Entity Constant Buffers and copy to CBVs
+	//for (auto e : entities)
+	//{
+	//	auto cb = ConstantBuffer
+	//	{
+	//		e->GetWorldViewProjectionTransposed(camera->GetProjectionMatrix(), camera->GetViewMatrix()),
+	//		e->GetWorldMatrixTransposed(),
+	//		camera->GetViewMatrixTransposed(),
+	//		camera->GetProjectionMatrixTransposed(),
+	//		shadowViewTransposed,
+	//		shadowProjTransposed
+	//	};
+
+	//	cbWrapper.CopyData(&cb, ConstantBufferSize, index);
+	//	index++;
+	//}
+	//auto entitiesHeapIndex = frame->CopySimple((UINT)entities.size(), cbHeap, constBufferIndex);
+	//auto srvGpuHeapIndex = frame->CopySimple(srvHeapIndex, srvHeap);
+	//constBufferIndex = index;
+
+	//Entity e;
+	////Create Point Light CBVs and corresponding mesh CBVs
+	//for (auto i = 0u; i < pixelCb.pointLightCount; ++i)
+	//{
+	//	e.SetMesh(sphereMesh);
+	//	e.SetPosition(pixelCb.pointLight[i].Position);
+	//	float range = pixelCb.pointLight[i].Range;
+	//	pixelCb.pointLightIndex = i;
+	//	e.SetScale(XMFLOAT3(range, range, range));
+
+	//	auto cb = ConstantBuffer{ e.GetWorldViewProjectionTransposed(camera->GetProjectionMatrix(), camera->GetViewMatrix()), e.GetWorldMatrixTransposed() };
+	//	pixelCbWrapper.CopyData((void*)(&pixelCb), PixelConstantBufferSize, i + 1);
+	//	cbWrapper.CopyData(&cb, ConstantBufferSize, index);
+	//	index++;
+	//}
+	//auto pixelCbHeapIndex = frame->CopySimple(pixelCb.pointLightCount + 1, pixelCbHeap);
+	//auto lightPassCBHeapIndex = frame->CopySimple(pixelCb.pointLightCount, cbHeap, constBufferIndex);
+	//constBufferIndex = index;
+
+	//int PerFrameCBSize = (sizeof(PerFrameConstantBuffer) + 255) & ~255;
+	//PerFrameConstantBuffer frameCB = { camera->GetNearZ(), camera->GetFarZ() }; //Projection Constants for DOF
+	//perFrameCbWrapper.CopyData(&frameCB, PerFrameCBSize, 0);
+	//auto perFrameCBVHeapIndex = frame->CopySimple(1, cbHeap, ConstBufferCount - 1);
+	
+	frameHeapParams.GBuffer = currentGBufferIndex;
+	//frameHeapParams.Entities = entitiesHeapIndex;
+	//frameHeapParams.PixelCB = pixelCbHeapIndex;
+	//frameHeapParams.SRVs = srvGpuHeapIndex;
+	//frameHeapParams.LightShapes = lightPassCBHeapIndex;
+	//frameHeapParams.PerFrameCB = perFrameCBVHeapIndex;
 }
 
 CDescriptorHeapWrapper& DeferredRenderer::GetSRVHeap()

@@ -19,17 +19,19 @@ void FrameManager::EndFrame()
 {
 }
 
-void FrameManager::CopySimple(uint32_t numDescriptors, CDescriptorHeapWrapper descriptorHeap, uint32_t offset)
+uint32_t FrameManager::CopySimple(uint32_t numDescriptors, CDescriptorHeapWrapper descriptorHeap, uint32_t offset)
 {
-	preIndex = currentHeapIndex;
 	auto futureIndex = currentHeapIndex + numDescriptors;
 	if (futureIndex >= DescriptorHeapSize)
 	{
 		currentHeapIndex = 0;
 		frameStartIndex = 0;
 	}
+
+	preIndex = currentHeapIndex;
 	device->CopyDescriptorsSimple(numDescriptors, gpuHeap.handleCPU(currentHeapIndex), descriptorHeap.handleCPU(offset), gpuHeapType);
 	currentHeapIndex += numDescriptors;
+	return preIndex;
 }
 
 D3D12_CPU_DESCRIPTOR_HANDLE FrameManager::GetCurrentCPUHandle()
@@ -42,9 +44,14 @@ D3D12_GPU_DESCRIPTOR_HANDLE FrameManager::GetCurrentGPUHandle()
 	return gpuHeap.handleGPU(currentHeapIndex);
 }
 
-D3D12_GPU_DESCRIPTOR_HANDLE FrameManager::GetGPUHandle(uint32_t offset)
+D3D12_GPU_DESCRIPTOR_HANDLE FrameManager::GetPreviousGPUHandle(uint32_t offset)
 {
-	return gpuHeap.handleGPU(frameStartIndex + offset);
+	return gpuHeap.handleGPU(preIndex + offset);
+}
+
+D3D12_GPU_DESCRIPTOR_HANDLE FrameManager::GetGPUHandle(uint32_t baseIndex, uint32_t offset)
+{
+	return gpuHeap.handleGPU(baseIndex + offset);
 }
 
 ID3D12DescriptorHeap* FrameManager::GetDescriptorHeap()

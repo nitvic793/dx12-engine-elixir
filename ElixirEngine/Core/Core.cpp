@@ -679,6 +679,6 @@ LRESULT Core::HandleWindowsCallback(HWND hWnd, UINT msg, WPARAM wParam, LPARAM l
 
 Core::~Core()
 {
-	Cleanup();
+	//Cleanup();
 }
 

@@ -225,6 +225,7 @@ void Game::Draw()
 	{
 		entityList.push_back(entity.get());
 	}
+	deferredRenderer->PrepareFrame(entityList, camera, pixelCb);
 
 	commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
@@ -270,6 +271,16 @@ void Game::Draw()
 	deferredRenderer->EndFrame(commandList);
 }
 
+void Game::Shutdown()
+{
+	Cleanup();
+	delete texturePool;
+	delete blurFilter;
+	delete computeCore;
+	delete camera;
+	delete resourceManager;
+}
+
 void Game::OnMouseDown(WPARAM buttonState, int x, int y)
 {
 	prevMousePos.x = x;
@@ -311,17 +322,6 @@ void Game::OnMouseWheel(float wheelDelta, int x, int y)
 {
 }
 
-
 Game::~Game()
 {
-	delete texturePool;
-	delete blurFilter;
-	delete computeCore;
-	delete camera;
-
-	//skyboxTexture->Release();
-	//skyboxIRTexture->Release();
-	//brdfLutTexture->Release();
-	//skyboxPreFilter->Release();
-	delete resourceManager;
 }

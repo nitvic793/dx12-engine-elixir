@@ -37,9 +37,11 @@ class DeferredRenderer
 	int constBufferIndex = 0;
 	int shadowMapSize = 2048;
 	ID3D12RootSignature* rootSignature;
+	//Keeps track of the SRV count in SRV Heap
 	uint32_t srvHeapIndex;
 
-	std::unique_ptr<FrameManager> frame;
+	std::unique_ptr<FrameManager>	frame;
+	FrameHeapParameters				frameHeapParams;
 
 	ID3D12Resource* gBufferTextures[numRTV];
 	ID3D12Resource* depthStencilTexture;
@@ -133,6 +135,7 @@ class DeferredRenderer
 	void CreateShadowBuffers();
 	void CreateSelectionFilterBuffers();
 	void Draw(Mesh* m, const ConstantBuffer& cb, ID3D12GraphicsCommandList* commandList);
+	void PrepareGPUHeap(std::vector<Entity*> entities, PixelConstantBuffer& pixelCb);
 public:
 	DeferredRenderer(ID3D12Device *dxDevice, int width, int height);
 
@@ -171,6 +174,7 @@ public:
 	void DrawResult(ID3D12GraphicsCommandList* commandList, D3D12_CPU_DESCRIPTOR_HANDLE &rtvHandle, Texture* resultTex);
 
 	void StartFrame(ID3D12GraphicsCommandList* commandList);
+	void PrepareFrame(std::vector<Entity*> entities, Camera* camera, PixelConstantBuffer& pixelCb);
 	void EndFrame(ID3D12GraphicsCommandList* commandList);
 
 	CDescriptorHeapWrapper& GetSRVHeap();

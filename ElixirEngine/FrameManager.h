@@ -2,6 +2,16 @@
 #include "stdafx.h"
 #include "DirectXHelper.h"
 
+struct FrameHeapParameters
+{
+	uint32_t GBuffer;
+	uint32_t Entities;
+	uint32_t SRVs;
+	uint32_t PixelCB;
+	uint32_t LightShapes;
+	uint32_t PerFrameCB;
+};
+
 class FrameManager
 {
 	const D3D12_DESCRIPTOR_HEAP_TYPE gpuHeapType = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
@@ -17,10 +27,11 @@ public:
 	FrameManager(ID3D12Device* device);
 	void						StartFrame();
 	void						EndFrame();
-	void						CopySimple(uint32_t numDescriptors, CDescriptorHeapWrapper descriptorHeap, uint32_t offset = 0u);
+	uint32_t					CopySimple(uint32_t numDescriptors, CDescriptorHeapWrapper descriptorHeap, uint32_t offset = 0u);
 	D3D12_CPU_DESCRIPTOR_HANDLE GetCurrentCPUHandle();
 	D3D12_GPU_DESCRIPTOR_HANDLE GetCurrentGPUHandle();
-	D3D12_GPU_DESCRIPTOR_HANDLE GetGPUHandle(uint32_t offset = 0u);
+	D3D12_GPU_DESCRIPTOR_HANDLE GetPreviousGPUHandle(uint32_t offset = 0u);
+	D3D12_GPU_DESCRIPTOR_HANDLE	GetGPUHandle(uint32_t baseIndex, uint32_t offset = 0u);
 	ID3D12DescriptorHeap*		GetDescriptorHeap();
 
 	~FrameManager();
