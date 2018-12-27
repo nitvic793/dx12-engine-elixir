@@ -346,12 +346,12 @@ void DeferredRenderer::Draw(ID3D12GraphicsCommandList* commandList, std::vector<
 	perFrameCbWrapper.CopyData(&frameCB, PerFrameCBSize, 0);
 	int index = constBufferIndex;
 	ID3D12DescriptorHeap* ppHeaps[] = { cbHeap.pDescriptorHeap.Get() };
-	ID3D12DescriptorHeap* ppSrvHeaps[] = { srvHeap.pDescriptorHeap.Get() };
+	ID3D12DescriptorHeap* ppSrvHeaps[] = { frame->GetDescriptorHeap() };
 
 	for (auto e : entities)
 	{
 		commandList->SetDescriptorHeaps(1, ppSrvHeaps);
-		commandList->SetGraphicsRootDescriptorTable(RootSigSRVPixel1, e->GetMaterial()->GetGPUDescriptorHandle()); //Set start of material texture in root descriptor
+		commandList->SetGraphicsRootDescriptorTable(RootSigSRVPixel1, frame->GetGPUHandle(frameHeapParams.SRVs, e->GetMaterial()->GetStartIndex())); //Set start of material texture in root descriptor
 
 		commandList->SetDescriptorHeaps(1, ppHeaps); 
 		auto cb = ConstantBuffer
@@ -382,7 +382,7 @@ void DeferredRenderer::DrawSkybox(ID3D12GraphicsCommandList * commandList, Textu
 	commandList->SetPipelineState(skyboxPSO);
 	commandList->OMSetRenderTargets(1, &gRTVHeap.handleCPU(RTV_ORDER_QUAD), true, &dsvHeap.hCPUHeapStart);
 	ID3D12DescriptorHeap* ppHeaps[] = { cbHeap.pDescriptorHeap.Get() };
-	ID3D12DescriptorHeap* ppSrvHeaps[] = { srvHeap.pDescriptorHeap.Get() };
+	ID3D12DescriptorHeap* ppSrvHeaps[] = { frame->GetDescriptorHeap() };
 	XMFLOAT4X4 identity;
 	XMStoreFloat4x4(&identity, XMMatrixTranspose(XMMatrixIdentity()));
 	auto cb = ConstantBuffer
@@ -394,7 +394,7 @@ void DeferredRenderer::DrawSkybox(ID3D12GraphicsCommandList * commandList, Textu
 	};
 
 	commandList->SetDescriptorHeaps(1, ppSrvHeaps);
-	commandList->SetGraphicsRootDescriptorTable(RootSigSRVPixel1, skybox->GetGPUDescriptorHandle()); //Set skybox texture
+	commandList->SetGraphicsRootDescriptorTable(RootSigSRVPixel1, frame->GetGPUHandle(frameHeapParams.SRVs, skybox->GetHeapIndex())); //Set skybox texture
 	commandList->SetDescriptorHeaps(1, ppHeaps);
 
 	cbWrapper.CopyData(&cb, ConstantBufferPerObjectAlignedSize, constBufferIndex);
@@ -476,9 +476,9 @@ void DeferredRenderer::DrawResult(ID3D12GraphicsCommandList * commandList, D3D12
 	commandList->ClearRenderTargetView(rtvHandle, mClearColor, 0, nullptr);
 	commandList->OMSetRenderTargets(1, &rtvHandle, true, nullptr);
 	commandList->SetPipelineState(screenQuadPSO);
-	ID3D12DescriptorHeap* ppHeaps[] = { resultTex->GetTextureDescriptorHeap()->pDescriptorHeap.Get() };
+	ID3D12DescriptorHeap* ppHeaps[] = { frame->GetDescriptorHeap() };
 	commandList->SetDescriptorHeaps(1, ppHeaps);
-	commandList->SetGraphicsRootDescriptorTable(RootSigSRVPixel1, resultTex->GetGPUDescriptorHandle());
+	commandList->SetGraphicsRootDescriptorTable(RootSigSRVPixel1, frame->GetGPUHandle(frameHeapParams.SRVs, resultTex->GetHeapIndex()));
 	DrawScreenQuad(commandList); // Draws full screen quad with null vertex buffer.
 }
 
@@ -497,6 +497,16 @@ void DeferredRenderer::EndFrame(ID3D12GraphicsCommandList* commandList)
 {
 	ResetRenderTargetStates(commandList);
 	frame->EndFrame();
+}
+
+FrameHeapParameters DeferredRenderer::GetFrameHeapParameters()
+{
+	return frameHeapParams;
+}
+
+FrameManager* DeferredRenderer::GetFrameManager()
+{
+	return frame.get();
 }
 
 void DeferredRenderer::Draw(Mesh * m, const ConstantBuffer & cb, ID3D12GraphicsCommandList* commandList)
@@ -520,7 +530,7 @@ void DeferredRenderer::PrepareGPUHeap(std::vector<Entity*> entities, PixelConsta
 	
 	//Note: Need to handle Post processing differently
 
-	auto currentGBufferIndex = frame->CopySimple(13, gBufferHeap);
+	auto currentGBufferIndex = frame->CopySimple(16, gBufferHeap);
 	//auto index = constBufferIndex;
 	////Create Entity Constant Buffers and copy to CBVs
 	//for (auto e : entities)
@@ -539,7 +549,7 @@ void DeferredRenderer::PrepareGPUHeap(std::vector<Entity*> entities, PixelConsta
 	//	index++;
 	//}
 	//auto entitiesHeapIndex = frame->CopySimple((UINT)entities.size(), cbHeap, constBufferIndex);
-	//auto srvGpuHeapIndex = frame->CopySimple(srvHeapIndex, srvHeap);
+	auto srvGpuHeapIndex = frame->CopySimple(srvHeapIndex, srvHeap);
 	//constBufferIndex = index;
 
 	//Entity e;
@@ -569,7 +579,7 @@ void DeferredRenderer::PrepareGPUHeap(std::vector<Entity*> entities, PixelConsta
 	frameHeapParams.GBuffer = currentGBufferIndex;
 	//frameHeapParams.Entities = entitiesHeapIndex;
 	//frameHeapParams.PixelCB = pixelCbHeapIndex;
-	//frameHeapParams.SRVs = srvGpuHeapIndex;
+	frameHeapParams.SRVs = srvGpuHeapIndex;
 	//frameHeapParams.LightShapes = lightPassCBHeapIndex;
 	//frameHeapParams.PerFrameCB = perFrameCBVHeapIndex;
 }
@@ -873,7 +883,7 @@ void DeferredRenderer::CreateRTV()
 	descSRV.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
 	descSRV.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
 
-	srvHeap.Create(device, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 128, true);
+	srvHeap.Create(device, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 128);
 
 	for (int i = 0; i < numRTV; i++) {
 		descSRV.Format = mRtvFormat[i];

@@ -79,7 +79,7 @@ void Game::InitializeAssets()
 
 	texturePool = new TexturePool(device, deferredRenderer, 12);
 	isBlurEnabled = false;
-	computeCore = new ComputeCore(device);
+	computeCore = new ComputeCore(device, deferredRenderer);
 
 	dofPass = std::unique_ptr<DepthOfFieldPass>(new DepthOfFieldPass(computeCore));
 	sunRaysPass = std::unique_ptr<SunRaysPass>(new SunRaysPass(computeCore, deferredRenderer));
@@ -262,8 +262,8 @@ void Game::Draw()
 		finalTexture = dofPass->Apply(commandList, finalTexture, blurTexture, texturePool, 3, 0.2f);
 	}
 	finalTexture = sunRaysPass->Apply(commandList, deferredRenderer->GetGBufferDepthSRV(), finalTexture, texturePool, camera);
-	//finalTexture = edgeFilter->Apply(commandList, deferredRenderer->GetSelectionDepthBufferSRV(), finalTexture, texturePool);
-	finalTexture = compositeTextures->Composite(commandList, finalTexture, deferredRenderer->GetSelectionOutlineSRV(), texturePool);
+	////finalTexture = edgeFilter->Apply(commandList, deferredRenderer->GetSelectionDepthBufferSRV(), finalTexture, texturePool);
+	//finalTexture = compositeTextures->Composite(commandList, finalTexture, deferredRenderer->GetSelectionOutlineSRV(), texturePool);
 
 	deferredRenderer->DrawResult(commandList, rtvHandle, finalTexture); //Draw renderer result to given main Render Target handle
 

@@ -37,6 +37,10 @@ void Texture::CreateTexture(std::wstring textureFileName,
 	{
 		heapIndex = renderContext->SetSRV(resource, isCubeMap);
 	}
+	else
+	{
+		heapIndex = renderContext->SetUAV(resource, isCubeMap);
+	}
 }
 
 D3D12_GPU_DESCRIPTOR_HANDLE Texture::GetGPUDescriptorHandle()
@@ -57,6 +61,11 @@ CDescriptorHeapWrapper * Texture::GetTextureDescriptorHeap()
 ID3D12Resource * Texture::GetTextureResource()
 {
 	return resource;
+}
+
+uint32_t Texture::GetHeapIndex()
+{
+	return heapIndex;
 }
 
 Texture::Texture(DeferredRenderer* renderContext, ID3D12Device* device)

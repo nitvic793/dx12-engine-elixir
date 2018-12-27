@@ -1,6 +1,6 @@
 #include "stdafx.h"
 #include "ComputeProcess.h"
-
+#include "Core/DeferredRenderer.h"
 
 void ComputeProcess::CreatePSO()
 {
@@ -32,27 +32,33 @@ void ComputeProcess::SetShader(ID3D12GraphicsCommandList * commandList)
 	auto rootSignature = computeCore->GetRootSignature();
 	commandList->SetComputeRootSignature(rootSignature);
 	commandList->SetPipelineState(pipelineStateObject);
+	auto frame = computeCore->GetRenderer()->GetFrameManager();
+	auto frameHeapParams = computeCore->GetRenderer()->GetFrameHeapParameters();
+	ID3D12DescriptorHeap* ppHeaps[] = { frame->GetDescriptorHeap() };
+	commandList->SetDescriptorHeaps(1, ppHeaps);
 }
 
 void ComputeProcess::SetTextureUAV(ID3D12GraphicsCommandList* commandList, Texture* textureUAV)
 {
-	ID3D12DescriptorHeap* ppHeaps[] = { textureUAV->GetTextureDescriptorHeap()->pDescriptorHeap.Get() };
-	commandList->SetDescriptorHeaps(1, ppHeaps);
-	commandList->SetComputeRootDescriptorTable(1, textureUAV->GetGPUDescriptorHandle());
+	auto frame = computeCore->GetRenderer()->GetFrameManager();
+	auto frameHeapParams = computeCore->GetRenderer()->GetFrameHeapParameters();
+	commandList->SetComputeRootDescriptorTable(1, frame->GetGPUHandle(frameHeapParams.SRVs, textureUAV->GetHeapIndex()));
 }
 
 void ComputeProcess::SetTextureSRV(ID3D12GraphicsCommandList* commandList, Texture* textureSRV)
 {
-	ID3D12DescriptorHeap* ppHeaps[] = { textureSRV->GetTextureDescriptorHeap()->pDescriptorHeap.Get() };
-	commandList->SetDescriptorHeaps(1, ppHeaps);
-	commandList->SetComputeRootDescriptorTable(0, textureSRV->GetGPUDescriptorHandle());
+	auto frame = computeCore->GetRenderer()->GetFrameManager();
+	auto frameHeapParams = computeCore->GetRenderer()->GetFrameHeapParameters();
+	//ID3D12DescriptorHeap* ppHeaps[] = { frame->GetDescriptorHeap() };
+	commandList->SetComputeRootDescriptorTable(0, frame->GetGPUHandle(frameHeapParams.SRVs, textureSRV->GetHeapIndex()));
 }
 
 void ComputeProcess::SetTextureSRVOffset(ID3D12GraphicsCommandList * commandList, Texture * textureSRV)
 {
-	ID3D12DescriptorHeap* ppHeaps[] = { textureSRV->GetTextureDescriptorHeap()->pDescriptorHeap.Get() };
-	commandList->SetDescriptorHeaps(1, ppHeaps);
-	commandList->SetComputeRootDescriptorTable(3, textureSRV->GetGPUDescriptorHandle());
+	auto frame = computeCore->GetRenderer()->GetFrameManager();
+	auto frameHeapParams = computeCore->GetRenderer()->GetFrameHeapParameters();
+	//ID3D12DescriptorHeap* ppHeaps[] = { frame->GetDescriptorHeap() };
+	commandList->SetComputeRootDescriptorTable(3, frame->GetGPUHandle(frameHeapParams.SRVs, textureSRV->GetHeapIndex()));
 }
 
 void ComputeProcess::SetConstants(ID3D12GraphicsCommandList* commandList, void * data, UINT count, UINT offset)

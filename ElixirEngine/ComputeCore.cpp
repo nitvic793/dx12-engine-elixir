@@ -31,8 +31,9 @@ void ComputeCore::CreateRootSignature()
 	device->CreateRootSignature(0, rootSigBlob->GetBufferPointer(), rootSigBlob->GetBufferSize(), IID_PPV_ARGS(&rootSignature));
 }
 
-ComputeCore::ComputeCore(ID3D12Device* device)
+ComputeCore::ComputeCore(ID3D12Device* device, DeferredRenderer* renderer)
 {
+	this->renderer = renderer;
 	this->device = device;
 	CreateRootSignature();
 }
@@ -45,6 +46,11 @@ ID3D12RootSignature * ComputeCore::GetRootSignature()
 ID3D12Device * ComputeCore::GetDevice()
 {
 	return device;
+}
+
+DeferredRenderer * ComputeCore::GetRenderer()
+{
+	return renderer;
 }
 
 

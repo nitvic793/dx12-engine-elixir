@@ -177,6 +177,9 @@ public:
 	void PrepareFrame(std::vector<Entity*> entities, Camera* camera, PixelConstantBuffer& pixelCb);
 	void EndFrame(ID3D12GraphicsCommandList* commandList);
 
+	FrameHeapParameters		GetFrameHeapParameters();
+	FrameManager*			GetFrameManager();
+
 	CDescriptorHeapWrapper& GetSRVHeap();
 	CDescriptorHeapWrapper& GetGBufferHeap();
 	CDescriptorHeapWrapper& GetCBHeap();

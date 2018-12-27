@@ -121,17 +121,21 @@ Texture* SunRaysPass::Apply(ID3D12GraphicsCommandList* commandList, Texture* dep
 	auto outSRV = texturePool->GetSRV(5);
 	auto outUAV = texturePool->GetUAV(5);
 	auto outRTV = texturePool->GetRTVHandle(4);
-
+	
 	float mClearColor[4] = { 0.0,0.0f,0.0f,1.0f };
 	commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(lightRaysSRV->GetTextureResource(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_RENDER_TARGET));
 	auto occlusionTex = GetOcclusionTexture(commandList, depthSRV, texturePool);
 	commandList->SetPipelineState(sunRaysPSO);
-	ID3D12DescriptorHeap* heaps[] = { occlusionTex->GetTextureDescriptorHeap()->pDescriptorHeap.Get() };
+
+	auto frame = renderer->GetFrameManager();
+	auto fheapParams = renderer->GetFrameHeapParameters();
+
+	ID3D12DescriptorHeap* heaps[] = { frame->GetDescriptorHeap() };
 	ID3D12DescriptorHeap* cbheaps[] = { cbHeap.pDescriptorHeap.Get() };
 	commandList->ClearRenderTargetView(outRTV, mClearColor, 0, nullptr);
 	commandList->OMSetRenderTargets(1, &outRTV, true, nullptr);
 	commandList->SetDescriptorHeaps(1, heaps);
-	commandList->SetGraphicsRootDescriptorTable(RootSigSRVPixel1, occlusionTex->GetGPUDescriptorHandle());
+	commandList->SetGraphicsRootDescriptorTable(RootSigSRVPixel1, frame->GetGPUHandle(fheapParams.SRVs, occlusionTex->GetHeapIndex()));
 	commandList->SetDescriptorHeaps(1, cbheaps);
 	commandList->SetGraphicsRootDescriptorTable(RootSigCBPixel0, cbHeap.handleGPU(0));
 	renderer->DrawScreenQuad(commandList);

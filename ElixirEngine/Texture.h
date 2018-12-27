@@ -45,7 +45,7 @@ public:
 	D3D12_CPU_DESCRIPTOR_HANDLE GetCPUDescriptorHandle();
 	CDescriptorHeapWrapper*		GetTextureDescriptorHeap();
 	ID3D12Resource*				GetTextureResource();
-
+	uint32_t					GetHeapIndex();
 	Texture(DeferredRenderer* renderContext, ID3D12Device* device);
 	Texture(DeferredRenderer* renderContext, ID3D12Device* device, ID3D12Resource* resource, int heapIndex, TextureViewType viewType);
 	Texture(DeferredRenderer* renderContext, ID3D12Device* device, ID3D12Resource* resource, int heapIndex, TextureViewType viewType, CDescriptorHeapWrapper* descHeap);
