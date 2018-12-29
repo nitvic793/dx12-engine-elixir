@@ -65,7 +65,7 @@ TexturePool::TexturePool(ID3D12Device* device, DeferredRenderer* renderContext, 
 	maxTextureCount = totalTextureCount;
 	for (int i = 0; i < totalTextureCount; ++i)
 	{
-		AddTexture();
+		AddTexture(DXGI_FORMAT_R32G32B32A32_FLOAT, renderContext->GetWidth(), renderContext->GetHeight());
 	}
 
 }

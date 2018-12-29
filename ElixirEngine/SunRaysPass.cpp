@@ -79,7 +79,7 @@ Texture* SunRaysPass::GetOcclusionTexture(ID3D12GraphicsCommandList* commandList
 	occlusionPassCS->SetShader(commandList);
 	occlusionPassCS->SetTextureSRV(commandList, depthSRV);
 	occlusionPassCS->SetTextureUAV(commandList, uavTex);
-	occlusionPassCS->Dispatch(commandList, 1280, 720, 1);
+	occlusionPassCS->Dispatch(commandList, computeCore->GetRenderer()->GetWidth(), computeCore->GetRenderer()->GetHeight(), 1);
 	return srvTex;
 }
 
@@ -146,7 +146,7 @@ Texture* SunRaysPass::Apply(ID3D12GraphicsCommandList* commandList, Texture* dep
 	compositeRaysCS->SetTextureSRVOffset(commandList, pixels);
 	compositeRaysCS->SetTextureUAV(commandList, outUAV);
 	compositeRaysCS->SetConstants(commandList, &rayColor, 3, 0);
-	compositeRaysCS->Dispatch(commandList, 1280, 720, 1);
+	compositeRaysCS->Dispatch(commandList, computeCore->GetRenderer()->GetWidth(), computeCore->GetRenderer()->GetHeight(), 1);
 	return outSRV;
 }
 

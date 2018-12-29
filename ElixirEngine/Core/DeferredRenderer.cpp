@@ -83,6 +83,16 @@ uint32_t DeferredRenderer::SetSRVs(ID3D12Resource** textureSRV, int textureCount
 	return index;
 }
 
+uint32_t DeferredRenderer::GetHeight()
+{
+	return viewportHeight;
+}
+
+uint32_t DeferredRenderer::GetWidth()
+{
+	return viewportWidth;
+}
+
 void DeferredRenderer::SetIBLTextures(ID3D12Resource* irradianceTextureCube, ID3D12Resource* prefilterTextureCube, ID3D12Resource* brdfLUTTexture)
 {
 	// numRTV is reserved for Depth Target

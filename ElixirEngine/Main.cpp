@@ -20,7 +20,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow)
 		}
 	}
 
-	Game* game = new Game(hInstance, nCmdShow, 1280, 720, false);
+	Game* game = new Game(hInstance, nCmdShow, 1920, 1080, false);
 	game->Initialize();
 	game->Run([&](Core* core) 
 	{

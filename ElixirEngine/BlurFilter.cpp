@@ -1,9 +1,10 @@
 #include "stdafx.h"
 #include "BlurFilter.h"
-
+#include "Core/DeferredRenderer.h"
 
 BlurFilter::BlurFilter(ComputeCore* core)
 {
+	computeCore = core;
 	blurHorizontalCS = new ComputeProcess(core, L"BlurHorizontalCS.cso");
 	blurVerticalCS = new ComputeProcess(core, L"BlurVerticalCS.cso");
 }
@@ -55,8 +56,8 @@ Texture* BlurFilter::Apply(ID3D12GraphicsCommandList* commandList, Texture* inpu
 	auto outputUAV = texturePool->GetUAV(0);
 	auto weights = CalcGaussWeights(2.5f);
 	blurRadius = (int)weights.size() / 2;
-	UINT height = 720;
-	UINT width = 1280;
+	UINT height = computeCore->GetRenderer()->GetHeight();
+	UINT width = computeCore->GetRenderer()->GetWidth();
 	for (int i = 0; i < 4; ++i)
 	{
 		blurHorizontalCS->SetShader(commandList);

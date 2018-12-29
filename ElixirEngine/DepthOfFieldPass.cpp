@@ -1,6 +1,6 @@
 #include "stdafx.h"
 #include "DepthOfFieldPass.h"
-
+#include "Core/DeferredRenderer.h"
 
 DepthOfFieldPass::DepthOfFieldPass(ComputeCore* core):
 	computeCore(core)
@@ -10,8 +10,8 @@ DepthOfFieldPass::DepthOfFieldPass(ComputeCore* core):
 
 Texture * DepthOfFieldPass::Apply(ID3D12GraphicsCommandList * commandList, Texture * sharpSRV, Texture * blurSRV, TexturePool * texturePool, float focusPlaneZ, float scale)
 {
-	UINT width = 1280;
-	UINT height = 720;
+	UINT width = computeCore->GetRenderer()->GetWidth();
+	UINT height = computeCore->GetRenderer()->GetHeight();
 	dofCS->SetShader(commandList);
 	dofCS->SetConstants(commandList, &focusPlaneZ, 1, 0);
 	dofCS->SetConstants(commandList, &scale, 1, 1);

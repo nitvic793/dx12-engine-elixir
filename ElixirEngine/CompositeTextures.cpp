@@ -1,6 +1,6 @@
 #include "stdafx.h"
 #include "CompositeTextures.h"
-
+#include "Core/DeferredRenderer.h"
 
 CompositeTextures::CompositeTextures(ComputeCore* computeCore)
 {
@@ -10,8 +10,8 @@ CompositeTextures::CompositeTextures(ComputeCore* computeCore)
 
 Texture * CompositeTextures::Composite(ID3D12GraphicsCommandList * command, Texture * inputA, Texture * inputB, TexturePool * pool)
 {
-	UINT width = 1280;
-	UINT height = 720;
+	UINT width = core->GetRenderer()->GetWidth();
+	UINT height = core->GetRenderer()->GetHeight();
 	auto texR = pool->GetNext();
 	auto outUAV = texR.UAV;
 	auto outSRV = texR.SRV;

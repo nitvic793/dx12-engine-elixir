@@ -1,6 +1,6 @@
 #include "stdafx.h"
 #include "EdgeFilter.h"
-
+#include "Core/DeferredRenderer.h"
 
 EdgeFilter::EdgeFilter(ComputeCore* core)
 {
@@ -10,8 +10,8 @@ EdgeFilter::EdgeFilter(ComputeCore* core)
 
 Texture * EdgeFilter::Apply(ID3D12GraphicsCommandList * command, Texture * depthBuffer, Texture * pixels, TexturePool* pool)
 {
-	UINT width = 1280;
-	UINT height = 720;
+	UINT width = computeCore->GetRenderer()->GetWidth();
+	UINT height = computeCore->GetRenderer()->GetHeight();
 	auto texResource = pool->GetNext();
 	auto outSRV = texResource.SRV;
 	auto outUAV = texResource.UAV;
