@@ -52,8 +52,10 @@ std::vector<float> BlurFilter::CalcGaussWeights(float sigma)
 //TODO: Change input parameters since blur radius is being recalculated
 Texture* BlurFilter::Apply(ID3D12GraphicsCommandList* commandList, Texture* inputSRV, TexturePool* texturePool, int blurRadius, float focusPlane, float focalLength)
 {
+	auto texResource = texturePool->GetNext();
+	auto texResource2 = texturePool->GetNext();
 	auto input = inputSRV;
-	auto outputUAV = texturePool->GetUAV(0);
+	auto outputUAV = texResource.UAV;
 	auto weights = CalcGaussWeights(2.5f);
 	blurRadius = (int)weights.size() / 2;
 	UINT height = computeCore->GetRenderer()->GetHeight();
@@ -72,8 +74,8 @@ Texture* BlurFilter::Apply(ID3D12GraphicsCommandList* commandList, Texture* inpu
 		UINT numGroupsX = (UINT)ceilf(width / 256.f);
 		blurHorizontalCS->Dispatch(commandList, numGroupsX, height, 1);
 
-		input = texturePool->GetSRV(0);
-		outputUAV = texturePool->GetUAV(1);
+		input = texResource.SRV;
+		outputUAV = texResource2.UAV;
 
 		blurVerticalCS->SetShader(commandList);
 		blurVerticalCS->SetConstants(commandList, &blurRadius, 1, 0);
@@ -88,5 +90,5 @@ Texture* BlurFilter::Apply(ID3D12GraphicsCommandList* commandList, Texture* inpu
 		blurVerticalCS->Dispatch(commandList, width, numGroupsY, 1);
 	}
 
-	return texturePool->GetSRV(1);
+	return texResource2.SRV;
 }

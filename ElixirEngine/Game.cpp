@@ -77,7 +77,7 @@ void Game::InitializeAssets()
 		entityMaterialMap.push_back(materialIds[i % materialIds.size()]);
 	}
 
-	texturePool = new TexturePool(device, deferredRenderer, 12);
+	texturePool = new TexturePool(device, deferredRenderer, 32);
 	isBlurEnabled = false;
 	computeCore = new ComputeCore(device, deferredRenderer);
 
@@ -267,7 +267,7 @@ void Game::Draw()
 
 	deferredRenderer->DrawResult(commandList, rtvHandle, finalTexture); //Draw renderer result to given main Render Target handle
 
-	texturePool->ResetIndex();
+	//texturePool->ResetIndex();
 	deferredRenderer->EndFrame(commandList);
 }
 

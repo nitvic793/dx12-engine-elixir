@@ -10,6 +10,7 @@ DepthOfFieldPass::DepthOfFieldPass(ComputeCore* core):
 
 Texture * DepthOfFieldPass::Apply(ID3D12GraphicsCommandList * commandList, Texture * sharpSRV, Texture * blurSRV, TexturePool * texturePool, float focusPlaneZ, float scale)
 {
+	auto texResource = texturePool->GetNext();
 	UINT width = computeCore->GetRenderer()->GetWidth();
 	UINT height = computeCore->GetRenderer()->GetHeight();
 	dofCS->SetShader(commandList);
@@ -17,9 +18,9 @@ Texture * DepthOfFieldPass::Apply(ID3D12GraphicsCommandList * commandList, Textu
 	dofCS->SetConstants(commandList, &scale, 1, 1);
 	dofCS->SetTextureSRV(commandList, blurSRV);
 	dofCS->SetTextureSRVOffset(commandList, sharpSRV);
-	dofCS->SetTextureUAV(commandList, texturePool->GetUAV(1));
+	dofCS->SetTextureUAV(commandList, texResource.UAV);
 	dofCS->Dispatch(commandList, width, height, 1);
-	return texturePool->GetSRV(1);
+	return texResource.SRV;
 }
 
 

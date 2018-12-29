@@ -36,7 +36,8 @@ void SunRaysPass::CreatePSO()
 void SunRaysPass::CreateCB()
 {
 	auto device = computeCore->GetDevice();
-	cbHeap.Create(device, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 1, true);
+	cbHeap.Create(device, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 1);
+
 	CD3DX12_HEAP_PROPERTIES heapProperty(D3D12_HEAP_TYPE_UPLOAD);
 	D3D12_RESOURCE_DESC resourceDesc;
 	ZeroMemory(&resourceDesc, sizeof(resourceDesc));
@@ -74,8 +75,9 @@ SunRaysPass::SunRaysPass(ComputeCore* core, DeferredRenderer* renderContext)
 
 Texture* SunRaysPass::GetOcclusionTexture(ID3D12GraphicsCommandList* commandList, Texture * depthSRV, TexturePool *texturePool)
 {
-	auto uavTex = texturePool->GetUAV(3);
-	auto srvTex = texturePool->GetSRV(3);
+	auto texResource = texturePool->GetNext();
+	auto uavTex = texResource.UAV;
+	auto srvTex = texResource.SRV;
 	occlusionPassCS->SetShader(commandList);
 	occlusionPassCS->SetTextureSRV(commandList, depthSRV);
 	occlusionPassCS->SetTextureUAV(commandList, uavTex);
@@ -117,10 +119,14 @@ Texture* SunRaysPass::Apply(ID3D12GraphicsCommandList* commandList, Texture* dep
 	auto constb = SunRayConstBuffer{ sunPos };
 	cbWrapper.CopyData(&constb, sizeof(SunRayConstBuffer), 0);
 
-	auto lightRaysSRV = texturePool->GetSRV(4);
-	auto outSRV = texturePool->GetSRV(5);
-	auto outUAV = texturePool->GetUAV(5);
-	auto outRTV = texturePool->GetRTVHandle(4);
+	auto lightRaysTexResource = texturePool->GetNext();
+	auto outResource = texturePool->GetNext();
+	auto lightRaysSRV = lightRaysTexResource.SRV;
+	auto rayRTV = lightRaysTexResource.RTV;
+
+	auto outSRV = outResource.SRV;
+	auto outUAV = outResource.UAV;
+	
 	
 	float mClearColor[4] = { 0.0,0.0f,0.0f,1.0f };
 	commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(lightRaysSRV->GetTextureResource(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_RENDER_TARGET));
@@ -132,12 +138,14 @@ Texture* SunRaysPass::Apply(ID3D12GraphicsCommandList* commandList, Texture* dep
 
 	ID3D12DescriptorHeap* heaps[] = { frame->GetDescriptorHeap() };
 	ID3D12DescriptorHeap* cbheaps[] = { cbHeap.pDescriptorHeap.Get() };
-	commandList->ClearRenderTargetView(outRTV, mClearColor, 0, nullptr);
-	commandList->OMSetRenderTargets(1, &outRTV, true, nullptr);
+	commandList->ClearRenderTargetView(rayRTV, mClearColor, 0, nullptr);
+	commandList->OMSetRenderTargets(1, &rayRTV, true, nullptr);
 	commandList->SetDescriptorHeaps(1, heaps);
 	commandList->SetGraphicsRootDescriptorTable(RootSigSRVPixel1, frame->GetGPUHandle(fheapParams.Textures, occlusionTex->GetHeapIndex()));
-	commandList->SetDescriptorHeaps(1, cbheaps);
-	commandList->SetGraphicsRootDescriptorTable(RootSigCBPixel0, cbHeap.handleGPU(0));
+
+	auto cbIndex = frame->CopyAllocate(1, cbHeap, 0);
+	//commandList->SetDescriptorHeaps(1, cbheaps);
+	commandList->SetGraphicsRootDescriptorTable(RootSigCBPixel0, frame->GetGPUHandle(cbIndex));
 	renderer->DrawScreenQuad(commandList);
 	commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(lightRaysSRV->GetTextureResource(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_UNORDERED_ACCESS));
 
