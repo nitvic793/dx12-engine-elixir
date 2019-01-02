@@ -144,7 +144,6 @@ Texture* SunRaysPass::Apply(ID3D12GraphicsCommandList* commandList, Texture* dep
 	commandList->SetGraphicsRootDescriptorTable(RootSigSRVPixel1, frame->GetGPUHandle(fheapParams.Textures, occlusionTex->GetHeapIndex()));
 
 	auto cbIndex = frame->CopyAllocate(1, cbHeap, 0);
-	//commandList->SetDescriptorHeaps(1, cbheaps);
 	commandList->SetGraphicsRootDescriptorTable(RootSigCBPixel0, frame->GetGPUHandle(cbIndex));
 	renderer->DrawScreenQuad(commandList);
 	commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(lightRaysSRV->GetTextureResource(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_UNORDERED_ACCESS));

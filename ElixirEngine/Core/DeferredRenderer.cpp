@@ -220,10 +220,7 @@ void DeferredRenderer::RenderLightPass(ID3D12GraphicsCommandList * command, cons
 	ID3D12DescriptorHeap* samplerHeaps[] = { samplerHeap.pDescriptorHeap.Get() };
 	ID3D12DescriptorHeap* ppHeaps[] = { frame->GetDescriptorHeap() };
 
-	command->SetDescriptorHeaps(1, ppHeaps);
 	command->SetGraphicsRootDescriptorTable(RootSigSRVPixel1, frame->GetGPUHandle(frameHeapParams.GBuffer)); // Set G-Buffer Textures
-
-	//command->SetDescriptorHeaps(1, ppHeap2);
 	command->SetGraphicsRootDescriptorTable(RootSigCBPixel0, frame->GetGPUHandle(frameHeapParams.PixelCB));// pixelCbHeap.handleGPU(0)); //Set Pixel Shader Constants
 
 	//command->SetDescriptorHeaps(1, samplerHeaps);
@@ -243,8 +240,6 @@ void DeferredRenderer::RenderLightShapePass(ID3D12GraphicsCommandList * command,
 	command->ClearRenderTargetView(gRTVHeap.handleCPU(RTV_ORDER_LIGHTSHAPE), mClearColor, 0, nullptr);
 	command->OMSetRenderTargets(1, &gRTVHeap.handleCPU(RTV_ORDER_LIGHTSHAPE), true, nullptr);
 	command->SetPipelineState(shapeLightPassPSO);
-	ID3D12DescriptorHeap* ppHeaps[] = { frame->GetDescriptorHeap() };
-	command->SetDescriptorHeaps(1, ppHeaps);
 	command->SetGraphicsRootDescriptorTable(RootSigCBPixel0, frame->GetGPUHandle(frameHeapParams.PixelCB));
 	command->SetGraphicsRootDescriptorTable(RootSigSRVPixel1, frame->GetGPUHandle(frameHeapParams.GBuffer));
 
@@ -259,9 +254,6 @@ void DeferredRenderer::RenderSelectionDepthBuffer(ID3D12GraphicsCommandList* com
 	commandList->ClearDepthStencilView(dsvHeap.handleCPU(2), D3D12_CLEAR_FLAGS::D3D12_CLEAR_FLAG_DEPTH, mClearDepth, 0xff, 0, nullptr);
 	commandList->OMSetRenderTargets(1, &pRTVHeap.hCPUHeapStart, false, &dsvHeap.handleCPU(2));
 	commandList->SetPipelineState(selectionFilterPSO);
-
-	ID3D12DescriptorHeap* ppHeaps[] = { frame->GetDescriptorHeap() };
-	commandList->SetDescriptorHeaps(1, ppHeaps);
 
 	for (auto e : entities)
 	{
@@ -291,11 +283,9 @@ void DeferredRenderer::RenderShadowMap(ID3D12GraphicsCommandList * commandList, 
 	scissorRect.right = shadowMapSize;
 	scissorRect.bottom = shadowMapSize;
 
-	ID3D12DescriptorHeap* ppHeaps[] = { frame->GetDescriptorHeap() };
 	commandList->RSSetViewports(1, &viewport);
 	commandList->RSSetScissorRects(1, &scissorRect);
 	commandList->SetGraphicsRootSignature(rootSignature);
-	commandList->SetDescriptorHeaps(1, ppHeaps);
 	commandList->ClearDepthStencilView(dsvHeap.handleCPU(1), D3D12_CLEAR_FLAGS::D3D12_CLEAR_FLAG_DEPTH, mClearDepth, 0xff, 0, nullptr);
 	commandList->OMSetRenderTargets(0, nullptr, false, &dsvHeap.handleCPU(1));
 	commandList->SetPipelineState(shadowMapDirLightPSO);
@@ -313,8 +303,6 @@ void DeferredRenderer::RenderShadowMap(ID3D12GraphicsCommandList * commandList, 
 
 void DeferredRenderer::Draw(ID3D12GraphicsCommandList* commandList, std::vector<Entity*> entities)
 {
-	ID3D12DescriptorHeap* ppSrvHeaps[] = { frame->GetDescriptorHeap() };
-	commandList->SetDescriptorHeaps(1, ppSrvHeaps);
 	for (auto e : entities)
 	{
 		auto cb = ConstantBuffer();
@@ -329,12 +317,8 @@ void DeferredRenderer::DrawSkybox(ID3D12GraphicsCommandList * commandList, Textu
 {
 	commandList->SetPipelineState(skyboxPSO);
 	commandList->OMSetRenderTargets(1, &gRTVHeap.handleCPU(RTV_ORDER_QUAD), true, &dsvHeap.hCPUHeapStart);
-	ID3D12DescriptorHeap* ppSrvHeaps[] = { frame->GetDescriptorHeap() };
-
-	commandList->SetDescriptorHeaps(1, ppSrvHeaps);
 	commandList->SetGraphicsRootDescriptorTable(RootSigSRVPixel1, frame->GetGPUHandle(frameHeapParams.Textures, skybox->GetHeapIndex())); //Set skybox texture
 	commandList->SetGraphicsRootDescriptorTable(RootSigCBVertex0, frame->GetGPUHandle(frameHeapParams.SkyCB)); // set constant buffer with view and projection matrices
-	
 	Draw(cubeMesh, commandList);
 }
 
@@ -356,8 +340,6 @@ void DeferredRenderer::DrawScreenQuad(ID3D12GraphicsCommandList * commandList)
 
 void DeferredRenderer::DrawLightShapePass(ID3D12GraphicsCommandList * commandList, PixelConstantBuffer & pixelCb)
 {
-	ID3D12DescriptorHeap* ppHeaps[] = { frame->GetDescriptorHeap() };
-	commandList->SetDescriptorHeaps(1, ppHeaps);
 	for (auto i = 0u; i < pixelCb.pointLightCount; ++i)
 	{
 		commandList->SetGraphicsRootDescriptorTable(RootSigCBVertex0, frame->GetGPUHandle(frameHeapParams.LightShapes, i));
@@ -376,9 +358,6 @@ void DeferredRenderer::DrawResult(ID3D12GraphicsCommandList* commandList, D3D12_
 	commandList->ClearRenderTargetView(rtvHandle, mClearColor, 0, nullptr);
 	commandList->OMSetRenderTargets(1, &rtvHandle, true, nullptr);
 	commandList->SetPipelineState(screenQuadPSO);
-	ID3D12DescriptorHeap* ppHeaps[] = { frame->GetDescriptorHeap() };
-	commandList->SetDescriptorHeaps(1, ppHeaps);
-	//commandList->SetGraphicsRootDescriptorTable(RootSigSRVPixel1, gBufferHeap.handleGPU(RTV_ORDER_QUAD));
 	commandList->SetGraphicsRootDescriptorTable(RootSigSRVPixel1, frame->GetGPUHandle(frameHeapParams.GBuffer, RTV_ORDER_QUAD));
 	DrawScreenQuad(commandList); // Draws full screen quad with null vertex buffer.
 }
@@ -389,8 +368,6 @@ void DeferredRenderer::DrawResult(ID3D12GraphicsCommandList * commandList, D3D12
 	commandList->ClearRenderTargetView(rtvHandle, mClearColor, 0, nullptr);
 	commandList->OMSetRenderTargets(1, &rtvHandle, true, nullptr);
 	commandList->SetPipelineState(screenQuadPSO);
-	ID3D12DescriptorHeap* ppHeaps[] = { frame->GetDescriptorHeap() };
-	commandList->SetDescriptorHeaps(1, ppHeaps);
 	commandList->SetGraphicsRootDescriptorTable(RootSigSRVPixel1, frame->GetGPUHandle(frameHeapParams.Textures, resultTex->GetHeapIndex()));
 	DrawScreenQuad(commandList); // Draws full screen quad with null vertex buffer.
 }
@@ -398,6 +375,8 @@ void DeferredRenderer::DrawResult(ID3D12GraphicsCommandList * commandList, D3D12
 void DeferredRenderer::StartFrame(ID3D12GraphicsCommandList* commandList)
 {
 	frame->StartFrame();
+	ID3D12DescriptorHeap* frameHeap[] = { frame->GetDescriptorHeap() };
+	commandList->SetDescriptorHeaps(1, frameHeap);
 }
 
 void DeferredRenderer::PrepareFrame(std::vector<Entity*> entities, Camera * camera, PixelConstantBuffer & pixelCb)

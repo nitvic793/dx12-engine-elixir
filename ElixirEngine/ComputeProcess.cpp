@@ -42,28 +42,26 @@ void ComputeProcess::SetTextureUAV(ID3D12GraphicsCommandList* commandList, Textu
 {
 	auto frame = computeCore->GetRenderer()->GetFrameManager();
 	auto frameHeapParams = computeCore->GetRenderer()->GetFrameHeapParameters();
-	commandList->SetComputeRootDescriptorTable(1, frame->GetGPUHandle(frameHeapParams.Textures, textureUAV->GetHeapIndex()));
+	commandList->SetComputeRootDescriptorTable(ComputeSigUAV0, frame->GetGPUHandle(frameHeapParams.Textures, textureUAV->GetHeapIndex()));
 }
 
 void ComputeProcess::SetTextureSRV(ID3D12GraphicsCommandList* commandList, Texture* textureSRV)
 {
 	auto frame = computeCore->GetRenderer()->GetFrameManager();
 	auto frameHeapParams = computeCore->GetRenderer()->GetFrameHeapParameters();
-	//ID3D12DescriptorHeap* ppHeaps[] = { frame->GetDescriptorHeap() };
-	commandList->SetComputeRootDescriptorTable(0, frame->GetGPUHandle(frameHeapParams.Textures, textureSRV->GetHeapIndex()));
+	commandList->SetComputeRootDescriptorTable(ComputeSigSRV0, frame->GetGPUHandle(frameHeapParams.Textures, textureSRV->GetHeapIndex()));
 }
 
 void ComputeProcess::SetTextureSRVOffset(ID3D12GraphicsCommandList * commandList, Texture * textureSRV)
 {
 	auto frame = computeCore->GetRenderer()->GetFrameManager();
 	auto frameHeapParams = computeCore->GetRenderer()->GetFrameHeapParameters();
-	//ID3D12DescriptorHeap* ppHeaps[] = { frame->GetDescriptorHeap() };
-	commandList->SetComputeRootDescriptorTable(3, frame->GetGPUHandle(frameHeapParams.Textures, textureSRV->GetHeapIndex()));
+	commandList->SetComputeRootDescriptorTable(ComputeSigSRV1, frame->GetGPUHandle(frameHeapParams.Textures, textureSRV->GetHeapIndex()));
 }
 
 void ComputeProcess::SetConstants(ID3D12GraphicsCommandList* commandList, void * data, UINT count, UINT offset)
 {
-	commandList->SetComputeRoot32BitConstants(2, count, data, offset); // constant buffer value settings
+	commandList->SetComputeRoot32BitConstants(ComputeSigConsts0, count, data, offset); // constant buffer value settings
 }
 
 void ComputeProcess::Dispatch(ID3D12GraphicsCommandList* commandList, int x, int y, int z)

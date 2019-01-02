@@ -4,6 +4,14 @@
 
 class DeferredRenderer;
 
+enum ComputeRootSignatureSlotType
+{
+	ComputeSigSRV0 = 0,
+	ComputeSigUAV0,
+	ComputeSigConsts0,
+	ComputeSigSRV1
+};
+
 class ComputeCore
 {
 	ID3D12Device*			device;
