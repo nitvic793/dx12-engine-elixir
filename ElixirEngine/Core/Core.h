@@ -7,6 +7,7 @@
 #include <functional>
 #include "Light.h"
 #include "DeferredRenderer.h"
+#include "../SystemResourceManager.h"
 
 class Core
 {
@@ -32,6 +33,7 @@ protected:
 
 	const int frameBufferCount = FRAMEBUFFERCOUNT; 
 
+	std::unique_ptr<SystemResourceManager> sysRM;
 	ID3D12Device* device; 
 	IDXGISwapChain3* swapChain; 
 	ID3D12DescriptorHeap* rtvDescriptorHeap; 

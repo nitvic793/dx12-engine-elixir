@@ -7,6 +7,7 @@
 #include "Camera.h"
 #include "../Texture.h"
 #include "../FrameManager.h"
+#include "../SystemResourceManager.h"
 
 
 enum GBufferRenderTargetOrder
@@ -40,6 +41,7 @@ class DeferredRenderer
 	//Keeps track of the SRV count in SRV Heap
 	uint32_t srvHeapIndex;
 
+	SystemResourceManager*			sysRM;
 	std::unique_ptr<FrameManager>	frame;
 	FrameHeapParameters				frameHeapParams;
 

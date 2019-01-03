@@ -148,6 +148,7 @@
     </ClCompile>
     <ClCompile Include="StringHash.cpp" />
     <ClCompile Include="SunRaysPass.cpp" />
+    <ClCompile Include="SystemResourceManager.cpp" />
     <ClCompile Include="Texture.cpp" />
     <ClCompile Include="TexturePool.cpp" />
   </ItemGroup>
@@ -178,6 +179,7 @@
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="StringHash.h" />
     <ClInclude Include="SunRaysPass.h" />
+    <ClInclude Include="SystemResourceManager.h" />
     <ClInclude Include="Texture.h" />
     <ClInclude Include="TexturePool.h" />
   </ItemGroup>

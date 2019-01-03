@@ -171,6 +171,7 @@ ID3D12RootSignature * DeferredRenderer::GetRootSignature()
 
 void DeferredRenderer::Initialize(ID3D12GraphicsCommandList* command)
 {
+	sysRM = SystemResourceManager::GetInstance();
 	CreateCB();
 	CreateViews();
 	CreateRootSignature();
@@ -753,7 +754,7 @@ void DeferredRenderer::CreateScreenQuadPSO()
 	descPipelineState.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
 	descPipelineState.SampleDesc.Count = 1;
 
-	device->CreateGraphicsPipelineState(&descPipelineState, IID_PPV_ARGS(&screenQuadPSO));
+	screenQuadPSO = sysRM->CreatePSO(StringID("screenQuad"), descPipelineState);
 }
 
 
@@ -1194,7 +1195,6 @@ DeferredRenderer::~DeferredRenderer()
 	dirLightPassPSO->Release();
 	shapeLightPassPSO->Release();
 	skyboxPSO->Release();
-	screenQuadPSO->Release();
 	shadowMapDirLightPSO->Release();
 	shadowMapPointLightPSO->Release();
 	selectionFilterPSO->Release();

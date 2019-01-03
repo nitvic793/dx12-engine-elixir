@@ -175,6 +175,7 @@ bool Core::InitializeDirectX()
 		return false;
 	}
 
+	sysRM = std::unique_ptr<SystemResourceManager>(SystemResourceManager::CreateInstance(device));
 	return true;
 }
 
@@ -455,6 +456,7 @@ void Core::Cleanup()
 	}
 
 	delete deferredRenderer;
+
 	// get swapchain out of full screen before exiting
 	BOOL fs = false;
 	if (swapChain->GetFullscreenState(&fs, NULL))

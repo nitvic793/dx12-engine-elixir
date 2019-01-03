@@ -5,18 +5,12 @@
 #include "Material.h"
 #include <unordered_map>
 #include "StringHash.h"
+#include <typeinfo>
 
 // Engine Specific
 typedef std::unordered_map<unsigned int, Mesh*> MeshMap;
 typedef std::unordered_map<unsigned int, Material*> MaterialMap;
 typedef std::unordered_map<unsigned int, Texture*> TextureMap;
-
-// DirectX 12 specific
-typedef std::unordered_map<unsigned int, ID3D12PipelineState*> PSOMap;
-typedef std::unordered_map<unsigned int, ID3D12RootSignature*> RootSigMap;
-typedef std::unordered_map<unsigned int, ID3D12Resource*> ResourceMap;
-typedef std::unordered_map<unsigned int, CDescriptorHeapWrapper> DescriptorHeapMap;
-typedef std::unordered_map<unsigned int, ConstantBufferWrapper> ConstantBufferMap;
 
 struct TextureLoadData
 {
@@ -32,10 +26,10 @@ private:
 	static ResourceManager* Instance;
 
 protected:
-	ID3D12Device* device;
-	MeshMap meshes;
-	MaterialMap materials;
-	TextureMap textures;
+	ID3D12Device*	device;
+	MeshMap			meshes;
+	MaterialMap		materials;
+	TextureMap		textures;
 	ResourceManager(ID3D12Device* device);
 public:
 	static ResourceManager* CreateInstance(ID3D12Device* device);
@@ -63,5 +57,59 @@ public:
 	Material*	GetMaterial(HashID materialID);
 	Texture*	GetTexture(HashID textureID);
 	~ResourceManager();
+};
+
+/*TODO*/
+
+class IMemoryPool
+{
+};
+
+template<typename T>
+class MemoryPool : public IMemoryPool
+{
+public:
+	T* Allocate()
+	{
+		return nullptr;
+	}
+
+	void Destroy(T* block)
+	{
+
+	}
+};
+
+class PoolAllocator
+{
+	std::unordered_map<size_t, IMemoryPool*> memoryPools;
+public:
+	template<typename T>
+	void RegisterType() 
+	{
+		memoryPools.insert(std::pair<size_t, IMemoryPool*>(typeid(T).hash_code(), new MemoryPool<T>()));
+	}
+
+	template<typename T>
+	T* GetNew()
+	{
+		auto pool = (MemoryPool<T>*)memoryPools[typeid(T).hash_code()];
+		return pool->Allocate();
+	}
+
+	template<typename T>
+	void Destroy(T* block)
+	{
+		auto pool = (MemoryPool<T>*)memoryPools[typeid(T).hash_code()];
+		pool->Destroy(block);
+	}
+
+	~PoolAllocator()
+	{
+		for (auto& pool : memoryPools)
+		{
+			delete pool.second;
+		}
+	}
 };
 
