@@ -10,6 +10,7 @@
 #include "EdgeFilter.h"
 #include "CompositeTextures.h"
 #include "ResourceManager.h"
+#include "DownScaleTexture.h"
 
 class Game : public Core
 {
@@ -35,6 +36,7 @@ protected:
 	std::unique_ptr<SunRaysPass>		sunRaysPass;
 	std::unique_ptr<EdgeFilter>			edgeFilter;
 	std::unique_ptr<CompositeTextures>	compositeTextures;
+	std::unique_ptr<DownScaleTexture>	downScaler;
 
 	bool			isBlurEnabled;
 	void InitializeAssets();

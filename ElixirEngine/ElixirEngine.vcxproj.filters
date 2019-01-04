@@ -123,6 +123,9 @@
     <ClCompile Include="SystemResourceManager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="DownScaleTexture.cpp">
+      <Filter>Source Files\PostProcess</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
@@ -212,6 +215,9 @@
     <ClInclude Include="SystemResourceManager.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="DownScaleTexture.h">
+      <Filter>Header Files\PostProcess</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="BlurHorizontalCS.hlsl">
@@ -291,6 +297,9 @@
     </FxCompile>
     <FxCompile Include="ShadowGS.hlsl">
       <Filter>Shaders\Shadows</Filter>
+    </FxCompile>
+    <FxCompile Include="DownScaleCS.hlsl">
+      <Filter>Shaders\PostProcessCommon</Filter>
     </FxCompile>
   </ItemGroup>
   <ItemGroup>

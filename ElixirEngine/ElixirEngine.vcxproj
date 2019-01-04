@@ -136,6 +136,7 @@
     <ClCompile Include="Core\Mesh.cpp" />
     <ClCompile Include="Core\ShaderManager.cpp" />
     <ClCompile Include="DepthOfFieldPass.cpp" />
+    <ClCompile Include="DownScaleTexture.cpp" />
     <ClCompile Include="EdgeFilter.cpp" />
     <ClCompile Include="FileUtility.cpp" />
     <ClCompile Include="FrameManager.cpp" />
@@ -170,6 +171,7 @@
     <ClInclude Include="d3dx12.h" />
     <ClInclude Include="DepthOfFieldPass.h" />
     <ClInclude Include="DirectXHelper.h" />
+    <ClInclude Include="DownScaleTexture.h" />
     <ClInclude Include="EdgeFilter.h" />
     <ClInclude Include="FileUtility.h" />
     <ClInclude Include="FrameManager.h" />
@@ -259,6 +261,16 @@
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Vertex</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Vertex</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Vertex</ShaderType>
+    </FxCompile>
+    <FxCompile Include="DownScaleCS.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">4.0</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">4.0</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">4.0</ShaderModel>
     </FxCompile>
     <FxCompile Include="EdgeDetectionCS.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compute</ShaderType>

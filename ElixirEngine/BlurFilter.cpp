@@ -58,8 +58,8 @@ Texture* BlurFilter::Apply(ID3D12GraphicsCommandList* commandList, Texture* inpu
 	auto outputUAV = texResource.UAV;
 	auto weights = CalcGaussWeights(2.5f);
 	blurRadius = (int)weights.size() / 2;
-	UINT height = computeCore->GetRenderer()->GetHeight();
-	UINT width = computeCore->GetRenderer()->GetWidth();
+	UINT height = computeCore->GetRenderer()->GetHeight() / 4;
+	UINT width = computeCore->GetRenderer()->GetWidth() / 4;
 	for (int i = 0; i < 4; ++i)
 	{
 		blurHorizontalCS->SetShader(commandList);

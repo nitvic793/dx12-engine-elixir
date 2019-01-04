@@ -179,6 +179,7 @@ public:
 
 	void StartFrame(ID3D12GraphicsCommandList* commandList);
 	void PrepareFrame(std::vector<Entity*> entities, Camera* camera, PixelConstantBuffer& pixelCb);
+	void TransitionToPostProcess(ID3D12GraphicsCommandList* commandList);
 	void EndFrame(ID3D12GraphicsCommandList* commandList);
 
 	FrameHeapParameters		GetFrameHeapParameters();

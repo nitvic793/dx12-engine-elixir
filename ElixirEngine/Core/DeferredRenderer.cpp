@@ -365,7 +365,7 @@ void DeferredRenderer::DrawResult(ID3D12GraphicsCommandList* commandList, D3D12_
 
 void DeferredRenderer::DrawResult(ID3D12GraphicsCommandList * commandList, D3D12_CPU_DESCRIPTOR_HANDLE & rtvHandle, Texture* resultTex)
 {
-	commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(gBufferTextures[RTV_ORDER_QUAD], D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_GENERIC_READ));
+	//commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(gBufferTextures[RTV_ORDER_QUAD], D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_GENERIC_READ));
 	commandList->ClearRenderTargetView(rtvHandle, mClearColor, 0, nullptr);
 	commandList->OMSetRenderTargets(1, &rtvHandle, true, nullptr);
 	commandList->SetPipelineState(screenQuadPSO);
@@ -384,6 +384,11 @@ void DeferredRenderer::PrepareFrame(std::vector<Entity*> entities, Camera * came
 {
 	this->camera = camera;
 	PrepareGPUHeap(entities, pixelCb);
+}
+
+void DeferredRenderer::TransitionToPostProcess(ID3D12GraphicsCommandList * commandList)
+{
+	commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(gBufferTextures[RTV_ORDER_QUAD], D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_GENERIC_READ));
 }
 
 void DeferredRenderer::EndFrame(ID3D12GraphicsCommandList* commandList)
@@ -813,7 +818,7 @@ void DeferredRenderer::CreateRTV()
 	descSRV.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
 	descSRV.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
 
-	srvHeap.Create(device, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 128);
+	srvHeap.Create(device, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 256);
 
 	for (int i = 0; i < numRTV; i++) {
 		descSRV.Format = mRtvFormat[i];

@@ -77,7 +77,7 @@ void Game::InitializeAssets()
 		entityMaterialMap.push_back(materialIds[i % materialIds.size()]);
 	}
 
-	texturePool = new TexturePool(device, deferredRenderer, 32);
+	texturePool = new TexturePool(device, deferredRenderer, 64);
 	isBlurEnabled = false;
 	computeCore = new ComputeCore(device, deferredRenderer);
 
@@ -86,6 +86,7 @@ void Game::InitializeAssets()
 	edgeFilter = std::unique_ptr<EdgeFilter>(new EdgeFilter(computeCore));
 	blurFilter = new BlurFilter(computeCore);
 	compositeTextures = std::unique_ptr<CompositeTextures>(new CompositeTextures(computeCore));
+	downScaler = std::unique_ptr<DownScaleTexture>(new DownScaleTexture(computeCore));
 	camera = new Camera((float)Width, (float)Height);
 
 	pixelCb.light.AmbientColor = XMFLOAT4(0.1f, 0.1f, 0.1f, 0);
@@ -171,7 +172,7 @@ void Game::Update()
 	entities[0]->SetPosition(XMFLOAT3(2 * sin(totalTime) + 2, 1.f, cos(totalTime)));
 	pixelCb.pointLight[1].Position = XMFLOAT3(2 * sin(totalTime * 2) + 5, 0, -1);
 	pixelCb.pointLight[0].Position = XMFLOAT3(2 * cos(totalTime * 2), 0, -1);
-	if (GetAsyncKeyState(VK_TAB))
+	if (GetAsyncKeyState('Q'))
 	{
 		isBlurEnabled = true;
 	}
@@ -253,14 +254,16 @@ void Game::Draw()
 	deferredRenderer->RenderLightShapePass(commandList, pixelCb);
 	deferredRenderer->RenderLightPass(commandList, pixelCb);
 	deferredRenderer->DrawSkybox(commandList, skyTexture);
-
-	Texture* finalTexture = deferredRenderer->GetResultSRV();
-
+	deferredRenderer->TransitionToPostProcess(commandList);
+	auto finalTexture = deferredRenderer->GetResultSRV();
+	auto downscaled = downScaler->Apply(commandList, finalTexture, texturePool);
 	if (isBlurEnabled)
 	{
-		auto blurTexture = blurFilter->Apply(commandList, finalTexture, texturePool, 4, 3, 2);
-		finalTexture = dofPass->Apply(commandList, finalTexture, blurTexture, texturePool, 3, 0.2f);
+		float focusPlane = 20.f;
+		auto blurTexture = blurFilter->Apply(commandList, downscaled, texturePool, 4, focusPlane, 2);
+		finalTexture = dofPass->Apply(commandList, finalTexture, blurTexture, texturePool, focusPlane, 0.05f);
 	}
+
 	finalTexture = sunRaysPass->Apply(commandList, deferredRenderer->GetGBufferDepthSRV(), finalTexture, texturePool, camera);
 	////finalTexture = edgeFilter->Apply(commandList, deferredRenderer->GetSelectionDepthBufferSRV(), finalTexture, texturePool);
 	//finalTexture = compositeTextures->Composite(commandList, finalTexture, deferredRenderer->GetSelectionOutlineSRV(), texturePool);
