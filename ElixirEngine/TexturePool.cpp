@@ -61,8 +61,9 @@ TexturePool::TexturePool(ID3D12Device* device, DeferredRenderer* renderContext, 
 	this->device = device;
 	this->renderContext = renderContext;
 	descriptorHeap = &renderContext->GetSRVHeap();
-	rtvHeap.Create(device, D3D12_DESCRIPTOR_HEAP_TYPE_RTV, totalTextureCount);
+	rtvHeap.Create(device, D3D12_DESCRIPTOR_HEAP_TYPE_RTV, totalTextureCount + 64); //allow 64 extra requests
 	maxTextureCount = totalTextureCount;
+	texRequestIndex = maxTextureCount;
 	for (int i = 0; i < totalTextureCount; ++i)
 	{
 		AddTexture(DXGI_FORMAT_R32G32B32A32_FLOAT, renderContext->GetWidth(), renderContext->GetHeight());
@@ -96,13 +97,11 @@ TextureResourceBunch TexturePool::GetNext()
 
 Texture * TexturePool::GetSRV(int index)
 {
-	srvIndex = index;
 	return textureSRVs[index];
 }
 
 Texture * TexturePool::GetUAV(int index)
 {
-	uavIndex = index;
 	return textureUAVs[index];
 }
 
@@ -118,13 +117,13 @@ Texture* TexturePool::Request(DXGI_FORMAT format, int width, int height, Texture
 	bool containsKey = textureRequestMap.find(hashed) != textureRequestMap.end();
 	if (!containsKey || !getCached)
 	{
-		texIndex = maxTextureCount;
+		texIndex = texRequestIndex;
 		AddTexture(format, width, height);
 		if (!containsKey)
-			textureRequestMap.insert(std::pair<uint64_t, int>(hashed, maxTextureCount));
+			textureRequestMap.insert(std::pair<uint64_t, int>(hashed, texRequestIndex));
 		else
-			textureRequestMap[hashed] = maxTextureCount;
-		maxTextureCount++;
+			textureRequestMap[hashed] = texRequestIndex;
+		texRequestIndex++;
 	}
 	else
 	{

@@ -453,8 +453,10 @@ void Core::Cleanup()
 	{
 		frameIndex = i;
 		WaitForPreviousFrame();
+		commandQueue->Signal(fence[frameIndex], fenceValue[frameIndex]);
 	}
 
+	CloseHandle(fenceEvent);
 	delete deferredRenderer;
 
 	// get swapchain out of full screen before exiting
@@ -630,8 +632,7 @@ void Core::Run(std::function<void(Core*)> coreLogicCallback)
 		}
 	}
 
-	WaitForPreviousFrame();
-	CloseHandle(fenceEvent); // close the fence event
+	Cleanup();
 }
 
 LRESULT Core::HandleWindowsCallback(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)

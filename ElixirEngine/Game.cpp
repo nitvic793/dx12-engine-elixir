@@ -259,7 +259,7 @@ void Game::Draw()
 	auto downscaled = downScaler->Apply(commandList, finalTexture, texturePool);
 	if (isBlurEnabled)
 	{
-		float focusPlane = 20.f;
+		float focusPlane = 8.f;
 		auto blurTexture = blurFilter->Apply(commandList, downscaled, texturePool, 4, focusPlane, 2);
 		finalTexture = dofPass->Apply(commandList, finalTexture, blurTexture, texturePool, focusPlane, 0.05f);
 	}
@@ -269,14 +269,11 @@ void Game::Draw()
 	//finalTexture = compositeTextures->Composite(commandList, finalTexture, deferredRenderer->GetSelectionOutlineSRV(), texturePool);
 
 	deferredRenderer->DrawResult(commandList, rtvHandle, finalTexture); //Draw renderer result to given main Render Target handle
-
-	//texturePool->ResetIndex();
 	deferredRenderer->EndFrame(commandList);
 }
 
 void Game::Shutdown()
 {
-	Cleanup();
 	delete texturePool;
 	delete blurFilter;
 	delete computeCore;

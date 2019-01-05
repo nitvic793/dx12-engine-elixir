@@ -12,8 +12,8 @@ cbuffer externalData : register(b0)
 	float2 SunPos;
 };
 
-static const int NUM_STEPS = 32;
-static const float NUM_DELTA = 1.0 / 31.f;
+static const int NUM_STEPS = 64;
+static const float NUM_DELTA = 1.0 / 63.f;
 
 float4 main(VertexToPixel input) : SV_TARGET
 {

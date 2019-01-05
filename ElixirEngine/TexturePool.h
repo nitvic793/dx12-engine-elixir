@@ -18,6 +18,7 @@ class TexturePool
 	std::vector<Texture*> textureSRVs;
 	std::vector<Texture*> textureUAVs;
 	int maxTextureCount;
+	int texRequestIndex;
 
 	int srvIndex;
 	int uavIndex;

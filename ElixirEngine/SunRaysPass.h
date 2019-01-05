@@ -19,6 +19,9 @@ class SunRaysPass
 	DeferredRenderer*		renderer;
 	ConstantBufferWrapper	cbWrapper;
 	CDescriptorHeapWrapper	cbHeap;
+	std::vector<Texture*>	occlusionTexCache;
+	std::vector<int>		ocTexIndex;
+	uint16_t				occlusionTexIndex = 0;
 	void CreatePSO();
 	void CreateCB();
 public:

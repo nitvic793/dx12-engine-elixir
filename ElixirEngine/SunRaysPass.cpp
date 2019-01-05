@@ -75,9 +75,19 @@ SunRaysPass::SunRaysPass(ComputeCore* core, DeferredRenderer* renderContext)
 
 Texture* SunRaysPass::GetOcclusionTexture(ID3D12GraphicsCommandList* commandList, Texture * depthSRV, TexturePool *texturePool)
 {
+	//if (occlusionTexCache.size() != 3)
+	//{
+	//	int index;
+	//	occlusionTexCache.push_back(texturePool->Request(DXGI_FORMAT_R32G32B32A32_FLOAT, 1920, 1080, TextureTypeSRV, &index, false));
+	//	ocTexIndex.push_back(index);
+	//}
+	//auto uav = texturePool->GetUAV(ocTexIndex[occlusionTexIndex]);
+	//auto srv = texturePool->GetSRV(ocTexIndex[occlusionTexIndex]);
+	//occlusionTexIndex = (occlusionTexIndex + 1) % 3;
+
 	auto texResource = texturePool->GetNext();
-	auto uavTex = texResource.UAV;
-	auto srvTex = texResource.SRV;
+	auto uavTex = texResource.UAV;// uav;
+	auto srvTex = texResource.SRV;// srv;
 	occlusionPassCS->SetShader(commandList);
 	occlusionPassCS->SetTextureSRV(commandList, depthSRV);
 	occlusionPassCS->SetTextureUAV(commandList, uavTex);
@@ -91,7 +101,7 @@ Texture* SunRaysPass::Apply(ID3D12GraphicsCommandList* commandList, Texture* dep
 	
 	auto viewProjT = camera->GetViewProjectionMatrix();
 	auto viewProj = XMLoadFloat4x4(&viewProjT);
-	auto sunDir = XMVector3Normalize(XMVectorSet(1.5f, 1.5f, 4.f, 0.f));
+	auto sunDir = XMVector3Normalize(XMVectorSet(1.0f, 1.5f, 4.f, 0.f));
 	float dotCamSun = XMVectorGetX(XMVector3Dot(camDir, sunDir));
 	if (dotCamSun < 0.f) return pixels;
 
