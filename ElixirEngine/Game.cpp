@@ -89,10 +89,20 @@ void Game::InitializeAssets()
 	downScaler = std::unique_ptr<DownScaleTexture>(new DownScaleTexture(computeCore));
 	camera = new Camera((float)Width, (float)Height);
 
-	pixelCb.light.AmbientColor = XMFLOAT4(0.1f, 0.1f, 0.1f, 0);
-	pixelCb.light.DiffuseColor = XMFLOAT4(1.0f, 1.0f, 1.0f, 0.f);
-	pixelCb.light.Intensity = 1.0f;
-	pixelCb.light.Direction = XMFLOAT3(0.3f, -0.5f, -1.f);
+	pixelCb.light[0] = DirectionalLight();
+	pixelCb.light[0].AmbientColor = XMFLOAT4(0.1f, 0.1f, 0.1f, 0);
+	pixelCb.light[0].DiffuseColor = XMFLOAT4(1.0f, 1.0f, 1.0f, 0.f);
+	pixelCb.light[0].Intensity = 1.0f;
+	pixelCb.light[0].Direction = XMFLOAT3(0.3f, -0.5f, -1.f);
+	pixelCb.light[1] = DirectionalLight();
+	pixelCb.light[1].AmbientColor = XMFLOAT4(0.1f, 0.1f, 0.1f, 0);
+	pixelCb.light[1].DiffuseColor = XMFLOAT4(1.0f, 1.0f, 1.0f, 0.f);
+	pixelCb.light[1].Intensity = 1.0f;
+	pixelCb.light[1].Direction = XMFLOAT3(0.3f, -0.5f, 1.f);
+
+	pixelCb.dirLightCount = 1;
+	pixelCb.dirLightIndex = 0;
+
 	pixelCb.pointLight[0] = PointLight{ {0.99f, 0.2f, 0.2f, 0.f} , {0.0f, 0.0f, -1.f}, 6.f };
 	pixelCb.pointLight[1] = PointLight{ {0.0f, 0.99f, 0.2f, 0.f} , {5.0f, 0.0f, -1.f}, 6.f };
 	pixelCb.pointLightCount = 2u;
@@ -250,11 +260,13 @@ void Game::Draw()
 	deferredRenderer->RenderSelectionDepthBuffer(commandList, selectedEntities, camera);
 	deferredRenderer->SetGBUfferPSO(commandList, camera, pixelCb);
 	deferredRenderer->Draw(commandList, entityList);
-
+	//TODO: Need to fix resource transition in one of the passes
 	deferredRenderer->RenderLightShapePass(commandList, pixelCb);
 	deferredRenderer->RenderLightPass(commandList, pixelCb);
+	deferredRenderer->RenderAmbientPass(commandList);
 	deferredRenderer->DrawSkybox(commandList, skyTexture);
 	deferredRenderer->TransitionToPostProcess(commandList);
+
 	auto finalTexture = deferredRenderer->GetResultSRV();
 	auto downscaled = downScaler->Apply(commandList, finalTexture, texturePool);
 	if (isBlurEnabled)

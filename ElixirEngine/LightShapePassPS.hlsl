@@ -10,17 +10,6 @@ struct SpotLight
 	float SpotlightAngle;
 };
 
-
-cbuffer externalData : register(b0)
-{
-	DirectionalLight dirLight;
-	PointLight pointLight[MaxPointLights];
-	float4x4 invProjView;
-	float3 cameraPosition;
-	int pointLightCount;
-	int pointLightIndex;
-}
-
 struct VertexToPixel
 {
 	float4 position		: SV_POSITION;

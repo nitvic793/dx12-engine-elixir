@@ -457,9 +457,6 @@ void Core::Cleanup()
 	}
 
 	CloseHandle(fenceEvent);
-	delete deferredRenderer;
-
-	// get swapchain out of full screen before exiting
 	BOOL fs = false;
 	if (swapChain->GetFullscreenState(&fs, NULL))
 		swapChain->SetFullscreenState(false, NULL);
@@ -469,7 +466,7 @@ void Core::Cleanup()
 
 	rtvDescriptorHeap->Release();
 	commandList->Release();
-	
+
 	for (int i = 0; i < frameBufferCount; ++i)
 	{
 		renderTargets[i]->Release();
@@ -480,13 +477,11 @@ void Core::Cleanup()
 	mainDescriptorHeap->Release();
 	pipelineStateObject->Release();
 	rootSignature->Release();
-	//vertexBuffer->Release();
-	//indexBuffer->Release();
 	depthStencilBuffer->Release();
 	dsDescriptorHeap->Release();
+	delete deferredRenderer;
 	commandQueue->Release();
 	swapChain->Release();
-	//textureBufferUploadHeap->Release();
 }
 
 void Core::WaitForPreviousFrame()

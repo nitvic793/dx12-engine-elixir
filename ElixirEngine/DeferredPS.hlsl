@@ -21,16 +21,6 @@ struct PixelOutput
 	float4 shadowPos	: SV_TARGET7; //Targets 5,6 reserved for light-pass
 };
 
-cbuffer externalData : register(b0)
-{
-	DirectionalLight dirLight;
-	PointLight pointLight[MaxPointLights];
-	float4x4 invProjView;
-	float3 cameraPosition;
-	int pointLightCount;
-	int pointLightIndex;
-}
-
 Texture2D AlbedoTexture			: register(t0);
 Texture2D NormalTexture			: register(t1);
 Texture2D RoughnessTexture		: register(t2);

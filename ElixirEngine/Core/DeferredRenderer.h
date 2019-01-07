@@ -167,6 +167,7 @@ public:
 	void SetGBUfferPSO(ID3D12GraphicsCommandList* command, Camera* camera, const PixelConstantBuffer& pixelCb);
 	void RenderLightPass(ID3D12GraphicsCommandList* command, const PixelConstantBuffer& pixelCb);
 	void RenderLightShapePass(ID3D12GraphicsCommandList* command, PixelConstantBuffer& pixelCb);
+	void RenderAmbientPass(ID3D12GraphicsCommandList* clist);
 
 	void RenderSelectionDepthBuffer(ID3D12GraphicsCommandList* commandList, std::vector<Entity*> entities, Camera* camera);
 	void RenderShadowMap(ID3D12GraphicsCommandList* commandList, std::vector<Entity*> entities);

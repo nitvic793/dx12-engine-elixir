@@ -3,6 +3,7 @@
 #include "Light.h"
 
 static const int MaxPointLights = 16;
+static const int MaxDirLights = 4;
 
 struct ConstantBuffer 
 {
@@ -16,12 +17,14 @@ struct ConstantBuffer
 
 struct PixelConstantBuffer
 {
-	DirectionalLight light;
+	DirectionalLight light[MaxDirLights];
 	PointLight pointLight[MaxPointLights];
 	XMFLOAT4X4 invProjView;
 	XMFLOAT3 cameraPosition;
 	uint32_t pointLightCount;
 	uint32_t pointLightIndex;
+	uint32_t dirLightCount;
+	uint32_t dirLightIndex;
 };
 
 struct PerFrameConstantBuffer

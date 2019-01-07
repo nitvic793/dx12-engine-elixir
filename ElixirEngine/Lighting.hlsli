@@ -19,6 +19,19 @@ struct PointLight
 };
 
 static const int MaxPointLights = 16;
+static const int MaxDirLights = 4;
+
+cbuffer externalData : register(b0)
+{
+	DirectionalLight dirLight[MaxDirLights];
+	PointLight pointLight[MaxPointLights];
+	float4x4 invProjView;
+	float3 cameraPosition;
+	int pointLightCount;
+	int pointLightIndex;
+	int dirLightCount;
+	int dirLightIndex;
+}
 
 float Attenuate(float3 position, float range, float3 worldPos)
 {
@@ -116,9 +129,28 @@ float3 DirLightPBR(DirectionalLight light, float3 normal, float3 worldPos,
 	float3 specular = prefilteredColor * (kS * brdf.x + brdf.y);
 	float3 kD = float3(1.0f, 1.0f, 1.0f) - kS;
 	float3 diffuse = irradiance * surfaceColor;
+	//float3 ambient = AmbientPBR(kD, metalness, diffuse, ao, specular);
+
+	return (balancedDiff * surfaceColor + spec) * light.DiffuseColor.rgb * light.Intensity * shadowAmount;// +ambient;
+}
+
+float3 AmbientPBR(DirectionalLight light, float3 normal, float3 worldPos,
+	float3 camPos, float roughness, float metalness,
+	float3 surfaceColor, float3 specularColor, float3 irradiance, float3 prefilteredColor, float2 brdf, float shadowAmount)
+{
+	float ao = 1.0f;
+	float3 toLight = normalize(-light.Direction);
+	float3 toCam = normalize(camPos - worldPos);
+	float diff = DiffusePBR(normal, toLight);
+	float3 kS = float3(0.f, 0.f, 0.f);
+	float3 spec = MicrofacetBRDF(normal, toLight, toCam, roughness, metalness, specularColor, kS);
+	float3 balancedDiff = DiffuseEnergyConserve(diff, spec, metalness);
+	float3 specular = prefilteredColor * (kS * brdf.x + brdf.y);
+	float3 kD = float3(1.0f, 1.0f, 1.0f) - kS;
+	float3 diffuse = irradiance * surfaceColor;
 	float3 ambient = AmbientPBR(kD, metalness, diffuse, ao, specular);
 
-	return (balancedDiff * surfaceColor + spec) * light.DiffuseColor.rgb * light.Intensity * shadowAmount + ambient;
+	return ambient;
 }
 
 float3 PointLightPBR(PointLight light, float3 normal, float3 worldPos, float3 camPos, float roughness, float metalness, float3 surfaceColor, float3 specularColor, float3 irradiance)

@@ -93,10 +93,10 @@ void main(int3 groupThreadID : SV_GroupThreadID,
 		blurColor += weights[i + gBlurRadius] * gCache[k];
 	}
 	float range = focalLength / 2.f;
-	float4 finalColor = sharp[dispatchThreadID.xy];
-	float linearZ = gInput[dispatchThreadID.xy].a; //Packed Linear Z;
-	if (linearZ > focusPlane + range || linearZ < focusPlane - range)
-		finalColor = blurColor;
+	//float4 finalColor = sharp[dispatchThreadID.xy];
+	//float linearZ = gInput[dispatchThreadID.xy].a; //Packed Linear Z;
+	//if (linearZ > focusPlane + range || linearZ < focusPlane - range)
+		//finalColor = blurColor;
 
-	gOutput[dispatchThreadID.xy] = finalColor;// blurColor;
+	gOutput[dispatchThreadID.xy] = blurColor;// blurColor;
 }

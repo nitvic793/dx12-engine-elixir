@@ -212,11 +212,11 @@ void DeferredRenderer::RenderLightPass(ID3D12GraphicsCommandList * command, cons
 	/*for (int i = 0; i < numRTV; i++)
 		command->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(gBufferTextures[i], D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_GENERIC_READ));*/
 		//command->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(depthStencilTexture, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_GENERIC_READ));
-	command->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(gBufferTextures[RTV_ORDER_QUAD], D3D12_RESOURCE_STATE_GENERIC_READ, D3D12_RESOURCE_STATE_RENDER_TARGET));
+	command->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(gBufferTextures[RTV_ORDER_LIGHTSHAPE], D3D12_RESOURCE_STATE_GENERIC_READ, D3D12_RESOURCE_STATE_RENDER_TARGET));
 	command->SetPipelineState(dirLightPassPSO);
 
 	//command->ClearRenderTargetView(rtvHeap.handleCPU(RTV_ORDER_QUAD), mClearColor, 0, nullptr);
-	command->OMSetRenderTargets(1, &gRTVHeap.handleCPU(RTV_ORDER_QUAD), true, nullptr);
+	command->OMSetRenderTargets(1, &gRTVHeap.handleCPU(RTV_ORDER_LIGHTSHAPE), true, nullptr);
 
 	ID3D12DescriptorHeap* samplerHeaps[] = { samplerHeap.pDescriptorHeap.Get() };
 	ID3D12DescriptorHeap* ppHeaps[] = { frame->GetDescriptorHeap() };
@@ -226,8 +226,8 @@ void DeferredRenderer::RenderLightPass(ID3D12GraphicsCommandList * command, cons
 
 	//command->SetDescriptorHeaps(1, samplerHeaps);
 	//command->SetGraphicsRootDescriptorTable(4, samplerHeap.hGPUHeapStart); //Set Shadow Sampler
-
 	DrawScreenQuad(command);
+	command->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(gBufferTextures[RTV_ORDER_LIGHTSHAPE], D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_GENERIC_READ));
 }
 
 void DeferredRenderer::RenderLightShapePass(ID3D12GraphicsCommandList * command, PixelConstantBuffer & pixelCb)
@@ -245,6 +245,18 @@ void DeferredRenderer::RenderLightShapePass(ID3D12GraphicsCommandList * command,
 	command->SetGraphicsRootDescriptorTable(RootSigSRVPixel1, frame->GetGPUHandle(frameHeapParams.GBuffer));
 
 	DrawLightShapePass(command, pixelCb);
+}
+
+void DeferredRenderer::RenderAmbientPass(ID3D12GraphicsCommandList * command)
+{
+	command->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(gBufferTextures[RTV_ORDER_QUAD], D3D12_RESOURCE_STATE_GENERIC_READ, D3D12_RESOURCE_STATE_RENDER_TARGET));
+	command->SetPipelineState(sysRM->GetPSO(StringID("ambientPass")));
+
+	//command->ClearRenderTargetView(rtvHeap.handleCPU(RTV_ORDER_QUAD), mClearColor, 0, nullptr);
+	command->OMSetRenderTargets(1, &gRTVHeap.handleCPU(RTV_ORDER_QUAD), true, nullptr);
+	command->SetGraphicsRootDescriptorTable(RootSigSRVPixel1, frame->GetGPUHandle(frameHeapParams.GBuffer)); // Set G-Buffer Textures
+	command->SetGraphicsRootDescriptorTable(RootSigCBPixel0, frame->GetGPUHandle(frameHeapParams.PixelCB));// pixelCbHeap.handleGPU(0)); //Set Pixel Shader Constants
+	DrawScreenQuad(command);
 }
 
 void DeferredRenderer::RenderSelectionDepthBuffer(ID3D12GraphicsCommandList* commandList, std::vector<Entity*> entities, Camera* camera)
@@ -484,6 +496,7 @@ void DeferredRenderer::PrepareGPUHeap(std::vector<Entity*> entities, PixelConsta
 		cbWrapper.CopyData(&cb, ConstantBufferSize, index);
 		index++;
 	}
+
 	auto pixelCbHeapIndex = frame->CopyAllocate(pixelCb.pointLightCount + 1, pixelCbHeap);
 	auto lightPassCBHeapIndex = frame->CopyAllocate(pixelCb.pointLightCount, cbHeap, constBufferIndex);
 	constBufferIndex = index;
@@ -684,6 +697,26 @@ void DeferredRenderer::CreateLightPassPSO()
 	//};
 
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC descPipelineState;
+	ZeroMemory(&descPipelineState, sizeof(descPipelineState));
+
+	descPipelineState.VS = ShaderManager::LoadShader(L"ScreenQuadVS.cso");
+	descPipelineState.PS = ShaderManager::LoadShader(L"AmbientPassPS.cso");
+	descPipelineState.InputLayout.pInputElementDescs = nullptr;
+	descPipelineState.InputLayout.NumElements = 0;// _countof(inputLayout);
+	descPipelineState.pRootSignature = rootSignature;
+	descPipelineState.DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
+	descPipelineState.DepthStencilState.DepthEnable = false;
+	descPipelineState.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
+	descPipelineState.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
+	descPipelineState.RasterizerState.DepthClipEnable = false;
+	descPipelineState.SampleMask = UINT_MAX;
+	descPipelineState.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+	descPipelineState.NumRenderTargets = 1;
+	descPipelineState.RTVFormats[0] = DXGI_FORMAT_R32G32B32A32_FLOAT;
+	descPipelineState.SampleDesc.Count = 1;
+
+	auto ambientPassPSO = sysRM->CreatePSO(StringID("ambientPass"), descPipelineState);
+
 	ZeroMemory(&descPipelineState, sizeof(descPipelineState));
 
 	descPipelineState.VS = ShaderManager::LoadShader(L"ScreenQuadVS.cso");

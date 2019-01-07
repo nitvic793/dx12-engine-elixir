@@ -28,10 +28,10 @@ Texture2D gNormalTexture			: register(t1);
 Texture2D gWorldPosTexture			: register(t2);
 Texture2D gRoughnessTexture			: register(t3);
 Texture2D gMetalnessTexture			: register(t4);
-//Texture2D gLightShapePass			: register(t5);
+Texture2D gLightShapePass			: register(t5);
 Texture2D gDepth					: register(t7); //t6 reserved for this shaders output
 
-//IBL
+													//IBL
 TextureCube skyIrradianceTexture	: register(t8);
 Texture2D	brdfLUTTexture			: register(t9);
 TextureCube skyPrefilterTexture		: register(t10);
@@ -76,29 +76,23 @@ float4 main(VertexToPixel pIn) : SV_TARGET
 	float3 worldPos = gWorldPosTexture.Sample(basicSampler, pIn.uv).rgb;
 	float roughness = gRoughnessTexture.Sample(basicSampler, pIn.uv).r;
 	float metal = gMetalnessTexture.Sample(basicSampler, pIn.uv).r;
-	float4 shadowPos = gShadowPos.Sample(basicSampler, pIn.uv);
-	float shadowAmount = ShadowAmount(shadowPos);
+	float shadowAmount = 1.f;
 
 	float3 viewDir = normalize(cameraPosition - worldPos);
 	float3 prefilter = PrefilteredColor(viewDir, normal, roughness);
 	float2 brdf = BrdfLUT(normal, viewDir, roughness);
-	//float3 otherlights = gLightShapePass.Sample(basicSampler, pIn.uv).rgb;
+	float3 otherlights = gLightShapePass.Sample(basicSampler, pIn.uv).rgb;
 
 	float3 specColor = lerp(F0_NON_METAL.rrr, albedo.rgb, metal);
 	float3 irradiance = skyIrradianceTexture.Sample(basicSampler, normal).rgb;
-	float3 finalColor = 0.f;
 
-	for (int i = 0; i < dirLightCount; ++i)
-	{
-		finalColor = finalColor + DirLightPBR(dirLight[i], normalize(normal), worldPos,
-			cameraPosition, roughness, metal, albedo,
-			specColor, irradiance, prefilter, brdf, shadowAmount);
-	}
-		
-	float3 totalColor = finalColor;// +otherlights;
-	//totalColor = totalColor / (totalColor + float3(1.f, 1.f, 1.f));
-	//totalColor = saturate(totalColor);
-	//float3 gammaCorrect = lerp(totalColor, pow(totalColor, 1.0 / 2.2), 0.4f); 
-	return float4(totalColor, packedAlbedo.a);
+	float3 finalColor = AmbientPBR(dirLight[0], normalize(normal), worldPos,
+		cameraPosition, roughness, metal, albedo,
+		specColor, irradiance, prefilter, brdf, shadowAmount);
+	float3 totalColor = finalColor + otherlights;
+	totalColor = totalColor / (totalColor + float3(1.f, 1.f, 1.f));
+	totalColor = saturate(totalColor);
+	float3 gammaCorrect = lerp(totalColor, pow(totalColor, 1.0 / 2.2), 0.4f);
+	return float4(gammaCorrect, packedAlbedo.a);
 
 }

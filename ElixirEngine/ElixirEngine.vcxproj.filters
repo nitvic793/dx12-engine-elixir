@@ -301,6 +301,9 @@
     <FxCompile Include="DownScaleCS.hlsl">
       <Filter>Shaders\PostProcessCommon</Filter>
     </FxCompile>
+    <FxCompile Include="AmbientPassPS.hlsl">
+      <Filter>Shaders\Deferred</Filter>
+    </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
