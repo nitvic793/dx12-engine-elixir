@@ -36,7 +36,7 @@ class DeferredRenderer
 	ID3D12Device *device;
 	const static int numRTV = RTV_ORDER_COUNT;
 	int constBufferIndex = 0;
-	int shadowMapSize = 2048;
+	int shadowMapSize = 4096;
 	ID3D12RootSignature* rootSignature;
 	//Keeps track of the SRV count in SRV Heap
 	uint32_t srvHeapIndex;

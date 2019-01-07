@@ -453,15 +453,20 @@ void DeferredRenderer::PrepareGPUHeap(std::vector<Entity*> entities, PixelConsta
 	auto entitiesHeapIndex = frame->CopyAllocate((UINT)entities.size(), cbHeap, constBufferIndex);
 	constBufferIndex = index;
 
+	auto dir = -XMVector3Normalize(XMLoadFloat3(&pixelCb.light[0].Direction));
+	auto eyePosV = XMVectorSet(0, 0, 0, 0) + 10 * dir;
+	XMFLOAT3 eyePos;
+	XMStoreFloat3(&eyePos, eyePosV);
+
 	//Create Shadow CBVs
 	XMMATRIX shView = XMMatrixLookAtLH(
-		XMVectorSet(2, 3, 5, 0),	// Start back and in the air
+		eyePosV,	// Start back and in the air
 		XMVectorSet(0, 0, 0, 0),	// Look at the origin
 		XMVectorSet(0, 1, 0, 0));	// Up is up
 	XMStoreFloat4x4(&shadowViewTransposed, XMMatrixTranspose(shView));
 
 
-	XMMATRIX shProj = XMMatrixOrthographicLH(20.0f, 20.0f, 0.1f, 100.0f);
+	XMMATRIX shProj = XMMatrixOrthographicLH(40.0f, 40.0f, 0.1f, 100.0f);
 	XMStoreFloat4x4(&shadowProjTransposed, XMMatrixTranspose(shProj));
 
 	ConstantBuffer cb;

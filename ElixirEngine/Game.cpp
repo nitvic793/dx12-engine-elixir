@@ -93,7 +93,7 @@ void Game::InitializeAssets()
 	pixelCb.light[0].AmbientColor = XMFLOAT4(0.1f, 0.1f, 0.1f, 0);
 	pixelCb.light[0].DiffuseColor = XMFLOAT4(1.0f, 1.0f, 1.0f, 0.f);
 	pixelCb.light[0].Intensity = 0.2f;
-	pixelCb.light[0].Direction = XMFLOAT3(0.3f, -0.5f, -1.f);
+	pixelCb.light[0].Direction = XMFLOAT3(-0.3f, -0.2f, -1.f);
 	pixelCb.light[1] = DirectionalLight();
 	pixelCb.light[1].AmbientColor = XMFLOAT4(0.1f, 0.1f, 0.1f, 0);
 	pixelCb.light[1].DiffuseColor = XMFLOAT4(1.0f, 1.0f, 1.0f, 0.f);
@@ -147,7 +147,7 @@ void Game::InitializeAssets()
 
 	entities[9]->SetCastsShadow(false);
 	entities[9]->SetMesh(rm->GetMesh(StringID("quad")));
-	entities[9]->SetPosition(XMFLOAT3(5, -1, 0));
+	entities[9]->SetPosition(XMFLOAT3(5, -1, -5));
 	entities[9]->SetScale(XMFLOAT3(15, 15, 15));
 	entities[9]->SetMaterial(rm->GetMaterial(StringID("cement")));
 
@@ -230,6 +230,10 @@ bool IsIntersecting(Entity* entity, Camera* camera, int mouseX, int mouseY, floa
 
 void Game::Draw()
 {
+	//Update CB
+	pixelCb.cameraPosition = camera->GetPosition();
+	pixelCb.invProjView = camera->GetInverseProjectionViewMatrix();
+
 	deferredRenderer->StartFrame(commandList);
 	std::vector<Entity*> entityList;
 	for (auto& entity : entities)
@@ -252,9 +256,6 @@ void Game::Draw()
 
 	commandList->RSSetViewports(1, &viewport);
 	commandList->RSSetScissorRects(1, &scissorRect);
-
-	pixelCb.cameraPosition = camera->GetPosition();
-	pixelCb.invProjView = camera->GetInverseProjectionViewMatrix();
 
 	// draw
 	deferredRenderer->RenderSelectionDepthBuffer(commandList, selectedEntities, camera);
