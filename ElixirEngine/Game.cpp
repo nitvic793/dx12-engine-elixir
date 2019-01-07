@@ -92,19 +92,19 @@ void Game::InitializeAssets()
 	pixelCb.light[0] = DirectionalLight();
 	pixelCb.light[0].AmbientColor = XMFLOAT4(0.1f, 0.1f, 0.1f, 0);
 	pixelCb.light[0].DiffuseColor = XMFLOAT4(1.0f, 1.0f, 1.0f, 0.f);
-	pixelCb.light[0].Intensity = 1.0f;
+	pixelCb.light[0].Intensity = 0.2f;
 	pixelCb.light[0].Direction = XMFLOAT3(0.3f, -0.5f, -1.f);
 	pixelCb.light[1] = DirectionalLight();
 	pixelCb.light[1].AmbientColor = XMFLOAT4(0.1f, 0.1f, 0.1f, 0);
 	pixelCb.light[1].DiffuseColor = XMFLOAT4(1.0f, 1.0f, 1.0f, 0.f);
-	pixelCb.light[1].Intensity = 1.0f;
+	pixelCb.light[1].Intensity = 0.2f;
 	pixelCb.light[1].Direction = XMFLOAT3(0.3f, -0.5f, 1.f);
 
 	pixelCb.dirLightCount = 1;
 	pixelCb.dirLightIndex = 0;
 
-	pixelCb.pointLight[0] = PointLight{ {0.99f, 0.2f, 0.2f, 0.f} , {0.0f, 0.0f, -1.f}, 6.f };
-	pixelCb.pointLight[1] = PointLight{ {0.0f, 0.99f, 0.2f, 0.f} , {5.0f, 0.0f, -1.f}, 6.f };
+	pixelCb.pointLight[0] = PointLight{ {0.99f, 0.2f, 0.2f, 0.f} , {0.0f, 0.0f, -1.f}, 6.f , 2.f};
+	pixelCb.pointLight[1] = PointLight{ {0.0f, 0.99f, 0.2f, 0.f} , {5.0f, 0.0f, -1.f}, 6.f , 2.f};
 	pixelCb.pointLightCount = 2u;
 	pixelCb.pointLightIndex = 0;
 

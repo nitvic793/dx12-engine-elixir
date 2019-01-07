@@ -15,4 +15,6 @@ struct PointLight
 	XMFLOAT4 Color; 
 	XMFLOAT3 Position; 
 	float Range; 
+	float Intensity;
+	XMFLOAT3 Padding;
 };

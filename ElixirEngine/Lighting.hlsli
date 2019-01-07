@@ -16,6 +16,8 @@ struct PointLight
 	float4 Color;
 	float3 Position;
 	float Range;
+	float Intensity;
+	float3 Padding;
 };
 
 static const int MaxPointLights = 16;
@@ -165,7 +167,7 @@ float3 PointLightPBR(PointLight light, float3 normal, float3 worldPos, float3 ca
 
 	float3 balancedDiff = DiffuseEnergyConserve(diff, spec, metalness);
 
-	return (balancedDiff * surfaceColor + spec) * atten * 1 /*light.Intensity*/ * light.Color.rgb;// +ambient;
+	return (balancedDiff * surfaceColor + spec) * atten * 1 * light.Intensity * light.Color.rgb;// +ambient;
 }
 
 

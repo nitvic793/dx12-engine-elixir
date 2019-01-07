@@ -695,6 +695,16 @@ void DeferredRenderer::CreateLightPassPSO()
 	//	/*{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
 	//	{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }*/
 	//};
+	auto blendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
+	blendState.AlphaToCoverageEnable = false;
+	blendState.IndependentBlendEnable = false;
+
+	blendState.RenderTarget[0].BlendEnable = true;
+	blendState.RenderTarget[0].BlendOp = D3D12_BLEND_OP_ADD;
+	//blendState.RenderTarget[0].SrcBlend = D3D12_BLEND_ONE;
+	//blendState.RenderTarget[0].DestBlend = D3D12_BLEND_ONE;
+	blendState.RenderTarget[0].SrcBlend = D3D12_BLEND_SRC_ALPHA;
+	blendState.RenderTarget[0].DestBlend = D3D12_BLEND_ONE;
 
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC descPipelineState;
 	ZeroMemory(&descPipelineState, sizeof(descPipelineState));
@@ -726,7 +736,7 @@ void DeferredRenderer::CreateLightPassPSO()
 	descPipelineState.pRootSignature = rootSignature;
 	descPipelineState.DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
 	descPipelineState.DepthStencilState.DepthEnable = false;
-	descPipelineState.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
+	descPipelineState.BlendState = blendState;
 	descPipelineState.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
 	descPipelineState.RasterizerState.DepthClipEnable = false;
 	descPipelineState.SampleMask = UINT_MAX;
@@ -744,18 +754,6 @@ void DeferredRenderer::CreateLightPassPSO()
 		{ "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 20, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
 		{ "TANGENT", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 32, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
 	};
-
-	auto blendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
-	blendState.AlphaToCoverageEnable = false;
-	blendState.IndependentBlendEnable = false;
-
-	blendState.RenderTarget[0].BlendEnable = true;
-	blendState.RenderTarget[0].BlendOp = D3D12_BLEND_OP_ADD;
-	//blendState.RenderTarget[0].SrcBlend = D3D12_BLEND_ONE;
-	//blendState.RenderTarget[0].DestBlend = D3D12_BLEND_ONE;
-	blendState.RenderTarget[0].SrcBlend = D3D12_BLEND_SRC_ALPHA;
-	blendState.RenderTarget[0].DestBlend = D3D12_BLEND_ONE;
-	//blendState.RenderTarget[0].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
 
 	auto rasterizer = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
 	rasterizer.CullMode = D3D12_CULL_MODE_FRONT; // Front culling for point light
