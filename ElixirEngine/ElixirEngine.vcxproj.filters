@@ -304,6 +304,15 @@
     <FxCompile Include="AmbientPassPS.hlsl">
       <Filter>Shaders\Deferred</Filter>
     </FxCompile>
+    <FxCompile Include="ShadowPosVS.hlsl">
+      <Filter>Shaders\Shadows</Filter>
+    </FxCompile>
+    <FxCompile Include="ShadowPosPS.hlsl">
+      <Filter>Shaders\Shadows</Filter>
+    </FxCompile>
+    <FxCompile Include="ShadowGenVS.hlsl">
+      <Filter>Shaders\Shadows</Filter>
+    </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

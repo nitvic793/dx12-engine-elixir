@@ -3,16 +3,28 @@ struct GSOutput
 	float4 pos : SV_POSITION;
 };
 
-[maxvertexcount(18)]
-void main(
-	triangle float4 input[3] : SV_POSITION, 
-	inout TriangleStream< GSOutput > output
-)
+cbuffer	cbuffercbShadowMapCubeGS : register(b1)
 {
-	for (uint i = 0; i < 3; i++)
+	float4x4 CubeViewProj[6];
+}
+
+struct GeometryOutput
+{
+	float4	Pos		: SV_POSITION;
+	uint	RTIndex	: SV_RenderTargetArrayIndex;
+};
+
+[maxvertexcount(18)]
+void main(triangle float4 InPos[3] : SV_Position, inout	TriangleStream<GeometryOutput> OutStream)
+{
+	for (int iFace = 0; iFace < 6; iFace++)
 	{
-		GSOutput element;
-		element.pos = input[i];
-		output.Append(element);
+		GeometryOutput output;
+		output.RTIndex = iFace;
+		for (int v = 0; v < 3; v++) {
+			output.Pos = mul(InPos[v], CubeViewProj[iFace]);
+			OutStream.Append(output);
+		}
+		OutStream.RestartStrip();
 	}
 }

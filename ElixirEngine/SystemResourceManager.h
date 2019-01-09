@@ -26,9 +26,11 @@ public:
 	static SystemResourceManager* CreateInstance(ID3D12Device* device);
 	static SystemResourceManager* GetInstance();
 
-	ID3D12PipelineState* CreatePSO(HashID psoID, D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc);
-	ID3D12PipelineState* GetPSO(HashID psoID);
+	ID3D12PipelineState*	CreatePSO(HashID psoID, D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc);
+	ID3D12PipelineState*	GetPSO(HashID psoID);
 
+	ID3D12Resource*			CreateResource(HashID psoID, D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc);
+	ID3D12Resource*			GetResource(HashID psoID);
 	~SystemResourceManager();
 };
 

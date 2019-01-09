@@ -77,7 +77,7 @@ void Game::InitializeAssets()
 		entityMaterialMap.push_back(materialIds[i % materialIds.size()]);
 	}
 
-	texturePool = new TexturePool(device, deferredRenderer, 64);
+	texturePool = new TexturePool(device, deferredRenderer, 24);
 	isBlurEnabled = false;
 	computeCore = new ComputeCore(device, deferredRenderer);
 

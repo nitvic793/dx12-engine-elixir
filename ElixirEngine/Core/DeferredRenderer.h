@@ -37,6 +37,8 @@ class DeferredRenderer
 	const static int numRTV = RTV_ORDER_COUNT;
 	int constBufferIndex = 0;
 	int shadowMapSize = 4096;
+	const static int shadowMapCount = 32;
+
 	ID3D12RootSignature* rootSignature;
 	//Keeps track of the SRV count in SRV Heap
 	uint32_t srvHeapIndex;
@@ -48,14 +50,9 @@ class DeferredRenderer
 	ID3D12Resource* gBufferTextures[numRTV];
 	ID3D12Resource* depthStencilTexture;
 	ID3D12Resource* postProcessTexture;
-	ID3D12Resource* shadowMapTexture;
-	ID3D12Resource* shadowPosTexture;
-
-	ID3D12Resource* shadowMapPointTexture;
 
 	ID3D12Resource* selectedDepthTexture;
 	ID3D12Resource* selectedOutlineTexture;
-
 
 	ID3D12PipelineState* deferredPSO;
 	ID3D12PipelineState* dirLightPassPSO;
@@ -76,6 +73,21 @@ class DeferredRenderer
 	CDescriptorHeapWrapper cbHeap;
 	CDescriptorHeapWrapper pixelCbHeap;
 
+	//Shadows
+
+	CDescriptorHeapWrapper shadowResHeap;
+	CDescriptorHeapWrapper shadowRTVHeap;
+	CDescriptorHeapWrapper shadowDSVHeap;
+
+	ID3D12Resource* shadowMaps[shadowMapCount];
+	ID3D12Resource* shadowPosTextures[shadowMapCount];
+
+	ID3D12Resource* shadowMapTexture;
+	ID3D12Resource* shadowPosTexture;
+	ID3D12Resource* shadowMapPointTexture;
+	ID3D12Resource* shadowPosPointTexture;
+
+	//CBs
 	ConstantBufferWrapper cbWrapper;
 	ConstantBufferWrapper pixelCbWrapper;
 	ConstantBufferWrapper perFrameCbWrapper;
