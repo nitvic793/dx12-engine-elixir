@@ -28,8 +28,7 @@ Texture2D gNormalTexture			: register(t1);
 Texture2D gWorldPosTexture			: register(t2);
 Texture2D gRoughnessTexture			: register(t3);
 Texture2D gMetalnessTexture			: register(t4);
-//Texture2D gLightShapePass			: register(t5);
-Texture2D gDepth					: register(t7); //t6 reserved for this shaders output
+Texture2D gDepth					: register(t7); //t5 reserved for this shaders output, t6 for ambient pass
 
 //IBL
 TextureCube skyIrradianceTexture	: register(t8);
@@ -75,11 +74,11 @@ float SampleShadowMap(float2 uv, float2 offsetUV, float2 shadowSizeInv, float de
 
 float SampleShadowMapOptimizedPCF(float4 shadowPos)
 {
-	float2 shadowMapSize = 4096;
+	float2 shadowMapSize = 4096; // TODO: send through CB
 	float lightDepth = shadowPos.z / shadowPos.w;
-	float2 uv = (shadowPos.xy / shadowPos.w * 0.5f + 0.5f);// *shadowMapSize; // 1 unit - 1 texel
+	float2 uv = (shadowPos.xy / shadowPos.w * 0.5f + 0.5f);
 	uv.y = 1.f - uv.y;
-	uv = uv * shadowMapSize;
+	uv = uv * shadowMapSize; //1 unit - 1 texel
 
 	float2 shadowMapSizeInv = 1.0 / shadowMapSize;
 
@@ -142,7 +141,6 @@ float4 main(VertexToPixel pIn) : SV_TARGET
 	float3 viewDir = normalize(cameraPosition - worldPos);
 	float3 prefilter = PrefilteredColor(viewDir, normal, roughness);
 	float2 brdf = BrdfLUT(normal, viewDir, roughness);
-	//float3 otherlights = gLightShapePass.Sample(basicSampler, pIn.uv).rgb;
 
 	float3 specColor = lerp(F0_NON_METAL.rrr, albedo.rgb, metal);
 	float3 irradiance = skyIrradianceTexture.Sample(basicSampler, normal).rgb;
@@ -155,10 +153,7 @@ float4 main(VertexToPixel pIn) : SV_TARGET
 			specColor, irradiance, prefilter, brdf, shadowAmount);
 	}
 
-	float3 totalColor = finalColor;// +otherlights;
-	//totalColor = totalColor / (totalColor + float3(1.f, 1.f, 1.f));
-	//totalColor = saturate(totalColor);
-	//float3 gammaCorrect = lerp(totalColor, pow(totalColor, 1.0 / 2.2), 0.4f); 
+	float3 totalColor = finalColor;
 	return float4(totalColor, packedAlbedo.a);
 
 }

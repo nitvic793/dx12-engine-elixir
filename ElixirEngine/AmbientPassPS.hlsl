@@ -31,7 +31,7 @@ Texture2D gMetalnessTexture			: register(t4);
 Texture2D gLightShapePass			: register(t5);
 Texture2D gDepth					: register(t7); //t6 reserved for this shaders output
 
-													//IBL
+//IBL
 TextureCube skyIrradianceTexture	: register(t8);
 Texture2D	brdfLUTTexture			: register(t9);
 TextureCube skyPrefilterTexture		: register(t10);
