@@ -67,6 +67,66 @@ float ShadowAmount(float4 shadowPos)
 	return shadowAmount;
 }
 
+float SampleShadowMap(float2 uv, float2 offsetUV, float2 shadowSizeInv, float depth)
+{
+	float2 sUV = uv + offsetUV * shadowSizeInv;
+	return gShadowMap.SampleCmpLevelZero(shadowSampler, sUV, depth);
+}
+
+float SampleShadowMapOptimizedPCF(float4 shadowPos)
+{
+	float2 shadowMapSize = 4096;
+	float lightDepth = shadowPos.z / shadowPos.w;
+	float2 uv = (shadowPos.xy / shadowPos.w * 0.5f + 0.5f);// *shadowMapSize; // 1 unit - 1 texel
+	uv.y = 1.f - uv.y;
+	uv = uv * shadowMapSize;
+
+	float2 shadowMapSizeInv = 1.0 / shadowMapSize;
+
+	float2 base_uv;
+	base_uv.x = floor(uv.x + 0.5);
+	base_uv.y = floor(uv.y + 0.5);
+
+	float s = (uv.x + 0.5 - base_uv.x);
+	float t = (uv.y + 0.5 - base_uv.y);
+
+	base_uv -= float2(0.5, 0.5);
+	base_uv *= shadowMapSizeInv;
+
+
+	float uw0 = (4 - 3 * s);
+	float uw1 = 7;
+	float uw2 = (1 + 3 * s);
+
+	float u0 = (3 - 2 * s) / uw0 - 2;
+	float u1 = (3 + s) / uw1;
+	float u2 = s / uw2 + 2;
+
+	float vw0 = (4 - 3 * t);
+	float vw1 = 7;
+	float vw2 = (1 + 3 * t);
+
+	float v0 = (3 - 2 * t) / vw0 - 2;
+	float v1 = (3 + t) / vw1;
+	float v2 = t / vw2 + 2;
+
+
+	float sum = 0;
+	sum += uw0 * vw0 * SampleShadowMap(base_uv, float2(u0, v0), shadowMapSizeInv, lightDepth);
+	sum += uw1 * vw0 * SampleShadowMap(base_uv, float2(u1, v0), shadowMapSizeInv, lightDepth);
+	sum += uw2 * vw0 * SampleShadowMap(base_uv, float2(u2, v0), shadowMapSizeInv, lightDepth);
+
+	sum += uw0 * vw1 * SampleShadowMap(base_uv, float2(u0, v1), shadowMapSizeInv, lightDepth);
+	sum += uw1 * vw1 * SampleShadowMap(base_uv, float2(u1, v1), shadowMapSizeInv, lightDepth);
+	sum += uw2 * vw1 * SampleShadowMap(base_uv, float2(u2, v1), shadowMapSizeInv, lightDepth);
+
+	sum += uw0 * vw2 * SampleShadowMap(base_uv, float2(u0, v2), shadowMapSizeInv, lightDepth);
+	sum += uw1 * vw2 * SampleShadowMap(base_uv, float2(u1, v2), shadowMapSizeInv, lightDepth);
+	sum += uw2 * vw2 * SampleShadowMap(base_uv, float2(u2, v2), shadowMapSizeInv, lightDepth);
+
+	return sum * 1.0f / 144;
+}
+
 float4 main(VertexToPixel pIn) : SV_TARGET
 {
 	int3 sampleIndices = int3(pIn.position.xy, 0);
@@ -77,7 +137,7 @@ float4 main(VertexToPixel pIn) : SV_TARGET
 	float roughness = gRoughnessTexture.Sample(basicSampler, pIn.uv).r;
 	float metal = gMetalnessTexture.Sample(basicSampler, pIn.uv).r;
 	float4 shadowPos = gShadowPos.Sample(basicSampler, pIn.uv);
-	float shadowAmount = ShadowAmount(shadowPos);
+	float shadowAmount = SampleShadowMapOptimizedPCF(shadowPos);
 
 	float3 viewDir = normalize(cameraPosition - worldPos);
 	float3 prefilter = PrefilteredColor(viewDir, normal, roughness);
@@ -94,7 +154,7 @@ float4 main(VertexToPixel pIn) : SV_TARGET
 			cameraPosition, roughness, metal, albedo,
 			specColor, irradiance, prefilter, brdf, shadowAmount);
 	}
-		
+
 	float3 totalColor = finalColor;// +otherlights;
 	//totalColor = totalColor / (totalColor + float3(1.f, 1.f, 1.f));
 	//totalColor = saturate(totalColor);
