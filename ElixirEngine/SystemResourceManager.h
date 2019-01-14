@@ -14,6 +14,12 @@ typedef std::unordered_map<unsigned int, ID3D12Resource*> ResourceMap;
 typedef std::unordered_map<unsigned int, CDescriptorHeapWrapper> DescriptorHeapMap;
 typedef std::unordered_map<unsigned int, ConstantBufferWrapper> ConstantBufferMap;
 
+enum ResourceType
+{
+	ResourceTypeConstantBuffer,
+	ResourceTypeTexture
+};
+
 class SystemResourceManager
 {
 private:
@@ -29,8 +35,9 @@ public:
 	ID3D12PipelineState*	CreatePSO(HashID psoID, D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc);
 	ID3D12PipelineState*	GetPSO(HashID psoID);
 
-	ID3D12Resource*			CreateResource(HashID psoID, D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc);
-	ID3D12Resource*			GetResource(HashID psoID);
+	ID3D12Resource*			CreateResource(HashID resID, D3D12_RESOURCE_DESC resDesc, ResourceType resourceType, D3D12_HEAP_TYPE heapType = D3D12_HEAP_TYPE_UPLOAD);
+	ID3D12Resource*			GetResource(HashID resID);
+	void					CopyToCBV(HashID resID);
 	~SystemResourceManager();
 };
 

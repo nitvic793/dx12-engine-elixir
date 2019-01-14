@@ -27,8 +27,14 @@ struct PixelConstantBuffer
 	uint32_t dirLightIndex;
 };
 
+struct PointShadowBuffer
+{
+	DirectX::XMFLOAT4X4 viewProjection[6];
+};
+
 struct PerFrameConstantBuffer
 {
 	float nearZ;
 	float farZ;
+	XMFLOAT2 lightPerspective;
 };

@@ -31,6 +31,7 @@ cbuffer PerFrame : register(b1)
 {
 	float nearZ;
 	float farZ;
+	float2 lightPerspectiveValues;
 };
 
 float2 ProjectionConstants(float nearZ, float farZ)

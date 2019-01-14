@@ -2,6 +2,14 @@
 #ifndef _LIGHTING_HLSLI
 #define _LIGHTING_HLSLI
 
+struct SpotLight
+{
+	float4 Color;
+	float4 Direction;
+	float3 Position;
+	float Range;
+	float SpotlightAngle;
+};
 
 struct DirectionalLight
 {

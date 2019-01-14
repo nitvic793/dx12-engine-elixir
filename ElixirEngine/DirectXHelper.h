@@ -20,9 +20,16 @@ public:
 		CD3DX12_RANGE readRange(0, 0);
 		buffer->Map(0, &readRange, reinterpret_cast<void**>(&vAddressBegin));
 	}
+
 	void CopyData(void* data, int size, int index)
 	{
 		char* ptr = reinterpret_cast<char*>(vAddressBegin) + bufferSize * index;
+		memcpy(ptr, data, size);
+	}
+
+	void CopyData(void* data, int size, int index, int sizeOfBuffer)
+	{
+		char* ptr = reinterpret_cast<char*>(vAddressBegin) + sizeOfBuffer * index;
 		memcpy(ptr, data, size);
 	}
 

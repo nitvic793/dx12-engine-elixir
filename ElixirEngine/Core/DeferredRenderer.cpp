@@ -242,6 +242,7 @@ void DeferredRenderer::RenderLightShapePass(ID3D12GraphicsCommandList * command,
 	command->OMSetRenderTargets(1, &gRTVHeap.handleCPU(RTV_ORDER_LIGHTSHAPE), true, nullptr);
 	command->SetPipelineState(shapeLightPassPSO);
 	command->SetGraphicsRootDescriptorTable(RootSigCBPixel0, frame->GetGPUHandle(frameHeapParams.PixelCB));
+	command->SetGraphicsRootDescriptorTable(RootSigCBVertex1, frame->GetGPUHandle(frameHeapParams.PerFrameCB));
 	command->SetGraphicsRootDescriptorTable(RootSigSRVPixel1, frame->GetGPUHandle(frameHeapParams.GBuffer));
 
 	DrawLightShapePass(command, pixelCb);
@@ -264,14 +265,14 @@ void DeferredRenderer::RenderSelectionDepthBuffer(ID3D12GraphicsCommandList* com
 	commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(selectedDepthTexture, D3D12_RESOURCE_STATE_GENERIC_READ, D3D12_RESOURCE_STATE_DEPTH_WRITE));
 
 	commandList->ClearRenderTargetView(pRTVHeap.hCPUHeapStart, mClearColor, 0, nullptr);
-	commandList->ClearDepthStencilView(dsvHeap.handleCPU(2), D3D12_CLEAR_FLAGS::D3D12_CLEAR_FLAG_DEPTH, mClearDepth, 0xff, 0, nullptr);
-	commandList->OMSetRenderTargets(1, &pRTVHeap.hCPUHeapStart, false, &dsvHeap.handleCPU(2));
+	commandList->ClearDepthStencilView(dsvHeap.handleCPU(1), D3D12_CLEAR_FLAGS::D3D12_CLEAR_FLAG_DEPTH, mClearDepth, 0xff, 0, nullptr);
+	commandList->OMSetRenderTargets(1, &pRTVHeap.hCPUHeapStart, false, &dsvHeap.handleCPU(1));
 	commandList->SetPipelineState(selectionFilterPSO);
 
+	commandList->SetGraphicsRootDescriptorTable(RootSigCBVertex1, frame->GetGPUHandle(frameHeapParams.PerFrameCB)); //Per frame const buffer
 	for (auto e : entities)
 	{
 		commandList->SetGraphicsRootDescriptorTable(RootSigCBVertex0, frame->GetGPUHandle(frameHeapParams.Entities, e->GetID()));
-		commandList->SetGraphicsRootDescriptorTable(RootSigCBVertex1, frame->GetGPUHandle(frameHeapParams.PerFrameCB)); //Per frame const buffer
 		Draw(e->GetMesh(), commandList);
 	}
 
@@ -299,8 +300,8 @@ void DeferredRenderer::RenderShadowMap(ID3D12GraphicsCommandList * commandList, 
 	commandList->RSSetViewports(1, &viewport);
 	commandList->RSSetScissorRects(1, &scissorRect);
 	commandList->SetGraphicsRootSignature(rootSignature);
-	commandList->ClearDepthStencilView(dsvHeap.handleCPU(1), D3D12_CLEAR_FLAGS::D3D12_CLEAR_FLAG_DEPTH, mClearDepth, 0xff, 0, nullptr);
-	commandList->OMSetRenderTargets(0, nullptr, false, &dsvHeap.handleCPU(1));
+	commandList->ClearDepthStencilView(shadowDSVHeap.handleCPU(0), D3D12_CLEAR_FLAGS::D3D12_CLEAR_FLAG_DEPTH, mClearDepth, 0xff, 0, nullptr);
+	commandList->OMSetRenderTargets(0, nullptr, false, &shadowDSVHeap.handleCPU(0));
 	commandList->SetPipelineState(shadowMapDirLightPSO);
 
 	int sIndex = 0;
@@ -313,34 +314,37 @@ void DeferredRenderer::RenderShadowMap(ID3D12GraphicsCommandList * commandList, 
 	}
 	commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(shadowMapTexture, D3D12_RESOURCE_STATE_DEPTH_WRITE, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE));
 
-	
-	/*viewport.Width = (float)1024;
+	commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(shadowMapPointTexture, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_DEPTH_WRITE));
+	viewport.Width = (float)1024;
 	viewport.Height = (float)1024;
 	scissorRect.right = 1024;
 	scissorRect.bottom = 1024;
 	commandList->RSSetViewports(1, &viewport);
 	commandList->RSSetScissorRects(1, &scissorRect);
-	commandList->ClearDepthStencilView(dsvHeap.handleCPU(2), D3D12_CLEAR_FLAGS::D3D12_CLEAR_FLAG_DEPTH, mClearDepth, 0xff, 0, nullptr);
-	commandList->OMSetRenderTargets(0, nullptr, false, &dsvHeap.handleCPU(2)); 
+	commandList->ClearDepthStencilView(shadowDSVHeap.handleCPU(1), D3D12_CLEAR_FLAGS::D3D12_CLEAR_FLAG_DEPTH, mClearDepth, 0xff, 0, nullptr);
+	commandList->OMSetRenderTargets(0, nullptr, false, &shadowDSVHeap.handleCPU(1));
 	commandList->SetPipelineState(shadowMapPointLightPSO);
 	sIndex = 0;
+	auto shadowFrameIndex = frame->CopyAllocate(1, shadowCbHeap, 0);
+	commandList->SetGraphicsRootDescriptorTable(RootSigCBVertex1, frame->GetGPUHandle(shadowFrameIndex));
 	for (auto e : entities)
 	{
 		if (!e->CastsShadow()) continue;
 		commandList->SetGraphicsRootDescriptorTable(RootSigCBVertex0, frame->GetGPUHandle(frameHeapParams.ShadowCB, sIndex));
 		Draw(e->GetMesh(), commandList);
 		sIndex++;
-	}*/
+	}
+	commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(shadowMapPointTexture, D3D12_RESOURCE_STATE_DEPTH_WRITE, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE));
 }
 
 void DeferredRenderer::Draw(ID3D12GraphicsCommandList* commandList, std::vector<Entity*> entities)
 {
+	commandList->SetGraphicsRootDescriptorTable(RootSigCBVertex1, frame->GetGPUHandle(frameHeapParams.PerFrameCB));
 	for (auto e : entities)
 	{
 		auto cb = ConstantBuffer();
 		commandList->SetGraphicsRootDescriptorTable(RootSigSRVPixel1, frame->GetGPUHandle(frameHeapParams.Textures, e->GetMaterial()->GetStartIndex())); //Set start of material texture in root descriptor
 		commandList->SetGraphicsRootDescriptorTable(RootSigCBVertex0, frame->GetGPUHandle(frameHeapParams.Entities, e->GetID()));
-		commandList->SetGraphicsRootDescriptorTable(RootSigCBVertex1, frame->GetGPUHandle(frameHeapParams.PerFrameCB));
 		Draw(e->GetMesh(), commandList);
 	}
 }
@@ -525,11 +529,7 @@ void DeferredRenderer::PrepareGPUHeap(std::vector<Entity*> entities, PixelConsta
 	auto lightPassCBHeapIndex = frame->CopyAllocate(pixelCb.pointLightCount, cbHeap, constBufferIndex);
 	constBufferIndex = index;
 
-	//Create Per Frame CBV
-	int PerFrameCBSize = (sizeof(PerFrameConstantBuffer) + 255) & ~255;
-	PerFrameConstantBuffer frameCB = { camera->GetNearZ(), camera->GetFarZ() }; //Projection Constants for DOF
-	perFrameCbWrapper.CopyData(&frameCB, PerFrameCBSize, 0);
-	auto perFrameCBVHeapIndex = frame->CopyAllocate(1, cbHeap, ConstBufferCount - 1);
+
 
 	//Create Skybox CBV
 	XMFLOAT4X4 identity;
@@ -544,6 +544,60 @@ void DeferredRenderer::PrepareGPUHeap(std::vector<Entity*> entities, PixelConsta
 	cbWrapper.CopyData(&skycb, ConstantBufferSize, constBufferIndex);
 	auto skyCBIndex = frame->CopyAllocate(1, cbHeap, constBufferIndex);
 	constBufferIndex++;
+
+	pShadowBuffer = {};
+	XMFLOAT3 dirs[] = {
+		{ 1, 0, 0 },
+		{ -1, 0, 0 },
+		{ 0,1, 0 },
+		{ 0, -1, 0 },
+		{ 0, 0, 1 },
+		{ 0, 0, -1 }
+	};
+
+	XMFLOAT3 ups[] = 
+	{
+		{ 0.0f, -1.0f, 0.0 },
+		{ 0.0f, -1.0f, 0.0 },
+		{ 0.0f, 0.0f, -1.0 },
+		{ 0.0f, 0.0f,  1.0 },
+		{ 0.0f, -1.0f, 0.0 },
+		{ 0.0f, -1.0f, 0.0 }
+	};
+
+	auto proj = XMMatrixPerspectiveFovLH(XM_PIDIV2, 1.f, 0.1f, 10.f);
+	XMFLOAT4X4 pointProj;
+	XMStoreFloat4x4(&pointProj, proj);
+	//ZeroMemory(&pShadowBuffer, sizeof(PointShadowBuffer));
+	//for (int i = 0; i < 6; ++i)
+	//{
+	//	auto view = XMMatrixLookToLH(XMLoadFloat3(&pixelCb.pointLight[0].Position), XMLoadFloat3(&dirs[i]), XMLoadFloat3(&ups[i]));
+	//	XMStoreFloat4x4(&pShadowBuffer.viewProjection[i], XMMatrixTranspose(view * proj));
+	//}
+
+	auto world = XMMatrixTranslationFromVector(-XMLoadFloat3(&pixelCb.pointLight[0].Position));
+	auto view = XMMatrixRotationY(XM_PI + XM_PIDIV2); // +X
+	XMStoreFloat4x4(&pShadowBuffer.viewProjection[0], XMMatrixTranspose(world * view * proj));
+	view = XMMatrixRotationY(XM_PIDIV2); //-X
+	XMStoreFloat4x4(&pShadowBuffer.viewProjection[1], XMMatrixTranspose(world * view * proj));
+
+	view = XMMatrixRotationX(XM_PIDIV2); //+Y
+	XMStoreFloat4x4(&pShadowBuffer.viewProjection[2], XMMatrixTranspose(world * view * proj));
+	view = XMMatrixRotationX(XM_PI + XM_PIDIV2); //-Y
+	XMStoreFloat4x4(&pShadowBuffer.viewProjection[3], XMMatrixTranspose(world * view * proj));
+
+	XMStoreFloat4x4(&pShadowBuffer.viewProjection[4], XMMatrixTranspose(world * proj)); //+Z
+	view = XMMatrixRotationY(XM_PI);
+	XMStoreFloat4x4(&pShadowBuffer.viewProjection[5], XMMatrixTranspose(world * view * proj));//-Z
+
+	shadowCBWrapper.CopyData(&pShadowBuffer, sizeof(PointShadowBuffer), 0);
+	
+	//Create Per Frame CBV
+	int PerFrameCBSize = (sizeof(PerFrameConstantBuffer) + 255) & ~255;
+	ZeroMemory(&frameCB, sizeof(PerFrameConstantBuffer));
+	frameCB = { camera->GetNearZ(), camera->GetFarZ() , XMFLOAT2(pointProj._33, pointProj._43)}; //Projection Constants for DOF
+	perFrameCbWrapper.CopyData(&frameCB, PerFrameCBSize, 0);
+	auto perFrameCBVHeapIndex = frame->CopyAllocate(1, cbHeap, ConstBufferCount - 1);
 
 	//Assign heap indices to frame heap parameters
 	frameHeapParams.GBuffer = currentGBufferIndex;
@@ -981,7 +1035,7 @@ void DeferredRenderer::CreateRootSignature()
 	CD3DX12_ROOT_SIGNATURE_DESC descRootSignature;
 	descRootSignature.Init(4, rootParameters, 0, nullptr, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT | // we can deny shader stages here for better performance
 		D3D12_ROOT_SIGNATURE_FLAG_DENY_HULL_SHADER_ROOT_ACCESS |
-		D3D12_ROOT_SIGNATURE_FLAG_DENY_DOMAIN_SHADER_ROOT_ACCESS );
+		D3D12_ROOT_SIGNATURE_FLAG_DENY_DOMAIN_SHADER_ROOT_ACCESS);
 
 	CD3DX12_STATIC_SAMPLER_DESC StaticSamplers[2];
 	StaticSamplers[0].Init(0, D3D12_FILTER_ANISOTROPIC);
@@ -1007,6 +1061,7 @@ void DeferredRenderer::CreateShadowBuffers()
 	shadowRTVHeap.Create(device, D3D12_DESCRIPTOR_HEAP_TYPE_RTV, 6);//shadowMapCount);
 	shadowDSVHeap.Create(device, D3D12_DESCRIPTOR_HEAP_TYPE_DSV, 6);// shadowMapCount);
 	shadowResHeap.Create(device, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 6);
+	shadowCbHeap.Create(device, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 1);
 	//shadowPosHeap.Create(device, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, shadowMapCount); // Every shadow map requires a shadow pos texture
 	int shadowPosPointTextureIndex = numRTV + 7;
 	int shadowMapPointTextureIndex = numRTV + 6;
@@ -1087,31 +1142,55 @@ void DeferredRenderer::CreateShadowBuffers()
 	//{
 	//	device->CreateCommittedResource(&heapProperty, D3D12_HEAP_FLAG_NONE, &resourceDesc, D3D12_RESOURCE_STATE_GENERIC_READ, &clearVal, IID_PPV_ARGS(&shadowMaps[i]));
 	//}
+
 	resourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
 	resourceDesc.DepthOrArraySize = 6;
 	resourceDesc.Width = 1024;
 	resourceDesc.Height = 1024;
-	device->CreateCommittedResource(&heapProperty, D3D12_HEAP_FLAG_NONE, &resourceDesc, D3D12_RESOURCE_STATE_DEPTH_WRITE, &clearVal, IID_PPV_ARGS(&shadowMapPointTexture));
+	device->CreateCommittedResource(&heapProperty, D3D12_HEAP_FLAG_NONE, &resourceDesc, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, &clearVal, IID_PPV_ARGS(&shadowMapPointTexture));
 
 	//for (int i = MaxDirLights; i < MaxDirLights + MaxPointLights; ++i)
 	//{
 	//	device->CreateCommittedResource(&heapProperty, D3D12_HEAP_FLAG_NONE, &resourceDesc, D3D12_RESOURCE_STATE_GENERIC_READ, &clearVal, IID_PPV_ARGS(&shadowMaps[i]));
 	//}
 
+	D3D12_RESOURCE_DESC cbResDesc;
+	ZeroMemory(&cbResDesc, sizeof(resourceDesc));
+	cbResDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+	cbResDesc.Alignment = 0;
+	cbResDesc.SampleDesc.Count = 1;
+	cbResDesc.SampleDesc.Quality = 0;
+	cbResDesc.MipLevels = 1;
+	cbResDesc.Format = DXGI_FORMAT_UNKNOWN;
+	cbResDesc.DepthOrArraySize = 1;
+	cbResDesc.Width = 1024 * 128;
+	cbResDesc.Height = 1;
+	cbResDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+
+	CD3DX12_HEAP_PROPERTIES uheapProperty(D3D12_HEAP_TYPE_UPLOAD);
+	device->CreateCommittedResource(&uheapProperty, D3D12_HEAP_FLAG_NONE, &cbResDesc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(&shadowCB));
+	const static int size = (sizeof(PointShadowBuffer) + 255) & ~255;
+
+	D3D12_CONSTANT_BUFFER_VIEW_DESC	descBuffer;
+	descBuffer.BufferLocation = shadowCB->GetGPUVirtualAddress();
+	descBuffer.SizeInBytes = size;
+	device->CreateConstantBufferView(&descBuffer, shadowCbHeap.hCPUHeapStart);
+	shadowCBWrapper.Initialize(shadowCB, size);
+
 	D3D12_DEPTH_STENCIL_VIEW_DESC desc;
 	ZeroMemory(&desc, sizeof(desc));
 	desc.Texture2D.MipSlice = 0;
 	desc.Format = resourceDesc.Format;
-	desc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D; 
+	desc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
 	desc.Flags = D3D12_DSV_FLAG_NONE;
 
-	device->CreateDepthStencilView(shadowMapTexture, &desc, dsvHeap.handleCPU(1)); // 0 is the main depth target
+	device->CreateDepthStencilView(shadowMapTexture, &desc, shadowDSVHeap.handleCPU(0)); // 0 is the main depth target
 	device->CreateShaderResourceView(shadowMapTexture, &descSRV, gBufferHeap.handleCPU(shadowMapTextureIndex));
 
 	desc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2DARRAY;
 	desc.Texture2DArray.ArraySize = 6u;
 	desc.Texture2DArray.FirstArraySlice = 0u;
-	device->CreateDepthStencilView(shadowMapPointTexture, &desc, dsvHeap.handleCPU(2)); 
+	device->CreateDepthStencilView(shadowMapPointTexture, &desc, shadowDSVHeap.handleCPU(1));
 
 	descSRV.TextureCube.MipLevels = 1;
 	descSRV.TextureCube.MostDetailedMip = 0;
@@ -1249,7 +1328,7 @@ void DeferredRenderer::CreateSelectionFilterBuffers()
 	descRT.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;
 	device->CreateRenderTargetView(selectedOutlineTexture, &descRT, pRTVHeap.handleCPU(0));
 
-	device->CreateDepthStencilView(selectedDepthTexture, &desc, dsvHeap.handleCPU(2)); // 0 is the main depth target, 1 is the shadow map
+	device->CreateDepthStencilView(selectedDepthTexture, &desc, dsvHeap.handleCPU(1)); // 0 is the main depth target, 1 is the shadow map
 	heapIndex = SetSRV(selectedDepthTexture, DXGI_FORMAT_R24_UNORM_X8_TYPELESS);
 	selectedDepthBufferSRV = std::unique_ptr<Texture>(new Texture(this, device, selectedDepthTexture, heapIndex, TextureTypeSRV));
 }
@@ -1291,6 +1370,7 @@ DeferredRenderer::~DeferredRenderer()
 	perFrameCB->Release();
 	lightCB->Release();
 	worldViewCB->Release();
+	shadowCB->Release();
 	delete sphereMesh;
 	delete cubeMesh;
 }
