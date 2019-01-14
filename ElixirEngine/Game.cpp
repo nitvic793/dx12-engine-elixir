@@ -181,7 +181,7 @@ void Game::Update()
 	camera->Update(deltaTime);
 	entities[0]->SetPosition(XMFLOAT3(2 * sin(totalTime) + 2, 1.f, cos(totalTime)));
 	pixelCb.pointLight[1].Position = XMFLOAT3(2 * sin(totalTime * 2) + 5, 0, -1);
-	pixelCb.pointLight[0].Position = XMFLOAT3(2 * cos(totalTime * 2), 0, -1);
+	pixelCb.pointLight[0].Position = XMFLOAT3(2 * sin(totalTime * 2) + 1, 1.0f, -2 * cos(totalTime));
 	if (GetAsyncKeyState('Q'))
 	{
 		isBlurEnabled = true;
@@ -223,7 +223,7 @@ bool IsIntersecting(Entity* entity, Camera* camera, int mouseX, int mouseY, floa
 
 	auto direction = dest - orig;
 	direction = XMVector3Normalize(direction);
-	bool intersecting = false;// entity->GetBoundingSphere().Intersects(orig, direction, distance);
+	bool intersecting = entity->GetBoundingSphere().Intersects(orig, direction, distance);
 	//bool intersecting = /*intersecting ||*/ entity->GetBoundingBox().Intersects(orig, direction, distance);
 	return intersecting;
 }
@@ -278,7 +278,7 @@ void Game::Draw()
 	}
 
 	finalTexture = sunRaysPass->Apply(commandList, deferredRenderer->GetGBufferDepthSRV(), finalTexture, texturePool, camera);
-	////finalTexture = edgeFilter->Apply(commandList, deferredRenderer->GetSelectionDepthBufferSRV(), finalTexture, texturePool);
+	//finalTexture = edgeFilter->Apply(commandList, deferredRenderer->GetSelectionDepthBufferSRV(), finalTexture, texturePool);
 	//finalTexture = compositeTextures->Composite(commandList, finalTexture, deferredRenderer->GetSelectionOutlineSRV(), texturePool);
 
 	deferredRenderer->DrawResult(commandList, rtvHandle, finalTexture); //Draw renderer result to given main Render Target handle

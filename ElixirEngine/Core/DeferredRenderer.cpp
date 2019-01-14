@@ -565,7 +565,7 @@ void DeferredRenderer::PrepareGPUHeap(std::vector<Entity*> entities, PixelConsta
 		{ 0.0f, -1.0f, 0.0 }
 	};
 
-	auto proj = XMMatrixPerspectiveFovLH(XM_PIDIV2, 1.f, 0.1f, 10.f);
+	auto proj = XMMatrixPerspectiveFovLH(XM_PIDIV2, 1.f, 0.1f, pixelCb.pointLight[0].Range);
 	XMFLOAT4X4 pointProj;
 	XMStoreFloat4x4(&pointProj, proj);
 	//ZeroMemory(&pShadowBuffer, sizeof(PointShadowBuffer));
@@ -984,8 +984,8 @@ void DeferredRenderer::CreateDSV()
 
 	D3D12_CLEAR_VALUE clearVal;
 	clearVal = { mDsvFormat , mClearDepth };
+	depthStencilTexture = sysRM->CreateResource(StringID("depthStencil"), resourceDesc, ResourceTypeTexture, &clearVal, D3D12_HEAP_TYPE_DEFAULT, D3D12_RESOURCE_STATE_DEPTH_WRITE);
 
-	device->CreateCommittedResource(&heapProperty, D3D12_HEAP_FLAG_NONE, &resourceDesc, D3D12_RESOURCE_STATE_DEPTH_WRITE, &clearVal, IID_PPV_ARGS(&depthStencilTexture));
 	D3D12_DEPTH_STENCIL_VIEW_DESC desc;
 	ZeroMemory(&desc, sizeof(desc));
 	desc.Texture2D.MipSlice = 0;
@@ -1135,8 +1135,8 @@ void DeferredRenderer::CreateShadowBuffers()
 	descSRV.Format = DXGI_FORMAT_R32_FLOAT;
 	descSRV.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
 	descSRV.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-
-	device->CreateCommittedResource(&heapProperty, D3D12_HEAP_FLAG_NONE, &resourceDesc, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, &clearVal, IID_PPV_ARGS(&shadowMapTexture));
+	shadowMapTexture = sysRM->CreateResource(StringID("shadowMap"), resourceDesc, ResourceTypeTexture, &clearVal, D3D12_HEAP_TYPE_DEFAULT, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+	//device->CreateCommittedResource(&heapProperty, D3D12_HEAP_FLAG_NONE, &resourceDesc, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, &clearVal, IID_PPV_ARGS(&shadowMapTexture));
 
 	//for (int i = 0; i < MaxDirLights; ++i)
 	//{
@@ -1216,7 +1216,7 @@ void DeferredRenderer::CreateShadowBuffers()
 	resourceDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
 	resourceDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
 	resourceDesc.Format = shadowPosFormat;
-	device->CreateCommittedResource(&heapProperty, D3D12_HEAP_FLAG_NONE, &resourceDesc, D3D12_RESOURCE_STATE_RENDER_TARGET, &clearVal2, IID_PPV_ARGS(&shadowPosTexture));
+	shadowPosTexture = sysRM->CreateResource(StringID("shadowPos"), resourceDesc, ResourceTypeTexture, &clearVal2, D3D12_HEAP_TYPE_DEFAULT, D3D12_RESOURCE_STATE_RENDER_TARGET);
 	device->CreateCommittedResource(&heapProperty, D3D12_HEAP_FLAG_NONE, &resourceDesc, D3D12_RESOURCE_STATE_RENDER_TARGET, &clearVal2, IID_PPV_ARGS(&shadowPosPointTexture));
 	CreateShaderResourceView(device, shadowPosTexture, gBufferHeap.handleCPU(shadowPosTextureIndex));
 	CreateShaderResourceView(device, shadowPosPointTexture, gBufferHeap.handleCPU(shadowPosPointTextureIndex));
@@ -1337,18 +1337,11 @@ DeferredRenderer::~DeferredRenderer()
 {
 	for (int i = 0; i < numRTV; ++i)
 		gBufferTextures[numRTV]->Release();
-	depthStencilTexture->Release();
-	shadowMapTexture->Release();
-	shadowPosTexture->Release();
 	selectedDepthTexture->Release();
 	selectedOutlineTexture->Release();
 	rootSignature->Release();
 	shadowMapPointTexture->Release();
 	shadowPosPointTexture->Release();
-	/*rtvHeap.pDescriptorHeap->Release();
-	dsvHeap.pDescriptorHeap->Release();
-	srvHeap.pDescriptorHeap->Release();
-	gBufferHeap.pDescriptorHeap->Release();*/
 	postProcessTexture->Release();
 	delete resultUAV;
 	delete resultSRV;

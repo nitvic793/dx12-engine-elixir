@@ -14,7 +14,7 @@ SystemResourceManager * SystemResourceManager::CreateInstance(ID3D12Device * dev
 {
 	if (Instance != nullptr)
 		return Instance;
-	
+
 	auto sRm = new SystemResourceManager(device);
 	return sRm;
 }
@@ -37,9 +37,35 @@ ID3D12PipelineState* SystemResourceManager::GetPSO(HashID psoID)
 	return psoMap[psoID];
 }
 
+ID3D12Resource * SystemResourceManager::CreateResource(
+	HashID resID,
+	D3D12_RESOURCE_DESC resDesc,
+	ResourceType resourceType,
+	D3D12_CLEAR_VALUE * clearValue,
+	D3D12_HEAP_TYPE heapType,
+	D3D12_RESOURCE_STATES initialState,
+	D3D12_HEAP_FLAGS heapFlags)
+{
+	ID3D12Resource* resource;
+	CD3DX12_HEAP_PROPERTIES heapProperty(heapType);
+	device->CreateCommittedResource(&heapProperty, heapFlags, &resDesc, initialState, clearValue, IID_PPV_ARGS(&resource));
+	resources.insert(std::pair<HashID, ID3D12Resource*>(resID, resource));
+	return resource;
+}
+
+ID3D12Resource * SystemResourceManager::GetResource(HashID resID)
+{
+	return resources[resID];
+}
+
 SystemResourceManager::~SystemResourceManager()
 {
 	for (auto& p : psoMap)
+	{
+		p.second->Release();
+	}
+
+	for (auto& p : resources)
 	{
 		p.second->Release();
 	}
