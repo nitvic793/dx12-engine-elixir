@@ -1,81 +1,14 @@
 #include "stdafx.h"
 #include "Game.h"
-#include "StringHash.h"
+
 
 //Initializes assets. This function's scope has access to commandList which is not closed. 
 void Game::InitializeAssets()
 {
 	auto rm = resourceManager;
-	int entityCount = 10;
 
-	std::vector<MaterialLoadData> materialLoadData = {
-		{
-			StringID("floor"),
-			L"../../Assets/Textures/floor_albedo.png" ,
-			L"../../Assets/Textures/floor_normals.png" ,
-			L"../../Assets/Textures/floor_roughness.png" ,
-			L"../../Assets/Textures/floor_metal.png"
-		},
-		{
-			StringID("wood"),
-			L"../../Assets/Textures/wood_albedo.png" , //1
-			L"../../Assets/Textures/wood_normals.png" ,
-			L"../../Assets/Textures/wood_roughness.png" ,
-			L"../../Assets/Textures/wood_metal.png",
-		},
-		{
-			StringID("scratched"),
-			L"../../Assets/Textures/scratched_albedo.png" , //2
-			L"../../Assets/Textures/scratched_normals.png" ,
-			L"../../Assets/Textures/scratched_roughness.png" ,
-			L"../../Assets/Textures/scratched_metal.png"
-		},
-		{
-			StringID("bronze"),
-			L"../../Assets/Textures/bronze_albedo.png" , //3
-			L"../../Assets/Textures/bronze_normals.png" ,
-			L"../../Assets/Textures/bronze_roughness.png" ,
-			L"../../Assets/Textures/bronze_metal.png",
-		},
-		{
-			StringID("cement"),
-			L"../../Assets/Textures/cement_albedo.png" , //4
-			L"../../Assets/Textures/cement_normals.png" ,
-			L"../../Assets/Textures/cement_roughness.png" ,
-			L"../../Assets/Textures/cement_metal.png",
-		},
-		{	
-			StringID("arc"),
-			L"../../Assets/Textures/asw_albedo.png" , //5
-			L"../../Assets/Textures/marble_normals.jpg" ,
-			L"../../Assets/Textures/marble_roughness.jpg",
-			L"../../Assets/Textures/marble_metal.png",
-		},
-		{
-			StringID("hammer"),
-			L"../../Assets/Textures/hammer_albedo.png" , //6
-			L"../../Assets/Textures/hammer_normals.png" ,
-			L"../../Assets/Textures/cement_roughness.png",
-			L"../../Assets/Textures/hammer_metal.png"
-		}
-	};
-
-	std::vector<std::string> meshList = {
-		"../../Assets/sphere.obj",
-		"../../Assets/quad.obj",
-		"../../Assets/sw.obj",
-		"../../Assets/hammer.obj",
-	};
-
-	rm->LoadMeshes(commandList, meshList);
-	rm->LoadMaterials(commandQueue, deferredRenderer, materialLoadData);
-
-	std::vector<HashID> materialIds = { StringID("floor"), StringID("wood"), StringID("scratched"), StringID("bronze") };
-	std::vector<HashID> entityMaterialMap;
-	for (int i = 0; i < entityCount; ++i)
-	{
-		entityMaterialMap.push_back(materialIds[i % materialIds.size()]);
-	}
+	rm->LoadResources("../../SceneData/resources.json", commandQueue, commandList, deferredRenderer);
+	rm->LoadScene("../../SceneData/scene.json", entities);
 
 	texturePool = new TexturePool(device, deferredRenderer, 24);
 	isBlurEnabled = false;
@@ -115,41 +48,6 @@ void Game::InitializeAssets()
 			{ StringID("Brdf"), L"../../Assets/envBrdf.dds", TexFileTypeDDS, true },
 			{ StringID("Prefilter"), L"../../Assets/envSpecularHDR.dds", TexFileTypeDDS, true }
 		});
-
-	for (int i = 0; i < entityCount; ++i)
-	{
-		entities.push_back(std::unique_ptr<Entity>(new Entity()));
-		entities[i]->SetMesh(rm->GetMesh(StringID("sphere")));
-		auto pos = XMFLOAT3((float)i, 0, 0);
-		entities[i]->SetPosition(pos);
-		auto matId = entityMaterialMap[i];
-		entities[i]->SetMaterial(rm->GetMaterial(matId));
-		entities[i]->SetCastsShadow(true);
-	}
-	entities[0]->SetMaterial(rm->GetMaterial(StringID("floor")));
-
-	entities[8]->SetMesh(rm->GetMesh(StringID("hammer")));
-	entities[7]->SetMesh(rm->GetMesh(StringID("sw")));
-	entities[6]->SetMesh(rm->GetMesh(StringID("sw")));
-
-	entities[8]->SetRotation(XMFLOAT3(-XM_PIDIV2 / 4, -XM_PIDIV2 / 4, 0.f));
-	entities[8]->SetPosition(XMFLOAT3(0, -1, 0));
-	entities[7]->SetPosition(XMFLOAT3(15, 1, 5));
-	entities[6]->SetPosition(XMFLOAT3(0, 2, 5));
-
-	//entities[8]->SetScale(XMFLOAT3(0.01f, 0.01f, 0.01f));
-	entities[7]->SetScale(XMFLOAT3(0.01f, 0.01f, 0.01f));
-	entities[6]->SetScale(XMFLOAT3(0.01f, 0.01f, 0.01f));
-
-	entities[8]->SetMaterial(rm->GetMaterial(StringID("hammer")));
-	entities[7]->SetMaterial(rm->GetMaterial(StringID("arc")));
-	entities[6]->SetMaterial(rm->GetMaterial(StringID("arc")));
-
-	entities[9]->SetCastsShadow(false);
-	entities[9]->SetMesh(rm->GetMesh(StringID("quad")));
-	entities[9]->SetPosition(XMFLOAT3(5, -1, -5));
-	entities[9]->SetScale(XMFLOAT3(15, 15, 15));
-	entities[9]->SetMaterial(rm->GetMaterial(StringID("cement")));
 
 	deferredRenderer->SetIBLTextures(
 		rm->GetTexture(StringID("Irradiance"))->GetTextureResource(), 
@@ -238,7 +136,7 @@ void Game::Draw()
 	std::vector<Entity*> entityList;
 	for (auto& entity : entities)
 	{
-		entityList.push_back(entity.get());
+		entityList.push_back(entity);
 	}
 	deferredRenderer->PrepareFrame(entityList, camera, pixelCb);
 
@@ -287,6 +185,7 @@ void Game::Draw()
 
 void Game::Shutdown()
 {
+	for (auto& e : entities) delete e;
 	delete texturePool;
 	delete blurFilter;
 	delete computeCore;
@@ -303,9 +202,9 @@ void Game::OnMouseDown(WPARAM buttonState, int x, int y)
 	for (int i = 0; i < entities.size(); ++i)
 	{
 		float distance;
-		if (IsIntersecting(entities[i].get(), camera, x, y, distance))
+		if (IsIntersecting(entities[i], camera, x, y, distance))
 		{
-			selectedEntities.push_back(entities[i].get());
+			selectedEntities.push_back(entities[i]);
 			printf("Intersecting %d\n", i);
 			break;
 		}

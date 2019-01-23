@@ -1,0 +1,74 @@
+{
+    "Resources": {
+        "Materials": [
+            {
+                "MaterialID": "floor",
+                "AlbedoPath": "../../Assets/Textures/floor_albedo.png",
+                "NormalPath": "../../Assets/Textures/floor_normals.png",
+                "RoughnessPath": "../../Assets/Textures/floor_roughness.png",
+                "MetalnessPath": "../../Assets/Textures/floor_metal.png"
+            },
+            {
+                "MaterialID": "wood",
+                "AlbedoPath": "../../Assets/Textures/wood_albedo.png",
+                "NormalPath": "../../Assets/Textures/wood_normals.png",
+                "RoughnessPath": "../../Assets/Textures/wood_roughness.png",
+                "MetalnessPath": "../../Assets/Textures/wood_metal.png"
+            },
+            {
+                "MaterialID": "scratched",
+                "AlbedoPath": "../../Assets/Textures/scratched_albedo.png",
+                "NormalPath": "../../Assets/Textures/scratched_normals.png",
+                "RoughnessPath": "../../Assets/Textures/scratched_roughness.png",
+                "MetalnessPath": "../../Assets/Textures/scratched_metal.png"
+            },
+            {
+                "MaterialID": "bronze",
+                "AlbedoPath": "../../Assets/Textures/bronze_albedo.png",
+                "NormalPath": "../../Assets/Textures/bronze_normals.png",
+                "RoughnessPath": "../../Assets/Textures/bronze_roughness.png",
+                "MetalnessPath": "../../Assets/Textures/bronze_metal.png"
+            },
+            {
+                "MaterialID": "cement",
+                "AlbedoPath": "../../Assets/Textures/cement_albedo.png",
+                "NormalPath": "../../Assets/Textures/cement_normals.png",
+                "RoughnessPath": "../../Assets/Textures/cement_roughness.png",
+                "MetalnessPath": "../../Assets/Textures/cement_metal.png"
+            },
+            {
+                "MaterialID": "arc",
+                "AlbedoPath": "../../Assets/Textures/asw_albedo.png",
+                "NormalPath": "../../Assets/Textures/marble_normals.jpg",
+                "RoughnessPath": "../../Assets/Textures/marble_roughness.jpg",
+                "MetalnessPath": "../../Assets/Textures/marble_metal.png"
+            },
+            {
+                "MaterialID": "hammer",
+                "AlbedoPath": "../../Assets/Textures/hammer_albedo.png",
+                "NormalPath": "../../Assets/Textures/hammer_normals.png",
+                "RoughnessPath": "../../Assets/Textures/cement_roughness.png",
+                "MetalnessPath": "../../Assets/Textures/hammer_metal.png"
+            }
+        ],
+        "Meshes": [
+            {
+                "MeshID": "sphere",
+                "MeshPath": "../../Assets/sphere.obj"
+            },
+            {
+                "MeshID": "quad",
+                "MeshPath": "../../Assets/quad.obj"
+            },
+            {
+                "MeshID": "sw",
+                "MeshPath": "../../Assets/sw.obj"
+            },
+            {
+                "MeshID": "hammer",
+                "MeshPath": "../../Assets/hammer.obj"
+            }
+        ],
+        "Textures": []
+    }
+}

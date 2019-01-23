@@ -1,7 +1,7 @@
 #pragma once
 #include "stdafx.h"
 #include "DirectXHelper.h"
-#include "StringHash.h"
+#include "../Engine.Serialization/StringHash.h"
 #include <wrl/client.h>
 #include <unordered_map>
 

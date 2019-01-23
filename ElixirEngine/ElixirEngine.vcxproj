@@ -147,7 +147,6 @@
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="StringHash.cpp" />
     <ClCompile Include="SunRaysPass.cpp" />
     <ClCompile Include="SystemResourceManager.cpp" />
     <ClCompile Include="Texture.cpp" />
@@ -179,7 +178,6 @@
     <ClInclude Include="Material.h" />
     <ClInclude Include="ResourceManager.h" />
     <ClInclude Include="stdafx.h" />
-    <ClInclude Include="StringHash.h" />
     <ClInclude Include="SunRaysPass.h" />
     <ClInclude Include="SystemResourceManager.h" />
     <ClInclude Include="Texture.h" />
@@ -473,6 +471,11 @@
   <ItemGroup>
     <None Include="Lighting.hlsli" />
     <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Engine.Serialization\Engine.Serialization.vcxproj">
+      <Project>{96114179-bf59-4a20-9056-f89607b04834}</Project>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

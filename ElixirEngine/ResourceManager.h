@@ -4,8 +4,12 @@
 #include "Core/Mesh.h"
 #include "Material.h"
 #include <unordered_map>
-#include "StringHash.h"
+#include "../Engine.Serialization/StringHash.h"
 #include <typeinfo>
+#include "../Engine.Serialization/SceneSerDe.h"
+#include "../Engine.Serialization/ResourcePackSerDe.h"
+
+#include "Core/Entity.h"
 
 // Engine Specific
 typedef std::unordered_map<unsigned int, Mesh*> MeshMap;
@@ -56,6 +60,8 @@ public:
 	Mesh*		GetMesh(HashID hashId);
 	Material*	GetMaterial(HashID materialID);
 	Texture*	GetTexture(HashID textureID);
+	Scene		LoadScene(std::string filename, std::vector<Entity*> &outEntities);
+	void		LoadResources(std::string filename, ID3D12CommandQueue* cqueue, ID3D12GraphicsCommandList* clist, DeferredRenderer* renderer);
 	~ResourceManager();
 };
 

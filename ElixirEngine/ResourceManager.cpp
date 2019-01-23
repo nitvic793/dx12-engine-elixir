@@ -115,6 +115,48 @@ Texture * ResourceManager::GetTexture(HashID textureID)
 	return textures[textureID];
 }
 
+Scene ResourceManager::LoadScene(std::string filename, std::vector<Entity*> &outEntities)
+{
+	auto scene = SceneSerDe::LoadScene(filename);
+	for (auto e : scene.Entities)
+	{
+		auto ne = new Entity();
+		ne->SetPosition(e.Position);
+		ne->SetScale(e.Scale);
+		ne->SetRotation(e.Rotation);
+		ne->SetMesh(GetMesh(StringID(e.MeshID)));
+		ne->SetMaterial(GetMaterial(StringID(e.MaterialID)));
+		ne->SetCastsShadow(e.CastShadows);
+		outEntities.push_back(ne);
+	}
+
+	return scene;
+}
+
+void ResourceManager::LoadResources(std::string filename, ID3D12CommandQueue* cqueue, ID3D12GraphicsCommandList* clist, DeferredRenderer* renderer)
+{
+	auto rc = ResourcePackSerDe::LoadResources(filename);
+	for (auto m : rc.Materials)
+	{
+		LoadMaterial(
+			cqueue,
+			renderer,
+			{
+				StringID(m.MaterialID),
+				ToWideString(m.AlbedoPath),
+				ToWideString(m.NormalPath),
+				ToWideString(m.RoughnessPath),
+				ToWideString(m.MetalnessPath)
+			}
+		);
+	}
+
+	for (auto m : rc.Meshes)
+	{
+		LoadMesh(clist, StringID(m.MeshID), m.MeshPath);
+	}
+}
+
 
 ResourceManager::~ResourceManager()
 {

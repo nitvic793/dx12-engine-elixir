@@ -1,6 +1,15 @@
 #pragma once
 
+#include <string>
+#include <locale>
+#include <codecvt>
+#include <string>
+
+
 unsigned int GenerateHash(const char *string, size_t len);
+
+std::wstring ToWideString(const std::string& s);
+
 
 //Credits: http://lolengine.net/blog/2011/12/20/cpp-constant-string-hash
 #ifndef HASHF
@@ -30,6 +39,13 @@ public:
 
 	StringID(const char* stringValue) :
 		hash(SID(stringValue))
+		//hash(GenerateHash(stringValue, strlen(stringValue)))
+	{
+
+	}
+
+	StringID(std::string stringValue) :
+		hash(SID(stringValue.c_str()))
 		//hash(GenerateHash(stringValue, strlen(stringValue)))
 	{
 

@@ -30,7 +30,7 @@ protected:
 	BlurFilter*		blurFilter;
 
 	std::vector<Entity*> selectedEntities;
-	std::vector<std::unique_ptr<Entity>> entities;
+	std::vector<Entity*> entities;
 
 	std::unique_ptr<DepthOfFieldPass>	dofPass;
 	std::unique_ptr<SunRaysPass>		sunRaysPass;
