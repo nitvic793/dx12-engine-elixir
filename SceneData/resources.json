@@ -69,6 +69,31 @@
                 "MeshPath": "../../Assets/hammer.obj"
             }
         ],
-        "Textures": []
+        "Textures": [
+            {
+                "TextureID": "skybox",
+                "TexturePath": "../../Assets/envEnvHDR.dds",
+                "TexType": 1,
+                "IsCubeMap": true
+            },
+            {
+                "TextureID": "Irradiance",
+                "TexturePath": "../../Assets/envDiffuseHDR.dds",
+                "TexType": 1,
+                "IsCubeMap": true
+            },
+            {
+                "TextureID": "Brdf",
+                "TexturePath": "../../Assets/envBrdf.dds",
+                "TexType": 1,
+                "IsCubeMap": true
+            },
+            {
+                "TextureID": "Prefilter",
+                "TexturePath": "../../Assets/envSpecularHDR.dds",
+                "TexType": 1,
+                "IsCubeMap": true
+            }
+        ]
     }
 }

@@ -26,12 +26,12 @@ ResourceManager * ResourceManager::GetInstance()
 }
 
 void ResourceManager::LoadTexture(
-	ID3D12CommandQueue * commandQueue, 
-	DeferredRenderer * renderer, 
-	HashID textureID, 
-	std::wstring filepath, 
-	TextureFileType texFileType, 
-	bool isCubeMap, 
+	ID3D12CommandQueue * commandQueue,
+	DeferredRenderer * renderer,
+	HashID textureID,
+	std::wstring filepath,
+	TextureFileType texFileType,
+	bool isCubeMap,
 	TextureViewType viewType
 )
 {
@@ -57,14 +57,14 @@ void ResourceManager::LoadTextures(ID3D12CommandQueue* commandQueue, DeferredRen
 void ResourceManager::LoadMaterial(ID3D12CommandQueue* commandQueue, DeferredRenderer* renderer, MaterialLoadData loadData)
 {
 	auto material = new Material(
-		renderer, 
+		renderer,
 		{
 			loadData.AlbedoFile,
 			loadData.NormalFile,
 			loadData.RoughnessFile,
 			loadData.MetalnessFile
-		}, 
-		device, 
+		},
+		device,
 		commandQueue
 	);
 
@@ -154,6 +154,14 @@ void ResourceManager::LoadResources(std::string filename, ID3D12CommandQueue* cq
 	for (auto m : rc.Meshes)
 	{
 		LoadMesh(clist, StringID(m.MeshID), m.MeshPath);
+	}
+
+	for (auto t : rc.Textures)
+	{
+		TextureFileType type;
+		if (t.TexType == WIC) type = TexFileTypeWIC;
+		else type = TexFileTypeDDS;
+		LoadTexture(cqueue, renderer, StringID(t.TextureID), ToWideString(t.TexturePath), type, t.IsCubeMap);
 	}
 }
 

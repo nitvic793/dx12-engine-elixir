@@ -41,14 +41,6 @@ void Game::InitializeAssets()
 	pixelCb.pointLightCount = 2u;
 	pixelCb.pointLightIndex = 0;
 
-	rm->LoadTextures(commandQueue, deferredRenderer, 
-		{
-			{ StringID("skybox"), L"../../Assets/envEnvHDR.dds", TexFileTypeDDS, true },
-			{ StringID("Irradiance"), L"../../Assets/envDiffuseHDR.dds", TexFileTypeDDS, true },
-			{ StringID("Brdf"), L"../../Assets/envBrdf.dds", TexFileTypeDDS, true },
-			{ StringID("Prefilter"), L"../../Assets/envSpecularHDR.dds", TexFileTypeDDS, true }
-		});
-
 	deferredRenderer->SetIBLTextures(
 		rm->GetTexture(StringID("Irradiance"))->GetTextureResource(), 
 		rm->GetTexture(StringID("Prefilter"))->GetTextureResource(),

@@ -119,7 +119,7 @@ namespace EngineTests
 				}
 			};
 
-			std::vector<MeshType> meshes = 
+			std::vector<MeshType> meshes =
 			{
 				MeshType {"sphere", "../../Assets/sphere.obj"},
 				MeshType {"quad", "../../Assets/quad.obj" },
@@ -127,9 +127,17 @@ namespace EngineTests
 				MeshType {"hammer", "../../Assets/hammer.obj"}
 			};
 
-			Resources rc = {materials, meshes};
+			std::vector<TextureType> textures =
+			{
+				{"skybox", "../../Assets/envEnvHDR.dds", DDS, true},
+				{"Irradiance", "../../Assets/envDiffuseHDR.dds", DDS, true},
+				{"Brdf", "../../Assets/envBrdf.dds", DDS, true},
+				{"Prefilter", "../../Assets/envSpecularHDR.dds", DDS, true}
+			};
+
+			Resources rc = { materials, meshes, textures };
 			ResourcePackSerDe::SaveResourcePack("resources.json", rc);
-			
+
 		}
 
 		TEST_METHOD(LoadResources)

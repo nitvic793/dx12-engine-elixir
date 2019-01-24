@@ -12,17 +12,27 @@
 #include <cereal/archives/json.hpp>
 #include <iostream>
 
+enum TexType
+{
+	WIC,
+	DDS
+};
+
 struct TextureType
 {
 	std::string TextureID;
 	std::string TexturePath;
+	TexType		TexType;
+	bool		IsCubeMap;
 
 	template<class Archive>
 	void serialize(Archive &archive)
 	{
 		archive(
 			CEREAL_NVP(TextureID),
-			CEREAL_NVP(TexturePath)
+			CEREAL_NVP(TexturePath),
+			CEREAL_NVP(TexType),
+			CEREAL_NVP(IsCubeMap)
 		);
 	}
 };
