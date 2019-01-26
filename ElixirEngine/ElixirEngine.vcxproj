@@ -22,7 +22,7 @@
     <VCProjectVersion>15.0</VCProjectVersion>
     <ProjectGuid>{C691949F-3D6C-4005-A0BB-A46257C87E20}</ProjectGuid>
     <RootNamespace>ElixirEngine</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0.17134.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.17763.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -39,7 +39,7 @@
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v141</PlatformToolset>
     <CharacterSet>MultiByte</CharacterSet>
@@ -470,7 +470,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Lighting.hlsli" />
-    <None Include="packages.config" />
+    <None Include="packages.config">
+      <SubType>Designer</SubType>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Engine.Serialization\Engine.Serialization.vcxproj">
@@ -479,20 +481,20 @@
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
-    <Import Project="..\packages\directxtk12_desktop_2015.2018.9.13.1\build\native\directxtk12_desktop_2015.targets" Condition="Exists('..\packages\directxtk12_desktop_2015.2018.9.13.1\build\native\directxtk12_desktop_2015.targets')" />
-    <Import Project="..\packages\directxtex_desktop_2015.2018.8.18.2\build\native\directxtex_desktop_2015.targets" Condition="Exists('..\packages\directxtex_desktop_2015.2018.8.18.2\build\native\directxtex_desktop_2015.targets')" />
     <Import Project="..\packages\assimp_native.redist.4.0.1\build\native\assimp_native.redist.targets" Condition="Exists('..\packages\assimp_native.redist.4.0.1\build\native\assimp_native.redist.targets')" />
     <Import Project="..\packages\assimp_native.4.0.1\build\native\assimp_native.targets" Condition="Exists('..\packages\assimp_native.4.0.1\build\native\assimp_native.targets')" />
     <Import Project="..\packages\unofficial-flayan-cereal.1.2.2\build\native\unofficial-flayan-cereal.targets" Condition="Exists('..\packages\unofficial-flayan-cereal.1.2.2\build\native\unofficial-flayan-cereal.targets')" />
+    <Import Project="..\packages\directxtex_desktop_2015.2018.11.20.1\build\native\directxtex_desktop_2015.targets" Condition="Exists('..\packages\directxtex_desktop_2015.2018.11.20.1\build\native\directxtex_desktop_2015.targets')" />
+    <Import Project="..\packages\directxtk12_desktop_2015.2018.11.20.1\build\native\directxtk12_desktop_2015.targets" Condition="Exists('..\packages\directxtk12_desktop_2015.2018.11.20.1\build\native\directxtk12_desktop_2015.targets')" />
   </ImportGroup>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
       <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
     </PropertyGroup>
-    <Error Condition="!Exists('..\packages\directxtk12_desktop_2015.2018.9.13.1\build\native\directxtk12_desktop_2015.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\directxtk12_desktop_2015.2018.9.13.1\build\native\directxtk12_desktop_2015.targets'))" />
-    <Error Condition="!Exists('..\packages\directxtex_desktop_2015.2018.8.18.2\build\native\directxtex_desktop_2015.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\directxtex_desktop_2015.2018.8.18.2\build\native\directxtex_desktop_2015.targets'))" />
     <Error Condition="!Exists('..\packages\assimp_native.redist.4.0.1\build\native\assimp_native.redist.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\assimp_native.redist.4.0.1\build\native\assimp_native.redist.targets'))" />
     <Error Condition="!Exists('..\packages\assimp_native.4.0.1\build\native\assimp_native.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\assimp_native.4.0.1\build\native\assimp_native.targets'))" />
     <Error Condition="!Exists('..\packages\unofficial-flayan-cereal.1.2.2\build\native\unofficial-flayan-cereal.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\unofficial-flayan-cereal.1.2.2\build\native\unofficial-flayan-cereal.targets'))" />
+    <Error Condition="!Exists('..\packages\directxtex_desktop_2015.2018.11.20.1\build\native\directxtex_desktop_2015.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\directxtex_desktop_2015.2018.11.20.1\build\native\directxtex_desktop_2015.targets'))" />
+    <Error Condition="!Exists('..\packages\directxtk12_desktop_2015.2018.11.20.1\build\native\directxtk12_desktop_2015.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\directxtk12_desktop_2015.2018.11.20.1\build\native\directxtk12_desktop_2015.targets'))" />
   </Target>
 </Project>
