@@ -67,6 +67,10 @@
             {
                 "MeshID": "hammer",
                 "MeshPath": "../../Assets/hammer.obj"
+            },
+            {
+                "MeshID": "tree",
+                "MeshPath": "../../Assets/tree_obj.obj"
             }
         ],
         "Textures": [

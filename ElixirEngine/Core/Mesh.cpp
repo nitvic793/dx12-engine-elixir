@@ -1,6 +1,8 @@
 #include "Mesh.h"
 #include <fstream>
 #include <vector>
+#include "DirectXMesh.h"
+
 #define TINYOBJLOADER_IMPLEMENTATION
 #include <tiny_obj_loader.h>
 
@@ -109,29 +111,39 @@ Mesh::Mesh(std::string objFile, ID3D12Device * device, ID3D12GraphicsCommandList
 	std::vector<tinyobj::material_t> materials;
 	std::string err;
 	bool ret = tinyobj::LoadObj(&attrib, &shapes, &materials, &err, objFile.c_str());
-
 	for (size_t s = 0; s < shapes.size(); s++) {
 		// Loop over faces(polygon)
 		size_t index_offset = 0;
-		for (size_t f = 0; f < shapes[s].mesh.num_face_vertices.size(); f++) {
+		bool hasNormals = true;
+		for (size_t f = 0; f < shapes[s].mesh.num_face_vertices.size(); f++) 
+		{
 			int fv = shapes[s].mesh.num_face_vertices[f];
-
 			// Loop over vertices in the face.
-			for (size_t v = 0; v < fv; v++) {
+			for (size_t v = 0; v < fv; v++) 
+			{
 				// access to vertex
+				Vertex vertex;
 				tinyobj::index_t idx = shapes[s].mesh.indices[index_offset + v];
 				tinyobj::real_t vx = attrib.vertices[3 * idx.vertex_index + 0];
 				tinyobj::real_t vy = attrib.vertices[3 * idx.vertex_index + 1];
 				tinyobj::real_t vz = attrib.vertices[3 * idx.vertex_index + 2];
-				tinyobj::real_t nx = attrib.normals[3 * idx.normal_index + 0];
-				tinyobj::real_t ny = attrib.normals[3 * idx.normal_index + 1];
-				tinyobj::real_t nz = attrib.normals[3 * idx.normal_index + 2];
-				tinyobj::real_t tx = attrib.texcoords[2 * idx.texcoord_index + 0];
-				tinyobj::real_t ty = attrib.texcoords[2 * idx.texcoord_index + 1];
-				Vertex vertex;
 				vertex.pos = XMFLOAT3(vx, vy, vz);
 				positions.push_back(vertex.pos);
-				vertex.normal = XMFLOAT3(nx, ny, nz);
+
+				if (idx.normal_index != -1)
+				{
+					tinyobj::real_t nx = attrib.normals[3 * idx.normal_index + 0];
+					tinyobj::real_t ny = attrib.normals[3 * idx.normal_index + 1];
+					tinyobj::real_t nz = attrib.normals[3 * idx.normal_index + 2];
+					vertex.normal = XMFLOAT3(nx, ny, nz);
+				}
+				else
+				{
+					hasNormals = false;
+				}
+
+				tinyobj::real_t tx = attrib.texcoords[2 * idx.texcoord_index + 0];
+				tinyobj::real_t ty = attrib.texcoords[2 * idx.texcoord_index + 1];
 				vertex.uv = XMFLOAT2(tx, ty);
 				vertices.push_back(vertex);
 
@@ -146,6 +158,19 @@ Mesh::Mesh(std::string objFile, ID3D12Device * device, ID3D12GraphicsCommandList
 			// per-face material
 			shapes[s].mesh.material_ids[f];
 		}
+
+		if (!hasNormals)
+		{
+			XMFLOAT3 *normals = new XMFLOAT3[positions.size()];
+			ComputeNormals(indexVals.data(), shapes[s].mesh.num_face_vertices.size(), positions.data(), positions.size(), CNORM_WEIGHT_BY_AREA, normals);
+			for (uint32_t i = 0; i < positions.size(); ++i)
+			{
+				vertices[i].normal = normals[i];
+			}
+
+			delete[] normals;
+		}
+
 	}
 
 	BoundingOrientedBox::CreateFromPoints(boundingBox, positions.size(), positions.data(), sizeof(XMFLOAT3));
