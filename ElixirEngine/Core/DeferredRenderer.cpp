@@ -325,7 +325,7 @@ void DeferredRenderer::RenderShadowMap(ID3D12GraphicsCommandList * commandList, 
 	commandList->OMSetRenderTargets(0, nullptr, false, &shadowDSVHeap.handleCPU(1));
 	commandList->SetPipelineState(shadowMapPointLightPSO);
 	sIndex = 0;
-	auto shadowFrameIndex = frame->CopyAllocate(1, shadowCbHeap, 0);
+	auto shadowFrameIndex = frame->CopyAllocate(1, pointShadowCbHeap, 0);
 	commandList->SetGraphicsRootDescriptorTable(RootSigCBVertex1, frame->GetGPUHandle(shadowFrameIndex));
 	for (auto e : entities)
 	{
@@ -492,22 +492,7 @@ void DeferredRenderer::PrepareGPUHeap(std::vector<Entity*> entities, PixelConsta
 	XMMATRIX shProj = XMMatrixOrthographicLH(40.0f, 40.0f, 0.1f, 100.0f);
 	XMStoreFloat4x4(&shadowProjTransposed, XMMatrixTranspose(shProj));
 
-	ConstantBuffer cb;
-	cb.view = shadowViewTransposed;
-	cb.projection = shadowProjTransposed;
 
-	int count = 0;
-	for (auto e : entities)
-	{
-		if (!e->CastsShadow()) continue;
-		cb.world = e->GetWorldMatrixTransposed();
-		cbWrapper.CopyData(&cb, ConstantBufferSize, index);
-		index++;
-		count++;
-	}
-
-	auto shadowHeapIndex = frame->CopyAllocate(count, cbHeap, constBufferIndex);
-	constBufferIndex = index;
 
 	//Create Point Light CBVs and corresponding mesh CBVs
 	Entity e;
@@ -529,6 +514,21 @@ void DeferredRenderer::PrepareGPUHeap(std::vector<Entity*> entities, PixelConsta
 	auto lightPassCBHeapIndex = frame->CopyAllocate(pixelCb.pointLightCount, cbHeap, constBufferIndex);
 	constBufferIndex = index;
 
+	DirShadowBuffer cb;
+	cb.shadowView = shadowViewTransposed;
+	cb.shadowProjection = shadowProjTransposed;
+	int count = 0;
+	for (auto e : entities)
+	{
+		if (!e->CastsShadow()) continue;
+		cb.world = e->GetWorldMatrixTransposed();
+		shadowCBWrapper.CopyData(&cb, sizeof(DirShadowBuffer), count); //0th position taken by Point Shadow Buffer
+		//index++;
+		count++;
+	}
+
+	auto shadowHeapIndex = frame->CopyAllocate(count, shadowCbHeap, 0);
+	constBufferIndex = index;
 
 
 	//Create Skybox CBV
@@ -555,7 +555,7 @@ void DeferredRenderer::PrepareGPUHeap(std::vector<Entity*> entities, PixelConsta
 		{ 0, 0, -1 }
 	};
 
-	XMFLOAT3 ups[] = 
+	XMFLOAT3 ups[] =
 	{
 		{ 0.0f, -1.0f, 0.0 },
 		{ 0.0f, -1.0f, 0.0 },
@@ -590,12 +590,14 @@ void DeferredRenderer::PrepareGPUHeap(std::vector<Entity*> entities, PixelConsta
 	view = XMMatrixRotationY(XM_PI);
 	XMStoreFloat4x4(&pShadowBuffer.viewProjection[5], XMMatrixTranspose(world * view * proj));//-Z
 
-	shadowCBWrapper.CopyData(&pShadowBuffer, sizeof(PointShadowBuffer), 0);
-	
+	pointShadowCBWrapper.CopyData(&pShadowBuffer, sizeof(PointShadowBuffer), 0);
+
+
+
 	//Create Per Frame CBV
 	int PerFrameCBSize = (sizeof(PerFrameConstantBuffer) + 255) & ~255;
 	ZeroMemory(&frameCB, sizeof(PerFrameConstantBuffer));
-	frameCB = { camera->GetNearZ(), camera->GetFarZ() , XMFLOAT2(pointProj._33, pointProj._43)}; //Projection Constants for DOF
+	frameCB = { camera->GetNearZ(), camera->GetFarZ() , XMFLOAT2(pointProj._33, pointProj._43) }; //Projection Constants for DOF and Light Perspective for Point Light
 	perFrameCbWrapper.CopyData(&frameCB, PerFrameCBSize, 0);
 	auto perFrameCBVHeapIndex = frame->CopyAllocate(1, cbHeap, ConstBufferCount - 1);
 
@@ -929,7 +931,8 @@ void DeferredRenderer::CreateRTV()
 
 	srvHeap.Create(device, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 256);
 
-	for (int i = 0; i < numRTV; i++) {
+	for (int i = 0; i < numRTV; i++)
+	{
 		descSRV.Format = mRtvFormat[i];
 		device->CreateShaderResourceView(gBufferTextures[i], &descSRV, gBufferHeap.handleCPU(i));
 		gBufferTextureVector.push_back(new Texture(this, device, gBufferTextures[i], i, TextureTypeSRV, &gBufferHeap));
@@ -1061,7 +1064,8 @@ void DeferredRenderer::CreateShadowBuffers()
 	shadowRTVHeap.Create(device, D3D12_DESCRIPTOR_HEAP_TYPE_RTV, 6);//shadowMapCount);
 	shadowDSVHeap.Create(device, D3D12_DESCRIPTOR_HEAP_TYPE_DSV, 6);// shadowMapCount);
 	shadowResHeap.Create(device, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 6);
-	shadowCbHeap.Create(device, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 1);
+	shadowCbHeap.Create(device, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, ConstBufferCount);
+	pointShadowCbHeap.Create(device, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 1);
 	//shadowPosHeap.Create(device, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, shadowMapCount); // Every shadow map requires a shadow pos texture
 	int shadowPosPointTextureIndex = numRTV + 7;
 	int shadowMapPointTextureIndex = numRTV + 6;
@@ -1163,19 +1167,31 @@ void DeferredRenderer::CreateShadowBuffers()
 	cbResDesc.MipLevels = 1;
 	cbResDesc.Format = DXGI_FORMAT_UNKNOWN;
 	cbResDesc.DepthOrArraySize = 1;
-	cbResDesc.Width = 1024 * 128;
+	cbResDesc.Width = ((sizeof(DirShadowBuffer) + 255) & ~255) * (ConstBufferCount + 1);
 	cbResDesc.Height = 1;
 	cbResDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
 
 	CD3DX12_HEAP_PROPERTIES uheapProperty(D3D12_HEAP_TYPE_UPLOAD);
 	device->CreateCommittedResource(&uheapProperty, D3D12_HEAP_FLAG_NONE, &cbResDesc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(&shadowCB));
+	cbResDesc.Width = ((sizeof(PointShadowBuffer) + 255) & ~255);
+	device->CreateCommittedResource(&uheapProperty, D3D12_HEAP_FLAG_NONE, &cbResDesc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(&pointShadowCB));
 	const static int size = (sizeof(PointShadowBuffer) + 255) & ~255;
 
 	D3D12_CONSTANT_BUFFER_VIEW_DESC	descBuffer;
-	descBuffer.BufferLocation = shadowCB->GetGPUVirtualAddress();
+	descBuffer.BufferLocation = pointShadowCB->GetGPUVirtualAddress();
 	descBuffer.SizeInBytes = size;
-	device->CreateConstantBufferView(&descBuffer, shadowCbHeap.hCPUHeapStart);
-	shadowCBWrapper.Initialize(shadowCB, size);
+	device->CreateConstantBufferView(&descBuffer, pointShadowCbHeap.hCPUHeapStart);
+	pointShadowCBWrapper.Initialize(pointShadowCB, size);
+
+	const int dirShadowBufferSize = ((sizeof(DirShadowBuffer) + 255) & ~255);
+	for (int i = 0; i < ConstBufferCount; ++i)
+	{
+		descBuffer.BufferLocation = shadowCB->GetGPUVirtualAddress() + i * dirShadowBufferSize;
+		descBuffer.SizeInBytes = dirShadowBufferSize;
+		device->CreateConstantBufferView(&descBuffer, shadowCbHeap.handleCPU(i));
+	}
+	shadowCBWrapper.Initialize(shadowCB, dirShadowBufferSize);
+	
 
 	D3D12_DEPTH_STENCIL_VIEW_DESC desc;
 	ZeroMemory(&desc, sizeof(desc));
@@ -1364,6 +1380,7 @@ DeferredRenderer::~DeferredRenderer()
 	lightCB->Release();
 	worldViewCB->Release();
 	shadowCB->Release();
+	pointShadowCB->Release();
 	delete sphereMesh;
 	delete cubeMesh;
 }

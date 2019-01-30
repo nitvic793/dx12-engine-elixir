@@ -80,6 +80,7 @@ class DeferredRenderer
 	CDescriptorHeapWrapper shadowRTVHeap;
 	CDescriptorHeapWrapper shadowDSVHeap;
 	CDescriptorHeapWrapper shadowCbHeap;
+	CDescriptorHeapWrapper pointShadowCbHeap;
 
 	ID3D12Resource* shadowMaps[shadowMapCount];
 	ID3D12Resource* shadowPosTextures[shadowMapCount];
@@ -89,8 +90,10 @@ class DeferredRenderer
 	ID3D12Resource* shadowMapPointTexture;
 	ID3D12Resource* shadowPosPointTexture;
 	ID3D12Resource* shadowCB;
+	ID3D12Resource* pointShadowCB;
 
 	ConstantBufferWrapper shadowCBWrapper;
+	ConstantBufferWrapper pointShadowCBWrapper;
 
 	//CBs
 	ConstantBufferWrapper cbWrapper;

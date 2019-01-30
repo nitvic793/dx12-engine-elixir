@@ -1,11 +1,8 @@
 cbuffer externalData : register(b0)
 {
-	matrix wvp; //Not used
 	matrix world;
 	matrix view; // not used
 	matrix projection; // not used
-	matrix sview; //not used
-	matrix sprojection; //not used
 };
 
 //TODO: Optimize Constant Buffer

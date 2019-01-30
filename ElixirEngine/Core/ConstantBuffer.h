@@ -27,6 +27,13 @@ struct PixelConstantBuffer
 	uint32_t dirLightIndex;
 };
 
+struct DirShadowBuffer
+{
+	DirectX::XMFLOAT4X4 world;
+	DirectX::XMFLOAT4X4 shadowView;
+	DirectX::XMFLOAT4X4 shadowProjection;
+};
+
 struct PointShadowBuffer
 {
 	DirectX::XMFLOAT4X4 viewProjection[6];
