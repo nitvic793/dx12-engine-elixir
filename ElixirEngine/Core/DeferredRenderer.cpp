@@ -724,7 +724,20 @@ void DeferredRenderer::CreatePSO()
 	descPipelineState.RTVFormats[7] = DXGI_FORMAT_R32G32B32A32_FLOAT;
 	descPipelineState.DSVFormat = mDsvFormat;
 	descPipelineState.SampleDesc.Count = 1;
-	device->CreateGraphicsPipelineState(&descPipelineState, IID_PPV_ARGS(&deferredPSO));
+	deferredPSO = sysRM->CreatePSO(StringID("deferredPSO"), descPipelineState);
+
+	D3D12_INPUT_ELEMENT_DESC instanceInputLayout[] =
+	{
+		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+		{ "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 20, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+		{ "TANGENT", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 32, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+		{ "WORLDPOS_INSTANCE", 0, DXGI_FORMAT_R32G32B32_FLOAT, 1, 44, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 }
+	};
+	descPipelineState.VS = ShaderManager::LoadShader(L"InstancedDefaultVS.cso");
+	descPipelineState.InputLayout.pInputElementDescs = instanceInputLayout;
+	descPipelineState.InputLayout.NumElements = _countof(instanceInputLayout);
+	sysRM->CreatePSO(StringID("instancedDeferredPSO"), descPipelineState);
 }
 
 
@@ -1368,7 +1381,6 @@ DeferredRenderer::~DeferredRenderer()
 		delete t;
 	}
 
-	deferredPSO->Release();
 	dirLightPassPSO->Release();
 	shapeLightPassPSO->Release();
 	skyboxPSO->Release();
