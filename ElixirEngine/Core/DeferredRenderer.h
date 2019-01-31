@@ -8,7 +8,8 @@
 #include "../Texture.h"
 #include "../FrameManager.h"
 #include "../SystemResourceManager.h"
-
+#include "../MeshInstanceGroupEntity.h"
+#include "../ResourceManager.h"
 
 enum GBufferRenderTargetOrder
 {
@@ -44,6 +45,7 @@ class DeferredRenderer
 	uint32_t srvHeapIndex;
 
 	SystemResourceManager*			sysRM;
+	ResourceManager*				resourceManager;
 	std::unique_ptr<FrameManager>	frame;
 	FrameHeapParameters				frameHeapParams;
 
@@ -192,6 +194,7 @@ public:
 	void RenderSelectionDepthBuffer(ID3D12GraphicsCommandList* commandList, std::vector<Entity*> entities, Camera* camera);
 	void RenderShadowMap(ID3D12GraphicsCommandList* commandList, std::vector<Entity*> entities);
 	void Draw(ID3D12GraphicsCommandList* commandList, std::vector<Entity*> entities);
+	void DrawInstanced(ID3D12GraphicsCommandList* commandList, std::vector<MeshInstanceGroupEntity*> entities);
 	void DrawSkybox(ID3D12GraphicsCommandList* commandList, Texture* skybox);
 	void DrawScreenQuad(ID3D12GraphicsCommandList* commandList);
 	void DrawLightShapePass(ID3D12GraphicsCommandList* commandList, PixelConstantBuffer & pixelCb);

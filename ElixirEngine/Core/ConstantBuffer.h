@@ -15,6 +15,11 @@ struct ConstantBuffer
 	DirectX::XMFLOAT4X4 shadowProjection;
 };
 
+struct InstanceWorldBuffer
+{
+	DirectX::XMFLOAT4X4 worldInstance;
+};
+
 struct PixelConstantBuffer
 {
 	DirectionalLight light[MaxDirLights];

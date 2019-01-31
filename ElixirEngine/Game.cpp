@@ -10,6 +10,19 @@ void Game::InitializeAssets()
 	rm->LoadResources("../../SceneData/resources.json", commandQueue, commandList, deferredRenderer);
 	rm->LoadScene("../../SceneData/scene.json", entities);
 
+	instanced = new MeshInstanceGroupEntity(
+		{ StringID("sphere") }, { StringID("scratched") }, 
+		{
+			XMFLOAT3(-1,1,5),
+			XMFLOAT3(0,0,2),
+			XMFLOAT3(1,0,2),
+			XMFLOAT3(2,0,2),
+			XMFLOAT3(3,0,2),
+			XMFLOAT3(4,0,2),
+			XMFLOAT3(5,0,2),
+		}, 
+		device, commandList);
+
 	texturePool = new TexturePool(device, deferredRenderer, 24);
 	isBlurEnabled = false;
 	computeCore = new ComputeCore(device, deferredRenderer);
@@ -135,7 +148,7 @@ void Game::Draw()
 	commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 	//Render shadow Map before setting viewport and scissor rect
-	deferredRenderer->RenderShadowMap(commandList, entityList);
+	deferredRenderer->RenderShadowMap(commandList, entityList); //TODO: shadows for instanced objects
 
 	CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(rtvDescriptorHeap->GetCPUDescriptorHandleForHeapStart(), frameIndex, rtvDescriptorSize);
 	CD3DX12_CPU_DESCRIPTOR_HANDLE dsvHandle(dsDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
@@ -151,6 +164,7 @@ void Game::Draw()
 	deferredRenderer->RenderSelectionDepthBuffer(commandList, selectedEntities, camera);
 	deferredRenderer->SetGBUfferPSO(commandList, camera, pixelCb);
 	deferredRenderer->Draw(commandList, entityList);
+	deferredRenderer->DrawInstanced(commandList, { instanced });
 	//TODO: Need to fix resource transition in one of the passes
 	deferredRenderer->RenderLightShapePass(commandList, pixelCb);
 	deferredRenderer->RenderLightPass(commandList, pixelCb);
@@ -182,6 +196,7 @@ void Game::Shutdown()
 	delete blurFilter;
 	delete computeCore;
 	delete camera;
+	delete instanced;
 	delete resourceManager;
 }
 

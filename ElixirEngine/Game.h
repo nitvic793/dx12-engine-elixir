@@ -11,6 +11,7 @@
 #include "CompositeTextures.h"
 #include "ResourceManager.h"
 #include "DownScaleTexture.h"
+#include "MeshInstanceGroupEntity.h"
 
 class Game : public Core
 {
@@ -31,6 +32,7 @@ protected:
 
 	std::vector<Entity*> selectedEntities;
 	std::vector<Entity*> entities;
+	MeshInstanceGroupEntity* instanced;
 
 	std::unique_ptr<DepthOfFieldPass>	dofPass;
 	std::unique_ptr<SunRaysPass>		sunRaysPass;

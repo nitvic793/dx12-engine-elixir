@@ -54,13 +54,13 @@ float LinearZ(float4 outPosition)
 VertexOutput main(VertexInput input)
 {
 	VertexOutput output;
-	float4x4 shadowVP = mul(mul(world, shadowView), shadowProjection);
+	float4x4 shadowVP = mul(mul(input.instancedWorld, shadowView), shadowProjection);
 	matrix instancedWorldViewProj = mul(mul(input.instancedWorld, view), projection);
 	output.pos = mul(float4(input.pos, 1.0f), instancedWorldViewProj);
 	output.uv = input.uv;
-	output.normal = normalize(mul(input.normal, (float3x3)world));
-	output.tangent = normalize(mul(input.tangent, (float3x3)world));
-	output.worldPos = mul(float4(input.pos, 1.0f), world).xyz;
+	output.normal = normalize(mul(input.normal, (float3x3)input.instancedWorld));
+	output.tangent = normalize(mul(input.tangent, (float3x3)input.instancedWorld));
+	output.worldPos = mul(float4(input.pos, 1.0f), input.instancedWorld).xyz;
 	output.linearZ = LinearZ(output.pos);
 	output.shadowPos = mul(float4(input.pos, 1.0f), shadowVP);
 	return output;

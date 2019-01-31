@@ -172,6 +172,7 @@ ID3D12RootSignature * DeferredRenderer::GetRootSignature()
 void DeferredRenderer::Initialize(ID3D12GraphicsCommandList* command)
 {
 	sysRM = SystemResourceManager::GetInstance();
+	resourceManager = ResourceManager::GetInstance();
 	CreateCB();
 	CreateViews();
 	CreateRootSignature();
@@ -342,10 +343,31 @@ void DeferredRenderer::Draw(ID3D12GraphicsCommandList* commandList, std::vector<
 	commandList->SetGraphicsRootDescriptorTable(RootSigCBVertex1, frame->GetGPUHandle(frameHeapParams.PerFrameCB));
 	for (auto e : entities)
 	{
-		auto cb = ConstantBuffer();
 		commandList->SetGraphicsRootDescriptorTable(RootSigSRVPixel1, frame->GetGPUHandle(frameHeapParams.Textures, e->GetMaterial()->GetStartIndex())); //Set start of material texture in root descriptor
 		commandList->SetGraphicsRootDescriptorTable(RootSigCBVertex0, frame->GetGPUHandle(frameHeapParams.Entities, e->GetID()));
 		Draw(e->GetMesh(), commandList);
+	}
+}
+
+void DeferredRenderer::DrawInstanced(ID3D12GraphicsCommandList * commandList, std::vector<MeshInstanceGroupEntity*> entities)
+{
+	commandList->SetPipelineState(sysRM->GetPSO(StringID("instancedDeferredPSO")));
+	commandList->SetGraphicsRootDescriptorTable(RootSigCBVertex1, frame->GetGPUHandle(frameHeapParams.PerFrameCB));
+	commandList->SetGraphicsRootDescriptorTable(RootSigCBVertex0, frame->GetGPUHandle(frameHeapParams.Entities)); //Set the first CB as the world matrix is not used, only view and projection
+	for (auto e : entities)
+	{
+		auto meshes = e->GetMeshIDs();
+		auto materials = e->GetMaterialIDs();
+		for (size_t i = 0; i < meshes.size(); ++i)
+		{
+			auto mesh = resourceManager->GetMesh(meshes[i]);
+			auto material = resourceManager->GetMaterial(materials[i]);
+			commandList->SetGraphicsRootDescriptorTable(RootSigSRVPixel1, frame->GetGPUHandle(frameHeapParams.Textures, material->GetStartIndex()));
+			D3D12_VERTEX_BUFFER_VIEW views[] = { mesh->GetVertexBufferView() , e->GetInstanceBufferView()};
+			commandList->IASetVertexBuffers(0, 2, views);
+			commandList->IASetIndexBuffer(&mesh->GetIndexBufferView());
+			commandList->DrawIndexedInstanced(mesh->GetIndexCount(), e->GetInstanceCount(), 0, 0, 0);
+		}
 	}
 }
 
