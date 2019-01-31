@@ -1,10 +1,10 @@
 struct VertexInput
 {
-	float3 pos		: POSITION;
-	float2 uv		: TEXCOORD;
-	float3 normal	: NORMAL;
-	float3 tangent	: TANGENT;
-	float3 worldPos	: WORLDPOS_INSTANCE;
+	float3 pos			: POSITION;
+	float2 uv			: TEXCOORD;
+	float3 normal		: NORMAL;
+	float3 tangent		: TANGENT;
+	float4x4 instancedWorld	: WORLD_INSTANCE; //The instanced world position
 };
 
 struct VertexOutput
@@ -14,7 +14,7 @@ struct VertexOutput
 	float3 normal		: NORMAL;
 	float3 tangent		: TANGENT;
 	float3 worldPos		: POSITION;
-	float linearZ : LINEARZ;
+	float linearZ		: LINEARZ;
 	float4 shadowPos	: SHADOWPOS;
 };
 
@@ -55,8 +55,8 @@ VertexOutput main(VertexInput input)
 {
 	VertexOutput output;
 	float4x4 shadowVP = mul(mul(world, shadowView), shadowProjection);
-
-	output.pos = mul(float4(input.pos, 1.0f), worldViewProjection);
+	matrix instancedWorldViewProj = mul(mul(input.instancedWorld, view), projection);
+	output.pos = mul(float4(input.pos, 1.0f), instancedWorldViewProj);
 	output.uv = input.uv;
 	output.normal = normalize(mul(input.normal, (float3x3)world));
 	output.tangent = normalize(mul(input.tangent, (float3x3)world));
