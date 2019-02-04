@@ -218,6 +218,9 @@
     <ClInclude Include="MeshInstanceGroupEntity.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="InputLayout.h">
+      <Filter>Header Files\Core</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="BlurHorizontalCS.hlsl">

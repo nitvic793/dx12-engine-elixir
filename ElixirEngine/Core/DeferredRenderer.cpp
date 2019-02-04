@@ -2,6 +2,7 @@
 #include "ShaderManager.h"
 #include "Vertex.h"
 #include "DirectXTex.h"
+#include "../InputLayout.h"
 
 struct PrefilterPixelConstBuffer
 {
@@ -717,20 +718,12 @@ void DeferredRenderer::CreateViews()
 
 void DeferredRenderer::CreatePSO()
 {
-	D3D12_INPUT_ELEMENT_DESC inputLayout[] =
-	{
-		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-		{ "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 20, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-		{ "TANGENT", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 32, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
-	};
-
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC descPipelineState;
 	ZeroMemory(&descPipelineState, sizeof(descPipelineState));
 	descPipelineState.VS = ShaderManager::LoadShader(L"DefaultVS.cso");
 	descPipelineState.PS = ShaderManager::LoadShader(L"DeferredPS.cso");
-	descPipelineState.InputLayout.pInputElementDescs = inputLayout;
-	descPipelineState.InputLayout.NumElements = _countof(inputLayout);
+	descPipelineState.InputLayout.pInputElementDescs = InputLayout::DefaultLayout;
+	descPipelineState.InputLayout.NumElements = _countof(InputLayout::DefaultLayout);
 	descPipelineState.pRootSignature = rootSignature;
 	descPipelineState.DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
 	descPipelineState.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
@@ -748,35 +741,15 @@ void DeferredRenderer::CreatePSO()
 	descPipelineState.SampleDesc.Count = 1;
 	deferredPSO = sysRM->CreatePSO(StringID("deferredPSO"), descPipelineState);
 
-	D3D12_INPUT_ELEMENT_DESC instanceInputLayout[] =
-	{
-		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-		{ "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 20, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-		{ "TANGENT", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 32, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-		{ "WORLD_INSTANCE", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, 0							  ,	D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 },
-		{ "WORLD_INSTANCE", 1, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 },
-		{ "WORLD_INSTANCE", 2, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 },
-		{ "WORLD_INSTANCE", 3, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 },
-	};
-
 	descPipelineState.VS = ShaderManager::LoadShader(L"InstancedDefaultVS.cso");
-	descPipelineState.InputLayout.pInputElementDescs = instanceInputLayout;
-	descPipelineState.InputLayout.NumElements = _countof(instanceInputLayout);
+	descPipelineState.InputLayout.pInputElementDescs = InputLayout::InstanceDefaultLayout;
+	descPipelineState.InputLayout.NumElements = _countof(InputLayout::InstanceDefaultLayout);
 	sysRM->CreatePSO(StringID("instancedDeferredPSO"), descPipelineState);
 }
 
 
 void DeferredRenderer::CreateSkyboxPSO()
 {
-	D3D12_INPUT_ELEMENT_DESC inputLayout[] =
-	{
-		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-		{ "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 20, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-		{ "TANGENT", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 32, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
-	};
-
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC descPipelineState;
 	ZeroMemory(&descPipelineState, sizeof(descPipelineState));
 	auto depthStencilState = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
@@ -791,8 +764,8 @@ void DeferredRenderer::CreateSkyboxPSO()
 
 	descPipelineState.VS = ShaderManager::LoadShader(L"SkyboxVS.cso");
 	descPipelineState.PS = ShaderManager::LoadShader(L"SkyboxPS.cso");
-	descPipelineState.InputLayout.pInputElementDescs = inputLayout;
-	descPipelineState.InputLayout.NumElements = _countof(inputLayout);
+	descPipelineState.InputLayout.pInputElementDescs = InputLayout::DefaultLayout;
+	descPipelineState.InputLayout.NumElements = _countof(InputLayout::DefaultLayout);
 	descPipelineState.pRootSignature = rootSignature;
 	descPipelineState.DepthStencilState = depthStencilState;
 	descPipelineState.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
@@ -809,19 +782,12 @@ void DeferredRenderer::CreateSkyboxPSO()
 
 void DeferredRenderer::CreateLightPassPSO()
 {
-	//D3D12_INPUT_ELEMENT_DESC inputLayout[] =
-	//{
-	//	/*{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-	//	{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }*/
-	//};
 	auto blendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
 	blendState.AlphaToCoverageEnable = false;
 	blendState.IndependentBlendEnable = false;
 
 	blendState.RenderTarget[0].BlendEnable = true;
 	blendState.RenderTarget[0].BlendOp = D3D12_BLEND_OP_ADD;
-	//blendState.RenderTarget[0].SrcBlend = D3D12_BLEND_ONE;
-	//blendState.RenderTarget[0].DestBlend = D3D12_BLEND_ONE;
 	blendState.RenderTarget[0].SrcBlend = D3D12_BLEND_SRC_ALPHA;
 	blendState.RenderTarget[0].DestBlend = D3D12_BLEND_ONE;
 
@@ -866,24 +832,17 @@ void DeferredRenderer::CreateLightPassPSO()
 
 	device->CreateGraphicsPipelineState(&descPipelineState, IID_PPV_ARGS(&dirLightPassPSO));
 
-	D3D12_INPUT_ELEMENT_DESC inputLayout[] =
-	{
-		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-		{ "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 20, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-		{ "TANGENT", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 32, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
-	};
-
 	auto rasterizer = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
 	rasterizer.CullMode = D3D12_CULL_MODE_FRONT; // Front culling for point light
 	rasterizer.DepthClipEnable = false;
 	descPipelineState.VS = ShaderManager::LoadShader(L"LightShapeVS.cso");
 	descPipelineState.PS = ShaderManager::LoadShader(L"LightShapePassPS.cso");
 	descPipelineState.BlendState = blendState;
-	descPipelineState.InputLayout.pInputElementDescs = inputLayout;
+	descPipelineState.InputLayout.pInputElementDescs = InputLayout::DefaultLayout;
+	descPipelineState.InputLayout.NumElements = _countof(InputLayout::DefaultLayout);
 	descPipelineState.RasterizerState = rasterizer;
 	descPipelineState.RTVFormats[0] = DXGI_FORMAT_R32G32B32A32_FLOAT;
-	descPipelineState.InputLayout.NumElements = _countof(inputLayout);
+	
 	device->CreateGraphicsPipelineState(&descPipelineState, IID_PPV_ARGS(&shapeLightPassPSO));
 
 }
