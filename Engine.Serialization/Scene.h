@@ -23,9 +23,9 @@ struct Vector3
 	void serialize(Archive &archive)
 	{
 		archive(
-			CEREAL_NVP(Vector.x),
-			CEREAL_NVP(Vector.y),
-			CEREAL_NVP(Vector.z)
+			cereal::make_nvp("X", Vector.x),
+			cereal::make_nvp("Y", Vector.y),
+			cereal::make_nvp("Z", Vector.z)
 		);
 	}
 };

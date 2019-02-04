@@ -3,19 +3,19 @@
         "Entities": [
             {
                 "Position": {
-                    "Vector.x": 0.0,
-                    "Vector.y": 0.0,
-                    "Vector.z": 0.0
+                    "X": 0.0,
+                    "Y": 0.0,
+                    "Z": 0.0
                 },
                 "Scale": {
-                    "Vector.x": 1.0,
-                    "Vector.y": 1.0,
-                    "Vector.z": 1.0
+                    "X": 1.0,
+                    "Y": 1.0,
+                    "Z": 1.0
                 },
                 "Rotation": {
-                    "Vector.x": 0.0,
-                    "Vector.y": 0.0,
-                    "Vector.z": 0.0
+                    "X": 0.0,
+                    "Y": 0.0,
+                    "Z": 0.0
                 },
                 "MaterialID": "floor",
                 "MeshID": "sphere",
@@ -23,19 +23,19 @@
             },
             {
                 "Position": {
-                    "Vector.x": 1.0,
-                    "Vector.y": 0.0,
-                    "Vector.z": 0.0
+                    "X": 1.0,
+                    "Y": 0.0,
+                    "Z": 0.0
                 },
                 "Scale": {
-                    "Vector.x": 1.0,
-                    "Vector.y": 1.0,
-                    "Vector.z": 1.0
+                    "X": 1.0,
+                    "Y": 1.0,
+                    "Z": 1.0
                 },
                 "Rotation": {
-                    "Vector.x": 0.0,
-                    "Vector.y": 0.0,
-                    "Vector.z": 0.0
+                    "X": 0.0,
+                    "Y": 0.0,
+                    "Z": 0.0
                 },
                 "MaterialID": "wood",
                 "MeshID": "sphere",
@@ -43,19 +43,19 @@
             },
             {
                 "Position": {
-                    "Vector.x": 2.0,
-                    "Vector.y": 0.0,
-                    "Vector.z": 0.0
+                    "X": 2.0,
+                    "Y": 0.0,
+                    "Z": 0.0
                 },
                 "Scale": {
-                    "Vector.x": 1.0,
-                    "Vector.y": 1.0,
-                    "Vector.z": 1.0
+                    "X": 1.0,
+                    "Y": 1.0,
+                    "Z": 1.0
                 },
                 "Rotation": {
-                    "Vector.x": 0.0,
-                    "Vector.y": 0.0,
-                    "Vector.z": 0.0
+                    "X": 0.0,
+                    "Y": 0.0,
+                    "Z": 0.0
                 },
                 "MaterialID": "scratched",
                 "MeshID": "sphere",
@@ -63,19 +63,19 @@
             },
             {
                 "Position": {
-                    "Vector.x": 3.0,
-                    "Vector.y": 0.0,
-                    "Vector.z": 0.0
+                    "X": 3.0,
+                    "Y": 0.0,
+                    "Z": 0.0
                 },
                 "Scale": {
-                    "Vector.x": 1.0,
-                    "Vector.y": 1.0,
-                    "Vector.z": 1.0
+                    "X": 1.0,
+                    "Y": 1.0,
+                    "Z": 1.0
                 },
                 "Rotation": {
-                    "Vector.x": 0.0,
-                    "Vector.y": 0.0,
-                    "Vector.z": 0.0
+                    "X": 0.0,
+                    "Y": 0.0,
+                    "Z": 0.0
                 },
                 "MaterialID": "bronze",
                 "MeshID": "sphere",
@@ -83,19 +83,19 @@
             },
             {
                 "Position": {
-                    "Vector.x": 4.0,
-                    "Vector.y": 0.0,
-                    "Vector.z": 0.0
+                    "X": 4.0,
+                    "Y": 0.0,
+                    "Z": 0.0
                 },
                 "Scale": {
-                    "Vector.x": 1.0,
-                    "Vector.y": 1.0,
-                    "Vector.z": 1.0
+                    "X": 1.0,
+                    "Y": 1.0,
+                    "Z": 1.0
                 },
                 "Rotation": {
-                    "Vector.x": 0.0,
-                    "Vector.y": 0.0,
-                    "Vector.z": 0.0
+                    "X": 0.0,
+                    "Y": 0.0,
+                    "Z": 0.0
                 },
                 "MaterialID": "floor",
                 "MeshID": "sphere",
@@ -103,19 +103,19 @@
             },
             {
                 "Position": {
-                    "Vector.x": 5.0,
-                    "Vector.y": 0.0,
-                    "Vector.z": 0.0
+                    "X": 5.0,
+                    "Y": 0.0,
+                    "Z": 0.0
                 },
                 "Scale": {
-                    "Vector.x": 1.0,
-                    "Vector.y": 1.0,
-                    "Vector.z": 1.0
+                    "X": 1.0,
+                    "Y": 1.0,
+                    "Z": 1.0
                 },
                 "Rotation": {
-                    "Vector.x": 0.0,
-                    "Vector.y": 0.0,
-                    "Vector.z": 0.0
+                    "X": 0.0,
+                    "Y": 0.0,
+                    "Z": 0.0
                 },
                 "MaterialID": "wood",
                 "MeshID": "sphere",
@@ -123,19 +123,19 @@
             },
             {
                 "Position": {
-                    "Vector.x": 0.0,
-                    "Vector.y": 2.0,
-                    "Vector.z": 5.0
+                    "X": 0.0,
+                    "Y": 2.0,
+                    "Z": 5.0
                 },
                 "Scale": {
-                    "Vector.x": 0.009999999776482582,
-                    "Vector.y": 0.009999999776482582,
-                    "Vector.z": 0.009999999776482582
+                    "X": 0.009999999776482582,
+                    "Y": 0.009999999776482582,
+                    "Z": 0.009999999776482582
                 },
                 "Rotation": {
-                    "Vector.x": 0.0,
-                    "Vector.y": 0.0,
-                    "Vector.z": 0.0
+                    "X": 0.0,
+                    "Y": 0.0,
+                    "Z": 0.0
                 },
                 "MaterialID": "arc",
                 "MeshID": "sw",
@@ -143,19 +143,19 @@
             },
             {
                 "Position": {
-                    "Vector.x": 15.0,
-                    "Vector.y": 1.0,
-                    "Vector.z": 5.0
+                    "X": 15.0,
+                    "Y": 1.0,
+                    "Z": 5.0
                 },
                 "Scale": {
-                    "Vector.x": 0.009999999776482582,
-                    "Vector.y": 0.009999999776482582,
-                    "Vector.z": 0.009999999776482582
+                    "X": 0.009999999776482582,
+                    "Y": 0.009999999776482582,
+                    "Z": 0.009999999776482582
                 },
                 "Rotation": {
-                    "Vector.x": 0.0,
-                    "Vector.y": 0.0,
-                    "Vector.z": 0.0
+                    "X": 0.0,
+                    "Y": 0.0,
+                    "Z": 0.0
                 },
                 "MaterialID": "arc",
                 "MeshID": "sw",
@@ -163,19 +163,19 @@
             },
             {
                 "Position": {
-                    "Vector.x": 0.0,
-                    "Vector.y": -1.0,
-                    "Vector.z": 0.0
+                    "X": 0.0,
+                    "Y": -1.0,
+                    "Z": 0.0
                 },
                 "Scale": {
-                    "Vector.x": 1.0,
-                    "Vector.y": 1.0,
-                    "Vector.z": 1.0
+                    "X": 1.0,
+                    "Y": 1.0,
+                    "Z": 1.0
                 },
                 "Rotation": {
-                    "Vector.x": -0.39269909262657168,
-                    "Vector.y": -0.39269909262657168,
-                    "Vector.z": 0.0
+                    "X": -0.39269909262657168,
+                    "Y": -0.39269909262657168,
+                    "Z": 0.0
                 },
                 "MaterialID": "hammer",
                 "MeshID": "hammer",
@@ -183,19 +183,19 @@
             },
             {
                 "Position": {
-                    "Vector.x": 5.0,
-                    "Vector.y": -1.0,
-                    "Vector.z": -5.0
+                    "X": 5.0,
+                    "Y": -1.0,
+                    "Z": -5.0
                 },
                 "Scale": {
-                    "Vector.x": 15.0,
-                    "Vector.y": 15.0,
-                    "Vector.z": 15.0
+                    "X": 15.0,
+                    "Y": 15.0,
+                    "Z": 15.0
                 },
                 "Rotation": {
-                    "Vector.x": 0.0,
-                    "Vector.y": 0.0,
-                    "Vector.z": 0.0
+                    "X": 0.0,
+                    "Y": 0.0,
+                    "Z": 0.0
                 },
                 "MaterialID": "cement",
                 "MeshID": "quad",
