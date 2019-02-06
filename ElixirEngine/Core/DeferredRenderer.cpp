@@ -315,6 +315,7 @@ void DeferredRenderer::RenderShadowMap(ID3D12GraphicsCommandList * commandList, 
 		sIndex++;
 	}
 
+	//Instanced entities
 	commandList->SetPipelineState(sysRM->GetPSO(StringID("shadowInstancedDirLightPSO")));
 	commandList->SetGraphicsRootDescriptorTable(RootSigCBVertex0, frame->GetGPUHandle(frameHeapParams.ShadowCB, 0)); //Set 0th Shadow CB as we only need view and projection from it
 	for (auto e : instancedEntities)
@@ -350,6 +351,21 @@ void DeferredRenderer::RenderShadowMap(ID3D12GraphicsCommandList * commandList, 
 		Draw(e->GetMesh(), commandList);
 		sIndex++;
 	}
+
+	//Instanced entities
+	commandList->SetPipelineState(sysRM->GetPSO(StringID("shadowInstancedPointLightPSO")));
+	commandList->SetGraphicsRootDescriptorTable(RootSigCBVertex1, frame->GetGPUHandle(shadowFrameIndex));
+	for (auto e : instancedEntities)
+	{
+		if (!e->CastsShadow()) continue;
+		auto meshes = e->GetMeshIDs();
+		for (auto meshID : meshes)
+		{
+			auto mesh = resourceManager->GetMesh(meshID);
+			DrawInstanced(e, mesh, commandList);
+		}
+	}
+
 	commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(shadowMapPointTexture, D3D12_RESOURCE_STATE_DEPTH_WRITE, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE));
 }
 
@@ -1128,6 +1144,11 @@ void DeferredRenderer::CreateShadowBuffers()
 	descPipelineState.VS = ShaderManager::LoadShader(L"ShadowGenVS.cso");
 	descPipelineState.GS = ShaderManager::LoadShader(L"ShadowGS.cso");
 	device->CreateGraphicsPipelineState(&descPipelineState, IID_PPV_ARGS(&shadowMapPointLightPSO));
+
+	descPipelineState.InputLayout.pInputElementDescs = InputLayout::InstanceDefaultLayout;
+	descPipelineState.InputLayout.NumElements = _countof(InputLayout::InstanceDefaultLayout);
+	descPipelineState.VS = ShaderManager::LoadShader(L"ShadowGenInstancedVS.cso");
+	sysRM->CreatePSO(StringID("shadowInstancedPointLightPSO"), descPipelineState);
 
 	CD3DX12_HEAP_PROPERTIES heapProperty(D3D12_HEAP_TYPE_DEFAULT);
 

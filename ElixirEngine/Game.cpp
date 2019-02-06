@@ -1,12 +1,13 @@
 #include "stdafx.h"
 #include "Game.h"
-
+#include "DirectXMesh.h"
+#include "Model.h"
 
 //Initializes assets. This function's scope has access to commandList which is not closed. 
 void Game::InitializeAssets()
 {
 	auto rm = resourceManager;
-
+	
 	rm->LoadResources("../../SceneData/resources.json", commandQueue, commandList, deferredRenderer);
 	rm->LoadScene("../../SceneData/scene.json", entities);
 
@@ -22,6 +23,7 @@ void Game::InitializeAssets()
 			XMFLOAT3(10,0,-4),
 		}, 
 		device, commandList);
+	
 
 	texturePool = new TexturePool(device, deferredRenderer, 24);
 	isBlurEnabled = false;
@@ -49,7 +51,7 @@ void Game::InitializeAssets()
 	pixelCb.dirLightCount = 1;
 	pixelCb.dirLightIndex = 0;
 
-	pixelCb.pointLight[0] = PointLight{ {0.99f, 0.2f, 0.2f, 0.f} , {0.0f, 0.0f, -1.f}, 6.f , 2.f};
+	pixelCb.pointLight[0] = PointLight{ {0.99f, 0.2f, 0.2f, 0.f} , {0.0f, 0.0f, -1.f}, 16.f , 2.f};
 	pixelCb.pointLight[1] = PointLight{ {0.0f, 0.99f, 0.2f, 0.f} , {5.0f, 0.0f, -1.f}, 6.f , 2.f};
 	pixelCb.pointLightCount = 2u;
 	pixelCb.pointLightIndex = 0;
@@ -61,6 +63,8 @@ void Game::InitializeAssets()
 	);
 
 	skyTexture = rm->GetTexture(StringID("skybox"));
+	
+	
 }
 
 Game::Game(HINSTANCE hInstance, int ShowWnd, int width, int height, bool fullscreen) :
@@ -83,8 +87,8 @@ void Game::Update()
 	CurrentTime += deltaTime;
 	camera->Update(deltaTime);
 	entities[0]->SetPosition(XMFLOAT3(2 * sin(totalTime) + 2, 1.f, cos(totalTime)));
-	pixelCb.pointLight[1].Position = XMFLOAT3(2 * sin(totalTime * 2) + 5, 0, -1);
-	pixelCb.pointLight[0].Position = XMFLOAT3(2 * sin(totalTime * 2) + 1, 1.0f, -2 * cos(totalTime));
+	pixelCb.pointLight[1].Position = XMFLOAT3(2 * sin(totalTime * 2) + 1, 0, -1);
+	pixelCb.pointLight[0].Position = XMFLOAT3(2 * sin(totalTime * 2) + 5, 1.0f, -2 + -2 * cos(totalTime));
 	if (GetAsyncKeyState('Q'))
 	{
 		isBlurEnabled = true;
