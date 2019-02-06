@@ -9,6 +9,7 @@ MeshInstanceGroupEntity::MeshInstanceGroupEntity()
 MeshInstanceGroupEntity::MeshInstanceGroupEntity(std::vector<HashID> meshes, std::vector<HashID> materials, std::vector<XMFLOAT3> positions, ID3D12Device* device,
 	ID3D12GraphicsCommandList* clist)
 {
+	castsShadow = true;
 	this->meshes = meshes;
 	this->materials = materials;
 	InitializeBuffer(positions, device, clist);
@@ -57,7 +58,7 @@ void MeshInstanceGroupEntity::InitializeBuffer(std::vector<XMFLOAT3> positions, 
 
 	vBufferView.BufferLocation = instanceBuffer->GetGPUVirtualAddress();
 	vBufferView.StrideInBytes = sizeof(InstanceWorldBuffer);
-	vBufferView.SizeInBytes = vBufferSize;
+	vBufferView.SizeInBytes = (uint32_t)vBufferSize;
 
 }
 
@@ -71,9 +72,9 @@ const std::vector<HashID>& MeshInstanceGroupEntity::GetMaterialIDs()
 	return materials;
 }
 
-const size_t MeshInstanceGroupEntity::GetInstanceCount()
+const uint32_t MeshInstanceGroupEntity::GetInstanceCount()
 {
-	return transforms.size();
+	return (uint32_t)transforms.size();
 }
 
 const D3D12_VERTEX_BUFFER_VIEW & MeshInstanceGroupEntity::GetInstanceBufferView()
@@ -81,6 +82,15 @@ const D3D12_VERTEX_BUFFER_VIEW & MeshInstanceGroupEntity::GetInstanceBufferView(
 	return vBufferView;
 }
 
+const bool & MeshInstanceGroupEntity::CastsShadow()
+{
+	return castsShadow;
+}
+
+void MeshInstanceGroupEntity::SetCastsShadow(bool enable)
+{
+	castsShadow = enable;
+}
 
 MeshInstanceGroupEntity::~MeshInstanceGroupEntity()
 {

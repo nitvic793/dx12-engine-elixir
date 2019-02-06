@@ -159,6 +159,7 @@ class DeferredRenderer
 	void CreateShadowBuffers();
 	void CreateSelectionFilterBuffers();
 	void Draw(Mesh* m, ID3D12GraphicsCommandList* commandList);
+	void DrawInstanced(MeshInstanceGroupEntity* instanced, Mesh* mesh, ID3D12GraphicsCommandList* commandList);
 	void PrepareGPUHeap(std::vector<Entity*> entities, PixelConstantBuffer& pixelCb);
 public:
 	DeferredRenderer(ID3D12Device *dxDevice, int width, int height);
@@ -192,7 +193,7 @@ public:
 	void RenderAmbientPass(ID3D12GraphicsCommandList* clist);
 
 	void RenderSelectionDepthBuffer(ID3D12GraphicsCommandList* commandList, std::vector<Entity*> entities, Camera* camera);
-	void RenderShadowMap(ID3D12GraphicsCommandList* commandList, std::vector<Entity*> entities);
+	void RenderShadowMap(ID3D12GraphicsCommandList* commandList, std::vector<Entity*> entities, std::vector<MeshInstanceGroupEntity*> instancedEntities);
 	void Draw(ID3D12GraphicsCommandList* commandList, std::vector<Entity*> entities);
 	void DrawInstanced(ID3D12GraphicsCommandList* commandList, std::vector<MeshInstanceGroupEntity*> entities);
 	void DrawSkybox(ID3D12GraphicsCommandList* commandList, Texture* skybox);

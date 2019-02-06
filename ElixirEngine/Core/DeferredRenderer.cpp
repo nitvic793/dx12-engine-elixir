@@ -281,7 +281,7 @@ void DeferredRenderer::RenderSelectionDepthBuffer(ID3D12GraphicsCommandList* com
 	commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(selectedDepthTexture, D3D12_RESOURCE_STATE_DEPTH_WRITE, D3D12_RESOURCE_STATE_GENERIC_READ));
 }
 
-void DeferredRenderer::RenderShadowMap(ID3D12GraphicsCommandList * commandList, std::vector<Entity*> entities)
+void DeferredRenderer::RenderShadowMap(ID3D12GraphicsCommandList * commandList, std::vector<Entity*> entities, std::vector<MeshInstanceGroupEntity*> instancedEntities)
 {
 	D3D12_VIEWPORT viewport = {};
 	D3D12_RECT scissorRect = {};
@@ -314,6 +314,20 @@ void DeferredRenderer::RenderShadowMap(ID3D12GraphicsCommandList * commandList, 
 		Draw(e->GetMesh(), commandList);
 		sIndex++;
 	}
+
+	commandList->SetPipelineState(sysRM->GetPSO(StringID("shadowInstancedDirLightPSO")));
+	commandList->SetGraphicsRootDescriptorTable(RootSigCBVertex0, frame->GetGPUHandle(frameHeapParams.ShadowCB, 0)); //Set 0th Shadow CB as we only need view and projection from it
+	for (auto e : instancedEntities)
+	{
+		if (!e->CastsShadow()) continue;
+		auto meshes = e->GetMeshIDs();
+		for (auto meshID : meshes)
+		{
+			auto mesh = resourceManager->GetMesh(meshID);
+			DrawInstanced(e, mesh, commandList);
+		}
+	}
+
 	commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(shadowMapTexture, D3D12_RESOURCE_STATE_DEPTH_WRITE, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE));
 
 	commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(shadowMapPointTexture, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_DEPTH_WRITE));
@@ -361,13 +375,10 @@ void DeferredRenderer::DrawInstanced(ID3D12GraphicsCommandList * commandList, st
 		auto materials = e->GetMaterialIDs();
 		for (size_t i = 0; i < meshes.size(); ++i)
 		{
-			auto mesh = resourceManager->GetMesh(meshes[i]);
 			auto material = resourceManager->GetMaterial(materials[i]);
 			commandList->SetGraphicsRootDescriptorTable(RootSigSRVPixel1, frame->GetGPUHandle(frameHeapParams.Textures, material->GetStartIndex()));
-			D3D12_VERTEX_BUFFER_VIEW views[] = { mesh->GetVertexBufferView() , e->GetInstanceBufferView()};
-			commandList->IASetVertexBuffers(0, 2, views);
-			commandList->IASetIndexBuffer(&mesh->GetIndexBufferView());
-			commandList->DrawIndexedInstanced(mesh->GetIndexCount(), e->GetInstanceCount(), 0, 0, 0);
+			auto mesh = resourceManager->GetMesh(meshes[i]);
+			DrawInstanced(e, mesh, commandList);
 		}
 	}
 }
@@ -470,6 +481,14 @@ void DeferredRenderer::Draw(Mesh * m, ID3D12GraphicsCommandList* commandList)
 	commandList->IASetVertexBuffers(0, 1, &m->GetVertexBufferView());
 	commandList->IASetIndexBuffer(&m->GetIndexBufferView());
 	commandList->DrawIndexedInstanced(m->GetIndexCount(), 1, 0, 0, 0);
+}
+
+void DeferredRenderer::DrawInstanced(MeshInstanceGroupEntity * instanced, Mesh * mesh, ID3D12GraphicsCommandList * commandList)
+{
+	D3D12_VERTEX_BUFFER_VIEW views[] = { mesh->GetVertexBufferView() , instanced->GetInstanceBufferView() };
+	commandList->IASetVertexBuffers(0, 2, views);
+	commandList->IASetIndexBuffer(&mesh->GetIndexBufferView());
+	commandList->DrawIndexedInstanced(mesh->GetIndexCount(), instanced->GetInstanceCount(), 0, 0, 0);
 }
 
 void DeferredRenderer::PrepareGPUHeap(std::vector<Entity*> entities, PixelConstantBuffer & pixelCb)
@@ -1071,20 +1090,12 @@ void DeferredRenderer::CreateShadowBuffers()
 	int shadowPosTextureIndex = numRTV + 5;
 	int shadowMapTextureIndex = numRTV + 4; //// numRTV + 1,2,3 taken up by IBL textures
 
-	D3D12_INPUT_ELEMENT_DESC inputLayout[] =
-	{
-		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-		{ "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 20, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-		{ "TANGENT", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 32, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
-	};
-
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC descPipelineState;
 	ZeroMemory(&descPipelineState, sizeof(descPipelineState));
 	auto shadowMapFormat = DXGI_FORMAT_D32_FLOAT;
 	descPipelineState.VS = ShaderManager::LoadShader(L"ShadowVS.cso");
-	descPipelineState.InputLayout.pInputElementDescs = inputLayout;
-	descPipelineState.InputLayout.NumElements = _countof(inputLayout);
+	descPipelineState.InputLayout.pInputElementDescs = InputLayout::DefaultLayout;
+	descPipelineState.InputLayout.NumElements = _countof(InputLayout::DefaultLayout);
 	descPipelineState.pRootSignature = rootSignature;
 	descPipelineState.DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
 	descPipelineState.DepthStencilState.DepthEnable = true;
@@ -1106,6 +1117,14 @@ void DeferredRenderer::CreateShadowBuffers()
 
 	device->CreateGraphicsPipelineState(&descPipelineState, IID_PPV_ARGS(&shadowMapDirLightPSO));
 
+	descPipelineState.InputLayout.pInputElementDescs = InputLayout::InstanceDefaultLayout;
+	descPipelineState.InputLayout.NumElements = _countof(InputLayout::InstanceDefaultLayout);
+	descPipelineState.VS = ShaderManager::LoadShader(L"ShadowInstancedVS.cso");
+
+	sysRM->CreatePSO(StringID("shadowInstancedDirLightPSO"), descPipelineState);
+
+	descPipelineState.InputLayout.pInputElementDescs = InputLayout::DefaultLayout;
+	descPipelineState.InputLayout.NumElements = _countof(InputLayout::DefaultLayout);
 	descPipelineState.VS = ShaderManager::LoadShader(L"ShadowGenVS.cso");
 	descPipelineState.GS = ShaderManager::LoadShader(L"ShadowGS.cso");
 	device->CreateGraphicsPipelineState(&descPipelineState, IID_PPV_ARGS(&shadowMapPointLightPSO));

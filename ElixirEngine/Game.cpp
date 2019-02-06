@@ -14,12 +14,12 @@ void Game::InitializeAssets()
 		{ StringID("sphere") }, { StringID("scratched") }, 
 		{
 			XMFLOAT3(-1,1,5),
-			XMFLOAT3(0,0,2),
-			XMFLOAT3(1,0,2),
-			XMFLOAT3(2,0,2),
-			XMFLOAT3(3,0,2),
-			XMFLOAT3(4,0,2),
-			XMFLOAT3(5,0,2),
+			XMFLOAT3(5,0,-4),
+			XMFLOAT3(6,0,-4),
+			XMFLOAT3(7,0,-4),
+			XMFLOAT3(8,0,-4),
+			XMFLOAT3(9,0,-4),
+			XMFLOAT3(10,0,-4),
 		}, 
 		device, commandList);
 
@@ -148,7 +148,7 @@ void Game::Draw()
 	commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 	//Render shadow Map before setting viewport and scissor rect
-	deferredRenderer->RenderShadowMap(commandList, entityList); //TODO: shadows for instanced objects
+	deferredRenderer->RenderShadowMap(commandList, entityList, { instanced }); //TODO: shadows for instanced objects
 
 	CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(rtvDescriptorHeap->GetCPUDescriptorHandleForHeapStart(), frameIndex, rtvDescriptorSize);
 	CD3DX12_CPU_DESCRIPTOR_HANDLE dsvHandle(dsDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
