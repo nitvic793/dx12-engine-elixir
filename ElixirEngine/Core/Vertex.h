@@ -7,11 +7,22 @@ struct Vertex
 {
 	Vertex(){}
 	Vertex(float x, float y, float z, float u, float v) : pos(x, y, z), uv(u, v) {}
-	XMFLOAT3 pos;
-	XMFLOAT2 uv;
-	XMFLOAT3 normal;
-	XMFLOAT3 tangent;
-	float padding[5];
+	XMFLOAT3	pos;
+	XMFLOAT2	uv;
+	XMFLOAT3	normal;
+	XMFLOAT3	tangent;
+	float		padding[5];
+};
+
+struct VertexAnimated
+{
+	XMFLOAT3	pos;
+	XMFLOAT2	uv;
+	XMFLOAT3	normal;
+	XMFLOAT3	tangent;
+	XMFLOAT4	skinIndices;
+	XMFLOAT4	skinWeights;
+	float		padding;
 };
 
 struct VertexInstanceData
@@ -21,6 +32,6 @@ struct VertexInstanceData
 
 struct ScreenQuadVertex
 {
-	DirectX::XMFLOAT4 position;
-	DirectX::XMFLOAT2 uv;
+	XMFLOAT4 position;
+	XMFLOAT2 uv;
 };

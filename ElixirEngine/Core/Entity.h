@@ -13,6 +13,8 @@ protected:
 	XMFLOAT3	rotation;
 	Mesh*		mesh;
 	Material*	material;
+	//std::vector<HashID> meshes;
+	//std::vector<HashID> materials;
 	bool		bCastsShadow = false;
 	XMFLOAT3	boxCenter;
 	XMFLOAT3	sphereCenter;

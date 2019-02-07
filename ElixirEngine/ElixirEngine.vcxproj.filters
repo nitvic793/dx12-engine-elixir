@@ -331,10 +331,16 @@
     <FxCompile Include="ShadowGenInstancedVS.hlsl">
       <Filter>Shaders\Shadows</Filter>
     </FxCompile>
+    <FxCompile Include="AnimationDefaultVS.hlsl">
+      <Filter>Shaders\Deferred</Filter>
+    </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
     <None Include="Lighting.hlsli">
+      <Filter>Shaders\Deferred</Filter>
+    </None>
+    <None Include="CommonVertex.hlsli">
       <Filter>Shaders\Deferred</Filter>
     </None>
   </ItemGroup>

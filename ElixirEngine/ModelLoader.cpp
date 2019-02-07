@@ -8,7 +8,6 @@ Mesh* ModelLoader::ProcessMesh(aiMesh* mesh, const aiScene * scene, ID3D12Graphi
 	// Data to fill
 	std::vector<Vertex> vertices;
 	std::vector<UINT> indices;
-	//std::vector<Texture> textures;
 	// Walk through each of the mesh's vertices
 	for (UINT i = 0; i < mesh->mNumVertices; i++)
 	{
@@ -35,6 +34,12 @@ Mesh* ModelLoader::ProcessMesh(aiMesh* mesh, const aiScene * scene, ID3D12Graphi
 
 		for (UINT j = 0; j < face.mNumIndices; j++)
 			indices.push_back(face.mIndices[j]);
+	}
+
+	if (mesh->mMaterialIndex >= 0)
+	{
+		aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
+		auto c = material->GetTextureCount(aiTextureType_DIFFUSE);
 	}
 
 	auto elixMesh = new Mesh(device);
