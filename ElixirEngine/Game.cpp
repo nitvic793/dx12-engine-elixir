@@ -2,6 +2,7 @@
 #include "Game.h"
 #include "DirectXMesh.h"
 #include "Model.h"
+#include "ModelLoader.h"
 
 //Initializes assets. This function's scope has access to commandList which is not closed. 
 void Game::InitializeAssets()
@@ -64,7 +65,7 @@ void Game::InitializeAssets()
 
 	skyTexture = rm->GetTexture(StringID("skybox"));
 	
-	
+	//auto meshes = ModelLoader::LoadFile("../../Assets/Pallet.fbx", commandList);
 }
 
 Game::Game(HINSTANCE hInstance, int ShowWnd, int width, int height, bool fullscreen) :

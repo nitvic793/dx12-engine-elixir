@@ -4,6 +4,7 @@
 #include "ShaderManager.h"
 #include <WindowsX.h>
 #include <algorithm>
+#include "../ModelLoader.h"
 
 using namespace std;
 
@@ -337,7 +338,7 @@ void Core::InitializeResources()
 	scissorRect.top = 0;
 	scissorRect.right = Width;
 	scissorRect.bottom = Height;
-
+	ModelLoader::CreateInstance(device);
 }
 
 void Core::CreateConsoleWindow(int bufferLines, int bufferColumns, int windowLines, int windowColumns)
@@ -374,11 +375,7 @@ void Core::EndInitialization()
 {
 	commandList->Close();
 	ID3D12CommandList* ppCommandLists[] = { commandList };
-
-	commandQueue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
-
-
-	//deferredRenderer->SetSRV(normalTexture, textureDesc.Format, 1);
+	commandQueue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);;
 	// increment the fence value now, otherwise the buffer might not be uploaded by the time we start drawing
 	fenceValue[frameIndex]++;
 	auto hr = commandQueue->Signal(fence[frameIndex], fenceValue[frameIndex]);
