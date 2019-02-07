@@ -18,5 +18,6 @@ public:
 	static std::vector<Mesh*> LoadFile(std::string filename, ID3D12GraphicsCommandList* clist);
 	static ModelLoader* GetInstance();
 	static ModelLoader* CreateInstance(ID3D12Device* device);
+	static void DestroyInstance();
 };
 

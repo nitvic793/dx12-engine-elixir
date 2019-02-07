@@ -93,6 +93,11 @@ ModelLoader * ModelLoader::CreateInstance(ID3D12Device * device)
 	return Instance;
 }
 
+void ModelLoader::DestroyInstance()
+{
+	delete Instance;
+}
+
 ModelLoader::ModelLoader(ID3D12Device * device) :
 	device(device)
 {

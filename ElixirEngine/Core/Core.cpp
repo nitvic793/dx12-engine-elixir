@@ -471,6 +471,7 @@ void Core::Cleanup()
 		fence[i]->Release();
 	};
 
+	ModelLoader::DestroyInstance();
 	mainDescriptorHeap->Release();
 	pipelineStateObject->Release();
 	rootSignature->Release();

@@ -16,7 +16,7 @@ void ComputeCore::CreateRootSignature()
 	rootParameters[3].InitAsDescriptorTable(1, &range[2]);
 
 	CD3DX12_STATIC_SAMPLER_DESC StaticSamplers[1];
-	StaticSamplers[0].Init(0, D3D12_FILTER_ANISOTROPIC);
+	StaticSamplers[0].Init(0);
 
 	CD3DX12_ROOT_SIGNATURE_DESC descRootSignature;
 	descRootSignature.Init(4, rootParameters);
