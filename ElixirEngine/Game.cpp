@@ -64,7 +64,7 @@ void Game::InitializeAssets()
 	);
 
 	skyTexture = rm->GetTexture(StringID("skybox"));
-	
+	entities[9]->SetUVScale(XMFLOAT2(10, 10));
 	//auto meshes = ModelLoader::LoadFile("../../Assets/Pallet.fbx", commandList);
 }
 

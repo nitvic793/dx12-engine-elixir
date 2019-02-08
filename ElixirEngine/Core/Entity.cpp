@@ -18,6 +18,12 @@ Entity::Entity()
 	XMStoreFloat3(&position, v);
 	XMStoreFloat3(&scale, sc);
 	XMStoreFloat3(&rotation, v);
+	uvScale = XMFLOAT2(1.f, 1.f);
+}
+
+void Entity::SetUVScale(XMFLOAT2 scale)
+{
+	uvScale = scale;
 }
 
 void Entity::SetMesh(Mesh * m)
@@ -80,6 +86,11 @@ XMFLOAT3 Entity::GetPosition()
 uint32_t Entity::GetID()
 {
 	return entityID;
+}
+
+XMFLOAT2 Entity::GetUVScale()
+{
+	return uvScale;
 }
 
 void Entity::SetPosition(const XMFLOAT3& pos)

@@ -517,6 +517,7 @@ void DeferredRenderer::PrepareGPUHeap(std::vector<Entity*> entities, PixelConsta
 	for (auto e : entities)
 	{
 		e->SetID(index);
+		auto uvScale = e->GetUVScale();
 		auto cb = ConstantBuffer
 		{
 			e->GetWorldViewProjectionTransposed(camera->GetProjectionMatrix(), camera->GetViewMatrix()),
@@ -524,7 +525,8 @@ void DeferredRenderer::PrepareGPUHeap(std::vector<Entity*> entities, PixelConsta
 			camera->GetViewMatrixTransposed(),
 			camera->GetProjectionMatrixTransposed(),
 			shadowViewTransposed,
-			shadowProjTransposed
+			shadowProjTransposed,
+			uvScale
 		};
 
 		cbWrapper.CopyData(&cb, ConstantBufferSize, index);

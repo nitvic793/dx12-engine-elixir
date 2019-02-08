@@ -18,6 +18,7 @@ protected:
 	bool		bCastsShadow = false;
 	XMFLOAT3	boxCenter;
 	XMFLOAT3	sphereCenter;
+	XMFLOAT2	uvScale;
 
 	BoundingOrientedBox boundingBox;
 	BoundingSphere		boundingSphere;
@@ -31,8 +32,9 @@ public:
 	XMFLOAT4X4	GetWorldMatrixTransposed();
 	XMFLOAT3	GetPosition();
 	uint32_t	GetID();
+	XMFLOAT2	GetUVScale();
 
-
+	void		SetUVScale(XMFLOAT2 scale);
 	void		SetMesh(Mesh* m);
 	void		SetMaterial(Material* mat);
 	void		SetPosition(const XMFLOAT3& pos);

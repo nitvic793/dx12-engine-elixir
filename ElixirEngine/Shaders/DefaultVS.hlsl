@@ -25,6 +25,7 @@ cbuffer ConstantBuffer : register(b0)
 	float4x4 projection;
 	float4x4 shadowView;
 	float4x4 shadowProjection;
+	float2	 uvScale;
 };
 
 cbuffer PerFrame : register(b1)
@@ -56,6 +57,8 @@ VertexOutput main(VertexInput input)
 	float4x4 shadowVP = mul(mul(world, shadowView), shadowProjection);
 
 	output.pos = mul(float4(input.pos, 1.0f), worldViewProjection);
+	input.uv.x = uvScale.x * input.uv.x;
+	input.uv.y = uvScale.y * input.uv.y;
 	output.uv = input.uv;
 	output.normal = normalize(mul(input.normal, (float3x3)world));
 	output.tangent = normalize(mul(input.tangent, (float3x3)world));

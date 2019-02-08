@@ -7,12 +7,13 @@ static const int MaxDirLights = 4;
 
 struct ConstantBuffer 
 {
-	DirectX::XMFLOAT4X4 worldViewProjection;
-	DirectX::XMFLOAT4X4 world;
-	DirectX::XMFLOAT4X4 view;
-	DirectX::XMFLOAT4X4 projection;
-	DirectX::XMFLOAT4X4 shadowView;
-	DirectX::XMFLOAT4X4 shadowProjection;
+	XMFLOAT4X4	worldViewProjection;
+	XMFLOAT4X4	world;
+	XMFLOAT4X4	view;
+	XMFLOAT4X4	projection;
+	XMFLOAT4X4	shadowView;
+	XMFLOAT4X4	shadowProjection;
+	XMFLOAT2	uvScale;
 };
 
 struct InstanceWorldBuffer
@@ -22,14 +23,14 @@ struct InstanceWorldBuffer
 
 struct PixelConstantBuffer
 {
-	DirectionalLight light[MaxDirLights];
-	PointLight pointLight[MaxPointLights];
-	XMFLOAT4X4 invProjView;
-	XMFLOAT3 cameraPosition;
-	uint32_t pointLightCount;
-	uint32_t pointLightIndex;
-	uint32_t dirLightCount;
-	uint32_t dirLightIndex;
+	DirectionalLight	light[MaxDirLights];
+	PointLight			pointLight[MaxPointLights];
+	XMFLOAT4X4			invProjView;
+	XMFLOAT3			cameraPosition;
+	uint32_t			pointLightCount;
+	uint32_t			pointLightIndex;
+	uint32_t			dirLightCount;
+	uint32_t			dirLightIndex;
 };
 
 struct DirShadowBuffer
@@ -46,7 +47,7 @@ struct PointShadowBuffer
 
 struct PerFrameConstantBuffer
 {
-	float nearZ;
-	float farZ;
-	XMFLOAT2 lightPerspective;
+	float		nearZ;
+	float		farZ;
+	XMFLOAT2	lightPerspective;
 };
