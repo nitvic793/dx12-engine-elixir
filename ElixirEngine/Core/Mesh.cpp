@@ -7,12 +7,6 @@
 #include <tiny_obj_loader.h>
 
 
-
-////
-/// END TODO
-////
-
-
 Mesh::Mesh(ID3D12Device * device)
 {
 	this->device = device;
@@ -20,6 +14,7 @@ Mesh::Mesh(ID3D12Device * device)
 
 Mesh::Mesh(std::string objFile, ID3D12Device * device, ID3D12GraphicsCommandList* commandList)
 {
+	subMeshes.resize(1);
 	// Variables used while reading the file
 	std::vector<XMFLOAT3> positions;     // Positions from the file
 	std::vector<XMFLOAT3> normals;       // Normals from the file
@@ -94,167 +89,12 @@ Mesh::Mesh(std::string objFile, ID3D12Device * device, ID3D12GraphicsCommandList
 
 			delete[] normals;
 		}
-
 	}
 
 	BoundingOrientedBox::CreateFromPoints(boundingBox, positions.size(), positions.data(), sizeof(XMFLOAT3));
 	BoundingSphere::CreateFromPoints(boundingSphere, positions.size(), positions.data(), sizeof(XMFLOAT3));
 	this->device = device;
-
-	//// File input object
-	//std::ifstream obj(objFile);
-
-	//// Check for successful open
-	//if (!obj.is_open())
-	//{
-	//	return;
-	//}
-
-	//unsigned int vertCounter = 0;        // Count of vertices/indices
-	//char chars[100];                     // String for line reading
-
-	//									 // Still have data left?
-	//while (obj.good())
-	//{
-	//	// Get the line (100 characters should be more than enough)
-	//	obj.getline(chars, 100);
-
-	//	// Check the type of line
-	//	if (chars[0] == 'v' && chars[1] == 'n')
-	//	{
-	//		// Read the 3 numbers directly into an XMFLOAT3
-	//		XMFLOAT3 norm;
-	//		sscanf_s(
-	//			chars,
-	//			"vn %f %f %f",
-	//			&norm.x, &norm.y, &norm.z);
-
-	//		// Add to the list of normals
-	//		normals.push_back(norm);
-	//	}
-	//	else if (chars[0] == 'v' && chars[1] == 't')
-	//	{
-	//		// Read the 2 numbers directly into an XMFLOAT2
-	//		XMFLOAT2 uv;
-	//		sscanf_s(
-	//			chars,
-	//			"vt %f %f",
-	//			&uv.x, &uv.y);
-
-	//		// Add to the list of uv's
-	//		uvs.push_back(uv);
-	//	}
-	//	else if (chars[0] == 'v')
-	//	{
-	//		// Read the 3 numbers directly into an XMFLOAT3
-	//		XMFLOAT3 pos;
-	//		sscanf_s(
-	//			chars,
-	//			"v %f %f %f",
-	//			&pos.x, &pos.y, &pos.z);
-
-	//		// Add to the positions
-	//		positions.push_back(pos);
-	//	}
-	//	else if (chars[0] == 'f')
-	//	{
-	//		// Read the face indices into an array
-	//		unsigned int i[12];
-	//		int facesRead = sscanf_s(
-	//			chars,
-	//			"f %d/%d/%d %d/%d/%d %d/%d/%d %d/%d/%d",
-	//			&i[0], &i[1], &i[2],
-	//			&i[3], &i[4], &i[5],
-	//			&i[6], &i[7], &i[8],
-	//			&i[9], &i[10], &i[11]);
-
-	//		// - Create the verts by looking up
-	//		//    corresponding data from vectors
-	//		// - OBJ File indices are 1-based, so
-	//		//    they need to be adusted
-	//		Vertex v1;
-	//		v1.pos = positions[i[0] - 1];
-	//		v1.uv = uvs[i[1] - 1];
-	//		v1.normal = normals[i[2] - 1];
-
-	//		Vertex v2;
-	//		v2.pos = positions[i[3] - 1];
-	//		v2.uv = uvs[i[4] - 1];
-	//		v2.normal = normals[i[5] - 1];
-
-	//		Vertex v3;
-	//		v3.pos = positions[i[6] - 1];
-	//		v3.uv = uvs[i[7] - 1];
-	//		v3.normal = normals[i[8] - 1];
-
-	//		// The model is most likely in a right-handed space,
-	//		// especially if it came from Maya.  We want to convert
-	//		// to a left-handed space for DirectX.  This means we 
-	//		// need to:
-	//		//  - Invert the Z position
-	//		//  - Invert the normal's Z
-	//		//  - Flip the winding order
-	//		// We also need to flip the UV coordinate since DirectX
-	//		// defines (0,0) as the top left of the texture, and many
-	//		// 3D modeling packages use the bottom left as (0,0)
-
-	//		// Flip the UV's since they're probably "upside down"
-	//		v1.uv.y = 1.0f - v1.uv.y;
-	//		v2.uv.y = 1.0f - v2.uv.y;
-	//		v3.uv.y = 1.0f - v3.uv.y;
-
-	//		// Flip Z (LH vs. RH)
-	//		v1.pos.z *= -1.0f;
-	//		v2.pos.z *= -1.0f;
-	//		v3.pos.z *= -1.0f;
-
-	//		// Flip normal Z
-	//		v1.normal.z *= -1.0f;
-	//		v2.normal.z *= -1.0f;
-	//		v3.normal.z *= -1.0f;
-
-	//		// Add the verts to the vector (flipping the winding order)
-	//		verts.push_back(v1);
-	//		verts.push_back(v3);
-	//		verts.push_back(v2);
-
-	//		// Add three more indices
-	//		indices.push_back(vertCounter); vertCounter += 1;
-	//		indices.push_back(vertCounter); vertCounter += 1;
-	//		indices.push_back(vertCounter); vertCounter += 1;
-
-	//		// Was there a 4th face?
-	//		if (facesRead == 12)
-	//		{
-	//			// Make the last vertex
-	//			Vertex v4;
-	//			v4.pos = positions[i[9] - 1];
-	//			v4.uv = uvs[i[10] - 1];
-	//			v4.normal = normals[i[11] - 1];
-
-	//			// Flip the UV, Z pos and normal
-	//			v4.uv.y = 1.0f - v4.uv.y;
-	//			v4.pos.z *= -1.0f;
-	//			v4.normal.z *= -1.0f;
-
-	//			// Add a whole triangle (flipping the winding order)
-	//			verts.push_back(v1);
-	//			verts.push_back(v4);
-	//			verts.push_back(v3);
-
-	//			// Add three more indices
-	//			indices.push_back(vertCounter); vertCounter += 1;
-	//			indices.push_back(vertCounter); vertCounter += 1;
-	//			indices.push_back(vertCounter); vertCounter += 1;
-	//		}
-	//	}
-	//}
-
-	//// Close the file and create the actual buffers
-	//obj.close();
-
-	//Initialize(verts.data(), (UINT)verts.size(), indices.data(), (UINT)indices.size(), commandList);
-	Initialize(vertices.data(), (UINT)vertices.size(), indexVals.data(), (UINT)indexVals.size(), commandList);
+	Initialize(0, vertices.data(), (UINT)vertices.size(), indexVals.data(), (UINT)indexVals.size(), commandList);
 }
 
 Mesh::Mesh(ID3D12Device * device, int subMeshCount)
@@ -263,91 +103,6 @@ Mesh::Mesh(ID3D12Device * device, int subMeshCount)
 	subMeshes.resize(subMeshCount);
 }
 
-void Mesh::Initialize(Vertex* vertices, UINT vertexCount, UINT * indices, UINT indexCount, ID3D12GraphicsCommandList* commandList)
-{
-	this->indexCount = indexCount;
-	CalculateTangents(vertices, vertexCount, indices, indexCount);
-	vBufferSize = sizeof(Vertex) * vertexCount;
-
-	// create default heap
-	device->CreateCommittedResource(
-		&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT), // a default heap
-		D3D12_HEAP_FLAG_NONE, // no flags
-		&CD3DX12_RESOURCE_DESC::Buffer(vBufferSize), // resource description for a buffer
-		D3D12_RESOURCE_STATE_COPY_DEST, // we will start this heap in the copy destination state since we will copy data
-										// from the upload heap to this heap
-		nullptr, // optimized clear value must be null for this type of resource. used for render targets and depth/stencil buffers
-		IID_PPV_ARGS(&vertexBuffer));
-
-	// we can give resource heaps a name so when we debug with the graphics debugger we know what resource we are looking at
-	vertexBuffer->SetName(L"Vertex Buffer Resource Heap");
-
-	// create upload heap
-	
-	device->CreateCommittedResource(
-		&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD), // upload heap
-		D3D12_HEAP_FLAG_NONE, // no flags
-		&CD3DX12_RESOURCE_DESC::Buffer(vBufferSize), // resource description for a buffer
-		D3D12_RESOURCE_STATE_GENERIC_READ, // GPU will read from this buffer and copy its contents to the default heap
-		nullptr,
-		IID_PPV_ARGS(&vBufferUploadHeap));
-	vBufferUploadHeap->SetName(L"Vertex Buffer Upload Resource Heap");
-
-	// store vertex buffer in upload heap
-	D3D12_SUBRESOURCE_DATA vertexData = {};
-	vertexData.pData = reinterpret_cast<BYTE*>(vertices); // pointer to our vertex array
-	vertexData.RowPitch = vBufferSize; // size of all our triangle vertex data
-	vertexData.SlicePitch = vBufferSize; // also the size of our triangle vertex data
-
-	UpdateSubresources(commandList, vertexBuffer, vBufferUploadHeap, 0, 0, 1, &vertexData);
-
-	// transition the vertex buffer data from copy destination state to vertex buffer state
-	commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(vertexBuffer, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER));
-	iBufferSize = sizeof(UINT) * indexCount;
-
-	// create default heap to hold index buffer
-	device->CreateCommittedResource(
-		&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT), // a default heap
-		D3D12_HEAP_FLAG_NONE, // no flags
-		&CD3DX12_RESOURCE_DESC::Buffer(iBufferSize), // resource description for a buffer
-		D3D12_RESOURCE_STATE_COPY_DEST, // start in the copy destination state
-		nullptr, // optimized clear value must be null for this type of resource
-		IID_PPV_ARGS(&indexBuffer));
-
-	// we can give resource heaps a name so when we debug with the graphics debugger we know what resource we are looking at
-	indexBuffer->SetName(L"Index Buffer Resource Heap");
-
-	// create upload heap to upload index buffer
-	device->CreateCommittedResource(
-		&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD), // upload heap
-		D3D12_HEAP_FLAG_NONE, // no flags
-		&CD3DX12_RESOURCE_DESC::Buffer(vBufferSize), // resource description for a buffer
-		D3D12_RESOURCE_STATE_GENERIC_READ, // GPU will read from this buffer and copy its contents to the default heap
-		nullptr,
-		IID_PPV_ARGS(&iBufferUploadHeap));
-	iBufferUploadHeap->SetName(L"Index Buffer Upload Resource Heap");
-
-	// store vertex buffer in upload heap
-	D3D12_SUBRESOURCE_DATA indexData = {};
-	indexData.pData = reinterpret_cast<BYTE*>(indices); // pointer to our index array
-	indexData.RowPitch = iBufferSize; // size of all our index buffer
-	indexData.SlicePitch = iBufferSize; // also the size of our index buffer
-
-										// we are now creating a command with the command list to copy the data from
-										// the upload heap to the default heap
-	UpdateSubresources(commandList, indexBuffer, iBufferUploadHeap, 0, 0, 1, &indexData);
-
-	// transition the vertex buffer data from copy destination state to vertex buffer state
-	commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(indexBuffer, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER));
-
-	vBufferView.BufferLocation = vertexBuffer->GetGPUVirtualAddress();
-	vBufferView.StrideInBytes = sizeof(Vertex);
-	vBufferView.SizeInBytes = vBufferSize;
-
-	iBufferView.BufferLocation = indexBuffer->GetGPUVirtualAddress();
-	iBufferView.Format = DXGI_FORMAT_R32_UINT;
-	iBufferView.SizeInBytes = iBufferSize;
-}
 
 void Mesh::Initialize(UINT meshIndex, Vertex * vertices, UINT vertexCount, UINT * indices, UINT indexCount, ID3D12GraphicsCommandList * commandList)
 {
@@ -436,6 +191,7 @@ void Mesh::Initialize(UINT meshIndex, Vertex * vertices, UINT vertexCount, UINT 
 	subMesh.iBufferView.SizeInBytes = subMesh.iBufferSize;
 
 	subMesh.vertices.assign(vertices, vertices + vertexCount);
+	subMesh.indices.assign(indices, indices + indexCount);
 	subMeshes[meshIndex] = subMesh;
 }
 
@@ -502,21 +258,6 @@ void Mesh::CalculateTangents(Vertex * vertices, UINT vertexCount, UINT * indices
 	delete[] tan1;
 }
 
-const D3D12_VERTEX_BUFFER_VIEW& Mesh::GetVertexBufferView()
-{
-	return vBufferView;
-}
-
-const D3D12_INDEX_BUFFER_VIEW& Mesh::GetIndexBufferView()
-{
-	return iBufferView;
-}
-
-const UINT& Mesh::GetIndexCount()
-{
-	return indexCount;
-}
-
 const D3D12_VERTEX_BUFFER_VIEW & Mesh::GetVertexBufferView(UINT index)
 {
 	return subMeshes[index].vBufferView;
@@ -549,12 +290,6 @@ const BoundingOrientedBox & Mesh::GetBoundingOrientedBox()
 
 Mesh::~Mesh()
 {
-	if(vertexBuffer)vertexBuffer->Release();
-	if (indexBuffer)indexBuffer->Release();
-
-	if (iBufferUploadHeap)iBufferUploadHeap->Release(); //Most probably should have one upload heap for all meshes
-	if (vBufferUploadHeap)vBufferUploadHeap->Release();
-
 	for (auto sm : subMeshes)
 	{
 		if (sm.vertexBuffer)sm.vertexBuffer->Release();

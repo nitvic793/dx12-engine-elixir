@@ -155,7 +155,7 @@ Mesh* ModelLoader::Load(std::string filename, ID3D12GraphicsCommandList* clist)
 	if (pScene == NULL)
 		return nullptr;
 	Mesh* mesh = new Mesh(device, pScene->mNumMeshes);
-	for (int i = 0; i < pScene->mNumMeshes; ++i)
+	for (UINT i = 0; i < pScene->mNumMeshes; ++i)
 	{
 		ProcessMesh(i, pScene->mMeshes[i], pScene, mesh, clist);
 	}
