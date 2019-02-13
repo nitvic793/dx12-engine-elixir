@@ -182,6 +182,7 @@ bool Core::InitializeDirectX()
 
 void Core::InitializeResources()
 {
+	ModelLoader::CreateInstance(device);
 	commandList->SetName(L"Default Command List");
 	commandQueue->SetName(L"Default Command Queue");
 	deferredRenderer = new DeferredRenderer(device, Width, Height);
@@ -338,7 +339,7 @@ void Core::InitializeResources()
 	scissorRect.top = 0;
 	scissorRect.right = Width;
 	scissorRect.bottom = Height;
-	ModelLoader::CreateInstance(device);
+
 }
 
 void Core::CreateConsoleWindow(int bufferLines, int bufferColumns, int windowLines, int windowColumns)

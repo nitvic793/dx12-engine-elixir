@@ -8,12 +8,12 @@
 void Game::InitializeAssets()
 {
 	auto rm = resourceManager;
-	
+
 	rm->LoadResources("../../SceneData/resources.json", commandQueue, commandList, deferredRenderer);
 	rm->LoadScene("../../SceneData/scene.json", entities);
 
 	instanced = new MeshInstanceGroupEntity(
-		{ StringID("sphere") }, { StringID("scratched") }, 
+		{ StringID("sphere") }, { StringID("scratched") },
 		{
 			XMFLOAT3(-1,1,5),
 			XMFLOAT3(5,0,-4),
@@ -22,9 +22,9 @@ void Game::InitializeAssets()
 			XMFLOAT3(8,0,-4),
 			XMFLOAT3(9,0,-4),
 			XMFLOAT3(10,0,-4),
-		}, 
+		},
 		device, commandList);
-	
+
 
 	texturePool = new TexturePool(device, deferredRenderer, 24);
 	isBlurEnabled = false;
@@ -52,20 +52,21 @@ void Game::InitializeAssets()
 	pixelCb.dirLightCount = 1;
 	pixelCb.dirLightIndex = 0;
 
-	pixelCb.pointLight[0] = PointLight{ {0.99f, 0.2f, 0.2f, 0.f} , {0.0f, 0.0f, -1.f}, 16.f , 2.f};
-	pixelCb.pointLight[1] = PointLight{ {0.0f, 0.99f, 0.2f, 0.f} , {5.0f, 0.0f, -1.f}, 6.f , 2.f};
+	pixelCb.pointLight[0] = PointLight{ {0.99f, 0.2f, 0.2f, 0.f} , {0.0f, 0.0f, -1.f}, 16.f , 2.f };
+	pixelCb.pointLight[1] = PointLight{ {0.0f, 0.99f, 0.2f, 0.f} , {5.0f, 0.0f, -1.f}, 6.f , 2.f };
 	pixelCb.pointLightCount = 2u;
 	pixelCb.pointLightIndex = 0;
 
 	deferredRenderer->SetIBLTextures(
-		rm->GetTexture(StringID("Irradiance"))->GetTextureResource(), 
+		rm->GetTexture(StringID("Irradiance"))->GetTextureResource(),
 		rm->GetTexture(StringID("Prefilter"))->GetTextureResource(),
 		rm->GetTexture(StringID("Brdf"))->GetTextureResource()
 	);
 
 	skyTexture = rm->GetTexture(StringID("skybox"));
+	entities[8]->SetRotation(XMFLOAT3(XM_PIDIV2, 0, 0));
 	entities[9]->SetUVScale(XMFLOAT2(10, 10));
-	//auto meshes = ModelLoader::LoadFile("../../Assets/Pallet.fbx", commandList);
+	//auto meshes = ModelLoader::LoadFile("../../Assets/Models/man.fbx", commandList);
 }
 
 Game::Game(HINSTANCE hInstance, int ShowWnd, int width, int height, bool fullscreen) :

@@ -53,6 +53,10 @@
         ],
         "Meshes": [
             {
+                "MeshID": "cube",
+                "MeshPath": "../../Assets/cube.obj"
+            },
+            {
                 "MeshID": "sphere",
                 "MeshPath": "../../Assets/sphere.obj"
             },
@@ -65,8 +69,8 @@
                 "MeshPath": "../../Assets/sw.obj"
             },
             {
-                "MeshID": "hammer",
-                "MeshPath": "../../Assets/hammer.obj"
+                "MeshID": "man",
+                "MeshPath": "../../Assets/Models/man.fbx"
             },
             {
                 "MeshID": "tree",

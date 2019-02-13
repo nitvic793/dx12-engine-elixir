@@ -1,9 +1,59 @@
 #include "stdafx.h"
 #include "ModelLoader.h"
+#include <map>
 
+const static int CNumBonesPerVertex = 4;
 ModelLoader* ModelLoader::Instance = nullptr;
 
-Mesh* ModelLoader::ProcessMesh(aiMesh* mesh, const aiScene * scene, ID3D12GraphicsCommandList* clist)
+struct BoneInfo
+{
+	XMFLOAT4X4 OffsetMatrix;
+};
+
+struct VertexBoneData
+{
+	uint32_t IDs[CNumBonesPerVertex];
+	float Weights[CNumBonesPerVertex];
+
+	void AddBoneData(uint32_t boneID, float weight)
+	{
+		for (uint32_t i = 0; i < CNumBonesPerVertex; i++) {
+			if (Weights[i] == 0.0) {
+				IDs[i] = boneID;
+				Weights[i] = weight;
+				return;
+			}
+		}
+	}
+};
+
+XMFLOAT4X4 aiMatrixToXMFloat4x4(const aiMatrix4x4* aiMe)
+{
+	XMFLOAT4X4 output;
+	output._11 = aiMe->a1;
+	output._12 = aiMe->a2;
+	output._13 = aiMe->a3;
+	output._14 = aiMe->a4;
+
+	output._21 = aiMe->b1;
+	output._22 = aiMe->b2;
+	output._23 = aiMe->b3;
+	output._24 = aiMe->b4;
+
+	output._31 = aiMe->c1;
+	output._32 = aiMe->c2;
+	output._33 = aiMe->c3;
+	output._34 = aiMe->c4;
+
+	output._41 = aiMe->d1;
+	output._42 = aiMe->d2;
+	output._43 = aiMe->d3;
+	output._44 = aiMe->d4;
+
+	return output;
+}
+
+Mesh* ModelLoader::ProcessMesh(UINT index, aiMesh* mesh, const aiScene * scene, Mesh* &outMesh, ID3D12GraphicsCommandList* clist)
 {
 	// Data to fill
 	std::vector<Vertex> vertices;
@@ -42,44 +92,81 @@ Mesh* ModelLoader::ProcessMesh(aiMesh* mesh, const aiScene * scene, ID3D12Graphi
 		auto c = material->GetTextureCount(aiTextureType_DIFFUSE);
 	}
 
-	auto elixMesh = new Mesh(device);
-	elixMesh->Initialize(vertices.data(), (UINT)vertices.size(), indices.data(), (UINT)indices.size(), clist);
-	return elixMesh;
+	if (mesh->HasBones())
+	{
+		std::map<std::string, uint32_t> boneMapping;
+		std::vector<BoneInfo> boneInfoList;
+		std::vector<VertexBoneData> bones;
+		bones.resize(vertices.size());
+		uint32_t numBones = 0;
+		for (uint32_t i = 0; i < mesh->mNumBones; i++)
+		{
+			uint32_t boneIndex = 0;
+			std::string boneName(mesh->mBones[i]->mName.data);
+			if (boneMapping.find(boneName) == boneMapping.end()) //if bone not found
+			{
+				boneIndex = numBones;
+				numBones++;
+				BoneInfo bi = {};
+				boneInfoList.push_back(bi);
+			}
+			else
+			{
+				boneIndex = boneMapping[boneName];
+			}
+
+			boneMapping[boneName] = boneIndex;
+			boneInfoList[boneIndex].OffsetMatrix = aiMatrixToXMFloat4x4(&mesh->mBones[i]->mOffsetMatrix);
+
+			for (uint32_t j = 0; j < mesh->mBones[i]->mNumWeights; j++)
+			{
+				uint32_t vertexID = mesh->mBones[i]->mWeights[j].mVertexId;
+				float weight = mesh->mBones[i]->mWeights[j].mWeight;
+				bones[vertexID].AddBoneData(boneIndex, weight);
+			}
+		}
+	}
+
+	outMesh->Initialize(index, vertices.data(), (UINT)vertices.size(), indices.data(), (UINT)indices.size(), clist);
+	return outMesh;
 }
 
-void ModelLoader::ProcessNode(aiNode * node, const aiScene * scene, ID3D12GraphicsCommandList* clist, std::vector<Mesh*> &meshes)
+void ModelLoader::ProcessNode(aiNode * node, const aiScene * scene, ID3D12GraphicsCommandList* clist, Mesh* &outMesh)
 {
 	for (UINT i = 0; i < node->mNumMeshes; i++)
 	{
 		aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
-		meshes.push_back(ProcessMesh(mesh, scene, clist));
+		ProcessMesh(i, mesh, scene, outMesh, clist);
 	}
 
 	for (UINT i = 0; i < node->mNumChildren; i++)
 	{
-		ProcessNode(node->mChildren[i], scene, clist, meshes);
+		ProcessNode(node->mChildren[i], scene, clist, outMesh);
 	}
 }
 
-std::vector<Mesh*> ModelLoader::Load(std::string filename, ID3D12GraphicsCommandList* clist)
+Mesh* ModelLoader::Load(std::string filename, ID3D12GraphicsCommandList* clist)
 {
 	Assimp::Importer importer;
-	std::vector<Mesh*> meshes;
 	const aiScene* pScene = importer.ReadFile(filename,
 		aiProcess_Triangulate |
 		aiProcess_ConvertToLeftHanded);
 
 	if (pScene == NULL)
-		return meshes;
+		return nullptr;
+	Mesh* mesh = new Mesh(device, pScene->mNumMeshes);
+	for (int i = 0; i < pScene->mNumMeshes; ++i)
+	{
+		ProcessMesh(i, pScene->mMeshes[i], pScene, mesh, clist);
+	}
+	//ProcessNode(pScene->mRootNode, pScene, clist, mesh);
 
-	ProcessNode(pScene->mRootNode, pScene, clist, meshes);
-
-	return meshes;
+	return mesh;
 }
 
 
 
-std::vector<Mesh*> ModelLoader::LoadFile(std::string filename, ID3D12GraphicsCommandList* clist)
+Mesh*ModelLoader::LoadFile(std::string filename, ID3D12GraphicsCommandList* clist)
 {
 	return Instance->Load(filename, clist);
 }

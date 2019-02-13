@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "ResourceManager.h"
+#include "ModelLoader.h"
 
 ResourceManager* ResourceManager::Instance = nullptr;
 
@@ -96,7 +97,8 @@ void ResourceManager::LoadMesh(ID3D12GraphicsCommandList * commandList, std::str
 
 void ResourceManager::LoadMesh(ID3D12GraphicsCommandList * commandList, HashID hashId, std::string filePath)
 {
-	auto mesh = new Mesh(filePath, device, commandList);
+	auto mesh = ModelLoader::LoadFile(filePath, commandList);
+	//auto mesh = new Mesh(filePath, device, commandList);
 	meshes.insert(std::pair<HashID, Mesh*>(hashId, mesh));
 }
 

@@ -3,6 +3,7 @@
 #include "Vertex.h"
 #include "DirectXTex.h"
 #include "../InputLayout.h"
+#include "../ModelLoader.h"
 
 struct PrefilterPixelConstBuffer
 {
@@ -189,8 +190,8 @@ void DeferredRenderer::Initialize(ID3D12GraphicsCommandList* command)
 	CreateSelectionFilterBuffers();
 
 	frame = std::unique_ptr<FrameManager>(new FrameManager(device));
-	sphereMesh = new Mesh("../../Assets/sphere.obj", device, command);
-	cubeMesh = new Mesh("../../Assets/cube.obj", device, command);
+	sphereMesh = ModelLoader::LoadFile("../../Assets/sphere.obj", command);
+	cubeMesh = ModelLoader::LoadFile("../../Assets/cube.obj", command);
 }
 
 void DeferredRenderer::SetGBUfferPSO(ID3D12GraphicsCommandList* command, Camera* camera, const PixelConstantBuffer& pixelCb)
@@ -494,17 +495,23 @@ FrameManager* DeferredRenderer::GetFrameManager()
 
 void DeferredRenderer::Draw(Mesh * m, ID3D12GraphicsCommandList* commandList)
 {
-	commandList->IASetVertexBuffers(0, 1, &m->GetVertexBufferView());
-	commandList->IASetIndexBuffer(&m->GetIndexBufferView());
-	commandList->DrawIndexedInstanced(m->GetIndexCount(), 1, 0, 0, 0);
+	for (UINT i = 0; i < m->GetSubMeshCount(); ++i)
+	{
+		commandList->IASetVertexBuffers(0, 1, &m->GetVertexBufferView(i));
+		commandList->IASetIndexBuffer(&m->GetIndexBufferView(i));
+		commandList->DrawIndexedInstanced(m->GetIndexCount(i), 1, 0, 0, 0);
+	}
 }
 
 void DeferredRenderer::DrawInstanced(MeshInstanceGroupEntity * instanced, Mesh * mesh, ID3D12GraphicsCommandList * commandList)
 {
-	D3D12_VERTEX_BUFFER_VIEW views[] = { mesh->GetVertexBufferView() , instanced->GetInstanceBufferView() };
-	commandList->IASetVertexBuffers(0, 2, views);
-	commandList->IASetIndexBuffer(&mesh->GetIndexBufferView());
-	commandList->DrawIndexedInstanced(mesh->GetIndexCount(), instanced->GetInstanceCount(), 0, 0, 0);
+	for (UINT i = 0; i < mesh->GetSubMeshCount(); ++i)
+	{
+		D3D12_VERTEX_BUFFER_VIEW views[] = { mesh->GetVertexBufferView(i) , instanced->GetInstanceBufferView() };
+		commandList->IASetVertexBuffers(0, 2, views);
+		commandList->IASetIndexBuffer(&mesh->GetIndexBufferView(i));
+		commandList->DrawIndexedInstanced(mesh->GetIndexCount(i), instanced->GetInstanceCount(), 0, 0, 0);
+	}
 }
 
 void DeferredRenderer::PrepareGPUHeap(std::vector<Entity*> entities, PixelConstantBuffer & pixelCb)

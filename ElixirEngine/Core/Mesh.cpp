@@ -257,6 +257,12 @@ Mesh::Mesh(std::string objFile, ID3D12Device * device, ID3D12GraphicsCommandList
 	Initialize(vertices.data(), (UINT)vertices.size(), indexVals.data(), (UINT)indexVals.size(), commandList);
 }
 
+Mesh::Mesh(ID3D12Device * device, int subMeshCount)
+{
+	this->device = device;
+	subMeshes.resize(subMeshCount);
+}
+
 void Mesh::Initialize(Vertex* vertices, UINT vertexCount, UINT * indices, UINT indexCount, ID3D12GraphicsCommandList* commandList)
 {
 	this->indexCount = indexCount;
@@ -343,6 +349,96 @@ void Mesh::Initialize(Vertex* vertices, UINT vertexCount, UINT * indices, UINT i
 	iBufferView.SizeInBytes = iBufferSize;
 }
 
+void Mesh::Initialize(UINT meshIndex, Vertex * vertices, UINT vertexCount, UINT * indices, UINT indexCount, ID3D12GraphicsCommandList * commandList)
+{
+	SubMesh subMesh;
+	subMesh.indexCount = indexCount;
+	CalculateTangents(vertices, vertexCount, indices, indexCount);
+	subMesh.vBufferSize = sizeof(Vertex) * vertexCount;
+
+	// create default heap
+	device->CreateCommittedResource(
+		&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT), // a default heap
+		D3D12_HEAP_FLAG_NONE, // no flags
+		&CD3DX12_RESOURCE_DESC::Buffer(subMesh.vBufferSize), // resource description for a buffer
+		D3D12_RESOURCE_STATE_COPY_DEST, // we will start this heap in the copy destination state since we will copy data
+										// from the upload heap to this heap
+		nullptr, // optimized clear value must be null for this type of resource. used for render targets and depth/stencil buffers
+		IID_PPV_ARGS(&subMesh.vertexBuffer));
+
+	// we can give resource heaps a name so when we debug with the graphics debugger we know what resource we are looking at
+	subMesh.vertexBuffer->SetName(L"Vertex Buffer Resource Heap");
+
+	// create upload heap
+
+	device->CreateCommittedResource(
+		&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD), // upload heap
+		D3D12_HEAP_FLAG_NONE, // no flags
+		&CD3DX12_RESOURCE_DESC::Buffer(subMesh.vBufferSize), // resource description for a buffer
+		D3D12_RESOURCE_STATE_GENERIC_READ, // GPU will read from this buffer and copy its contents to the default heap
+		nullptr,
+		IID_PPV_ARGS(&subMesh.vBufferUploadHeap));
+	subMesh.vBufferUploadHeap->SetName(L"Vertex Buffer Upload Resource Heap");
+
+	// store vertex buffer in upload heap
+	D3D12_SUBRESOURCE_DATA vertexData = {};
+	vertexData.pData = reinterpret_cast<BYTE*>(vertices); // pointer to our vertex array
+	vertexData.RowPitch = subMesh.vBufferSize; // size of all our triangle vertex data
+	vertexData.SlicePitch = subMesh.vBufferSize; // also the size of our triangle vertex data
+
+	UpdateSubresources(commandList, subMesh.vertexBuffer, subMesh.vBufferUploadHeap, 0, 0, 1, &vertexData);
+
+	// transition the vertex buffer data from copy destination state to vertex buffer state
+	commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(subMesh.vertexBuffer, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER));
+	subMesh.iBufferSize = sizeof(UINT) * indexCount;
+
+	// create default heap to hold index buffer
+	device->CreateCommittedResource(
+		&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT), // a default heap
+		D3D12_HEAP_FLAG_NONE, // no flags
+		&CD3DX12_RESOURCE_DESC::Buffer(subMesh.iBufferSize), // resource description for a buffer
+		D3D12_RESOURCE_STATE_COPY_DEST, // start in the copy destination state
+		nullptr, // optimized clear value must be null for this type of resource
+		IID_PPV_ARGS(&subMesh.indexBuffer));
+
+	// we can give resource heaps a name so when we debug with the graphics debugger we know what resource we are looking at
+	subMesh.indexBuffer->SetName(L"Index Buffer Resource Heap");
+
+	// create upload heap to upload index buffer
+	device->CreateCommittedResource(
+		&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD), // upload heap
+		D3D12_HEAP_FLAG_NONE, // no flags
+		&CD3DX12_RESOURCE_DESC::Buffer(subMesh.vBufferSize), // resource description for a buffer
+		D3D12_RESOURCE_STATE_GENERIC_READ, // GPU will read from this buffer and copy its contents to the default heap
+		nullptr,
+		IID_PPV_ARGS(&subMesh.iBufferUploadHeap));
+	subMesh.iBufferUploadHeap->SetName(L"Index Buffer Upload Resource Heap");
+
+	// store vertex buffer in upload heap
+	D3D12_SUBRESOURCE_DATA indexData = {};
+	indexData.pData = reinterpret_cast<BYTE*>(indices); // pointer to our index array
+	indexData.RowPitch = subMesh.iBufferSize; // size of all our index buffer
+	indexData.SlicePitch = subMesh.iBufferSize; // also the size of our index buffer
+
+										// we are now creating a command with the command list to copy the data from
+										// the upload heap to the default heap
+	UpdateSubresources(commandList, subMesh.indexBuffer, subMesh.iBufferUploadHeap, 0, 0, 1, &indexData);
+
+	// transition the vertex buffer data from copy destination state to vertex buffer state
+	commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(subMesh.indexBuffer, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER));
+
+	subMesh.vBufferView.BufferLocation = subMesh.vertexBuffer->GetGPUVirtualAddress();
+	subMesh.vBufferView.StrideInBytes = sizeof(Vertex);
+	subMesh.vBufferView.SizeInBytes = subMesh.vBufferSize;
+
+	subMesh.iBufferView.BufferLocation = subMesh.indexBuffer->GetGPUVirtualAddress();
+	subMesh.iBufferView.Format = DXGI_FORMAT_R32_UINT;
+	subMesh.iBufferView.SizeInBytes = subMesh.iBufferSize;
+
+	subMesh.vertices.assign(vertices, vertices + vertexCount);
+	subMeshes[meshIndex] = subMesh;
+}
+
 void Mesh::CalculateTangents(Vertex * vertices, UINT vertexCount, UINT * indices, UINT indexCount)
 {
 	XMFLOAT3 *tan1 = new XMFLOAT3[vertexCount * 2];
@@ -421,6 +517,26 @@ const UINT& Mesh::GetIndexCount()
 	return indexCount;
 }
 
+const D3D12_VERTEX_BUFFER_VIEW & Mesh::GetVertexBufferView(UINT index)
+{
+	return subMeshes[index].vBufferView;
+}
+
+const D3D12_INDEX_BUFFER_VIEW & Mesh::GetIndexBufferView(UINT index)
+{
+	return subMeshes[index].iBufferView;
+}
+
+const UINT & Mesh::GetIndexCount(UINT index)
+{
+	return subMeshes[index].indexCount;
+}
+
+const UINT Mesh::GetSubMeshCount()
+{
+	return (UINT)subMeshes.size();
+}
+
 const BoundingSphere & Mesh::GetBoundingSphere()
 {
 	return boundingSphere;
@@ -433,9 +549,17 @@ const BoundingOrientedBox & Mesh::GetBoundingOrientedBox()
 
 Mesh::~Mesh()
 {
-	vertexBuffer->Release();
-	indexBuffer->Release();
+	if(vertexBuffer)vertexBuffer->Release();
+	if (indexBuffer)indexBuffer->Release();
 
-	iBufferUploadHeap->Release(); //Most probably should have one upload heap for all meshes
-	vBufferUploadHeap->Release();
+	if (iBufferUploadHeap)iBufferUploadHeap->Release(); //Most probably should have one upload heap for all meshes
+	if (vBufferUploadHeap)vBufferUploadHeap->Release();
+
+	for (auto sm : subMeshes)
+	{
+		if (sm.vertexBuffer)sm.vertexBuffer->Release();
+		if (sm.indexBuffer)sm.indexBuffer->Release();
+		if (sm.iBufferUploadHeap)sm.iBufferUploadHeap->Release(); //Most probably should have one upload heap for all meshes
+		if (sm.vBufferUploadHeap)sm.vBufferUploadHeap->Release();
+	}
 }
