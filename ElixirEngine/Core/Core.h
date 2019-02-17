@@ -28,6 +28,7 @@ protected:
 	int Height;
 	bool Fullscreen;
 	bool Running;
+	int64_t FrameCounter;
 
 	//Direct3D 
 

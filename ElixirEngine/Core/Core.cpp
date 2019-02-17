@@ -510,6 +510,7 @@ void Core::WaitForPreviousFrame()
 
 void Core::UpdateTimer()
 {
+	FrameCounter++;
 	__int64 now;
 	QueryPerformanceCounter((LARGE_INTEGER*)&now);
 	currentTime = now;
@@ -517,6 +518,21 @@ void Core::UpdateTimer()
 	deltaTime = max((float)((currentTime - previousTime) * perfCounterSeconds), 0.0f);
 	totalTime = (float)((currentTime - startTime) * perfCounterSeconds);
 	previousTime = currentTime;
+
+	fpsFrameCount++;
+	float timeDiff = totalTime - fpsTimeElapsed;
+	if (timeDiff < 1.0f)
+		return;
+	float mspf = 1000.0f / (float)fpsFrameCount;
+	std::ostringstream output;
+	output.precision(6);
+	output << "Elixir " <<
+		"    FPS: " << fpsFrameCount <<
+		"    Frame Time: " << mspf << "ms";
+
+	SetWindowText(hwnd, output.str().c_str());
+	fpsFrameCount = 0;
+	fpsTimeElapsed += 1.0f;
 }
 
 Core::Core(HINSTANCE hInstance, int ShowWnd, int width, int height, bool fullscreen)
@@ -604,7 +620,7 @@ void Core::Run(std::function<void(Core*)> coreLogicCallback)
 	startTime = now;
 	currentTime = now;
 	previousTime = now;
-
+	FrameCounter = 0;
 	MSG msg = {};
 	while (msg.message != WM_QUIT)
 	{
@@ -623,6 +639,17 @@ void Core::Run(std::function<void(Core*)> coreLogicCallback)
 
 			Update();
 			Render();
+
+			//Quick frame rate limiter to 60fps
+			float targetFPS = 60.f;
+			QueryPerformanceCounter((LARGE_INTEGER*)&now);
+			time_t t = now;
+			auto d = (float)((t - previousTime) * perfCounterSeconds);
+			if (d < 1.f / targetFPS)
+			{
+				auto t = 1.f / targetFPS - d;
+				this_thread::sleep_for(std::chrono::milliseconds((INT64)(t * 1000)));
+			}
 		}
 	}
 

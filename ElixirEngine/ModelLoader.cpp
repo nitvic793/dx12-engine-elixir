@@ -97,6 +97,9 @@ Mesh* ModelLoader::ProcessMesh(UINT index, aiMesh* mesh, const aiScene * scene, 
 		std::map<std::string, uint32_t> boneMapping;
 		std::vector<BoneInfo> boneInfoList;
 		std::vector<VertexBoneData> bones;
+		auto globalTransform = aiMatrixToXMFloat4x4(&scene->mRootNode->mTransformation);
+		XMFLOAT4X4 invGlobalTransform;
+		XMStoreFloat4x4(&invGlobalTransform, XMMatrixInverse(nullptr, XMLoadFloat4x4(&globalTransform)));
 		bones.resize(vertices.size());
 		uint32_t numBones = 0;
 		for (uint32_t i = 0; i < mesh->mNumBones; i++)
@@ -163,8 +166,6 @@ Mesh* ModelLoader::Load(std::string filename, ID3D12GraphicsCommandList* clist)
 
 	return mesh;
 }
-
-
 
 Mesh*ModelLoader::LoadFile(std::string filename, ID3D12GraphicsCommandList* clist)
 {
