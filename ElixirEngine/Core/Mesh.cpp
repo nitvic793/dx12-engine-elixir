@@ -2,6 +2,7 @@
 #include <fstream>
 #include <vector>
 #include "DirectXMesh.h"
+#include "../Utility.h"
 
 #define TINYOBJLOADER_IMPLEMENTATION
 #include <tiny_obj_loader.h>
@@ -97,10 +98,12 @@ Mesh::Mesh(std::string objFile, ID3D12Device * device, ID3D12GraphicsCommandList
 	Initialize(0, vertices.data(), (UINT)vertices.size(), indexVals.data(), (UINT)indexVals.size(), commandList);
 }
 
-Mesh::Mesh(ID3D12Device * device, int subMeshCount, bool hasBones)
+Mesh::Mesh(ID3D12Device * device, int subMeshCount, bool hasBones, const aiScene* scene):
+	mAiScene(scene)
 {
 	this->device = device;
 	subMeshes.resize(subMeshCount);
+	this->mAiScene = scene;
 	if (hasBones)
 	{
 		mIsAnimated = true;
@@ -310,6 +313,23 @@ void Mesh::CalculateTangents(Vertex * vertices, UINT vertexCount, UINT * indices
 	}
 
 	delete[] tan1;
+}
+
+void Mesh::BoneTransform(UINT meshIndex, float totalTime)
+{
+	XMFLOAT4X4 identity;
+	XMStoreFloat4x4(&identity, XMMatrixIdentity());
+
+	float TicksPerSecond = (float)(mAiScene->mAnimations[0]->mTicksPerSecond != 0 ? mAiScene->mAnimations[0]->mTicksPerSecond : 25.0f);
+	float TimeInTicks = totalTime * TicksPerSecond;
+	float AnimationTime = fmod(TimeInTicks, (float)mAiScene->mAnimations[0]->mDuration);
+
+	//ReadNodeHeirarchy(AnimationTime, mAiScene->mRootNode, identity);
+
+
+	for (uint32_t i = 0; i < boneDescriptors[meshIndex].boneInfoList.size(); i++) {
+		boneCBs[meshIndex].bones[i] = boneDescriptors[meshIndex].boneInfoList[i].FinalTransform;
+	}
 }
 
 const PerArmatureConstantBuffer Mesh::GetArmatureCB(UINT index)

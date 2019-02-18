@@ -3,6 +3,10 @@
 #include "Vertex.h"
 #include <map>
 #include "ConstantBuffer.h"
+#include <assimp/scene.h>           // Output data structure
+#include <assimp/postprocess.h>     // Post processing flags
+#include <assimp/Importer.hpp>      // C++ importer interface
+
 #define MaxBonesPerVertex 4
 
 /// TODO:
@@ -12,6 +16,7 @@
 struct BoneInfo
 {
 	XMFLOAT4X4 OffsetMatrix;
+	XMFLOAT4X4 FinalTransform;
 };
 
 struct VertexBoneData
@@ -76,15 +81,17 @@ class Mesh
 	BoundingSphere							boundingSphere;
 	BoundingOrientedBox						boundingBox;
 	bool									mIsAnimated;
-
+	const aiScene*								mAiScene;
 public:
 	Mesh(ID3D12Device* device);
 	Mesh(std::string objFile, ID3D12Device* device, ID3D12GraphicsCommandList* commandList);
-	Mesh(ID3D12Device* device, int subMeshCount, bool hasBones = false);
+	Mesh(ID3D12Device* device, int subMeshCount, bool hasBones = false, const aiScene* scene = nullptr);
 
 	void Initialize(UINT meshIndex, Vertex* vertices, UINT vertexCount, UINT* indices, UINT indexCount, ID3D12GraphicsCommandList* commandList);
 	void InitializeBoneWeights(UINT meshIndex, BoneDescriptor boneData, ID3D12GraphicsCommandList* commandList);
 	void CalculateTangents(Vertex* vertices, UINT vertexCount, UINT * indices, UINT indexCount);
+	void BoneTransform(UINT meshIndex, float totalTime);
+	void ReadNodeHeirarchy();
 
 	const PerArmatureConstantBuffer GetArmatureCB(UINT index);
 	const D3D12_VERTEX_BUFFER_VIEW& GetVertexBufferView(UINT index);
@@ -96,5 +103,6 @@ public:
 	const BoundingSphere&			GetBoundingSphere();
 	const BoundingOrientedBox&		GetBoundingOrientedBox();
 	const bool						IsAnimated();
+	
 	~Mesh();
 };

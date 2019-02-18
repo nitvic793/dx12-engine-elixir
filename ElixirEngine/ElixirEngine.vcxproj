@@ -152,6 +152,7 @@
     <ClCompile Include="SystemResourceManager.cpp" />
     <ClCompile Include="Texture.cpp" />
     <ClCompile Include="TexturePool.cpp" />
+    <ClCompile Include="Utility.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="BlurFilter.h" />
@@ -186,6 +187,7 @@
     <ClInclude Include="SystemResourceManager.h" />
     <ClInclude Include="Texture.h" />
     <ClInclude Include="TexturePool.h" />
+    <ClInclude Include="Utility.h" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="AmbientPassPS.hlsl">
