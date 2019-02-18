@@ -333,10 +333,12 @@ void DeferredRenderer::RenderShadowMap(ID3D12GraphicsCommandList * commandList, 
 	commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(shadowMapTexture, D3D12_RESOURCE_STATE_DEPTH_WRITE, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE));
 
 	commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(shadowMapPointTexture, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_DEPTH_WRITE));
-	viewport.Width = (float)1024;
-	viewport.Height = (float)1024;
-	scissorRect.right = 1024;
-	scissorRect.bottom = 1024;
+
+	viewport.Width = (float)pointShadowMapSize;
+	viewport.Height = (float)pointShadowMapSize;
+	scissorRect.right = pointShadowMapSize;
+	scissorRect.bottom = pointShadowMapSize;
+
 	commandList->RSSetViewports(1, &viewport);
 	commandList->RSSetScissorRects(1, &scissorRect);
 	commandList->ClearDepthStencilView(shadowDSVHeap.handleCPU(1), D3D12_CLEAR_FLAGS::D3D12_CLEAR_FLAG_DEPTH, mClearDepth, 0xff, 0, nullptr);
@@ -1250,8 +1252,8 @@ void DeferredRenderer::CreateShadowBuffers()
 
 	resourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
 	resourceDesc.DepthOrArraySize = 6;
-	resourceDesc.Width = 1024;
-	resourceDesc.Height = 1024;
+	resourceDesc.Width = pointShadowMapSize;
+	resourceDesc.Height = pointShadowMapSize;
 	device->CreateCommittedResource(&heapProperty, D3D12_HEAP_FLAG_NONE, &resourceDesc, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, &clearVal, IID_PPV_ARGS(&shadowMapPointTexture));
 
 	//for (int i = MaxDirLights; i < MaxDirLights + MaxPointLights; ++i)

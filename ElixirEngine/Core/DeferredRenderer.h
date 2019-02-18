@@ -38,7 +38,8 @@ class DeferredRenderer
 	ID3D12Device *device;
 	const static int numRTV = RTV_ORDER_COUNT;
 	int constBufferIndex = 0;
-	int shadowMapSize = 4096;
+	int shadowMapSize = 2048;
+	int pointShadowMapSize = 256;
 	const static int shadowMapCount = 32;
 
 	ID3D12RootSignature* rootSignature;
