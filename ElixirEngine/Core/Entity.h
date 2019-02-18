@@ -13,7 +13,7 @@ protected:
 	XMFLOAT3	rotation;
 	Mesh*		mesh;
 	Material*	material;
-	//std::vector<HashID> meshes;
+
 	//std::vector<HashID> materials;
 	bool		bCastsShadow = false;
 	XMFLOAT3	boxCenter;
@@ -50,5 +50,6 @@ public:
 
 	inline const BoundingOrientedBox&	GetBoundingBox() { return boundingBox; };
 	inline const BoundingSphere&		GetBoundingSphere() { return boundingSphere; };
+	inline const bool					IsAnimated() { return mesh->IsAnimated(); }
 	~Entity();
 };

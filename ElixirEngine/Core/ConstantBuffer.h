@@ -4,6 +4,7 @@
 
 static const int MaxPointLights = 16;
 static const int MaxDirLights = 4;
+static const int MaxBones = 128;
 
 struct ConstantBuffer 
 {
@@ -50,4 +51,9 @@ struct PerFrameConstantBuffer
 	float		nearZ;
 	float		farZ;
 	XMFLOAT2	lightPerspective;
+};
+
+struct PerArmatureConstantBuffer
+{
+	XMFLOAT4X4 bones[MaxBones];
 };

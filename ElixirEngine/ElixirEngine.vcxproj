@@ -141,7 +141,6 @@
     <ClCompile Include="FileUtility.cpp" />
     <ClCompile Include="FrameManager.cpp" />
     <ClCompile Include="Game.cpp" />
-    <ClCompile Include="Main.cpp" />
     <ClCompile Include="Material.cpp" />
     <ClCompile Include="MeshInstanceGroupEntity.cpp" />
     <ClCompile Include="ModelLoader.cpp" />

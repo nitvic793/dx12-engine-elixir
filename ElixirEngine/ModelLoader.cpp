@@ -2,30 +2,8 @@
 #include "ModelLoader.h"
 #include <map>
 
-const static int CNumBonesPerVertex = 4;
+
 ModelLoader* ModelLoader::Instance = nullptr;
-
-struct BoneInfo
-{
-	XMFLOAT4X4 OffsetMatrix;
-};
-
-struct VertexBoneData
-{
-	uint32_t IDs[CNumBonesPerVertex];
-	float Weights[CNumBonesPerVertex];
-
-	void AddBoneData(uint32_t boneID, float weight)
-	{
-		for (uint32_t i = 0; i < CNumBonesPerVertex; i++) {
-			if (Weights[i] == 0.0) {
-				IDs[i] = boneID;
-				Weights[i] = weight;
-				return;
-			}
-		}
-	}
-};
 
 XMFLOAT4X4 aiMatrixToXMFloat4x4(const aiMatrix4x4* aiMe)
 {
@@ -92,11 +70,12 @@ Mesh* ModelLoader::ProcessMesh(UINT index, aiMesh* mesh, const aiScene * scene, 
 		auto c = material->GetTextureCount(aiTextureType_DIFFUSE);
 	}
 
+	std::map<std::string, uint32_t> boneMapping;
+	std::vector<BoneInfo> boneInfoList;
+	std::vector<VertexBoneData> bones;
+
 	if (mesh->HasBones())
 	{
-		std::map<std::string, uint32_t> boneMapping;
-		std::vector<BoneInfo> boneInfoList;
-		std::vector<VertexBoneData> bones;
 		auto globalTransform = aiMatrixToXMFloat4x4(&scene->mRootNode->mTransformation);
 		XMFLOAT4X4 invGlobalTransform;
 		XMStoreFloat4x4(&invGlobalTransform, XMMatrixInverse(nullptr, XMLoadFloat4x4(&globalTransform)));
@@ -131,6 +110,10 @@ Mesh* ModelLoader::ProcessMesh(UINT index, aiMesh* mesh, const aiScene * scene, 
 	}
 
 	outMesh->Initialize(index, vertices.data(), (UINT)vertices.size(), indices.data(), (UINT)indices.size(), clist);
+	if (mesh->HasBones()) 
+	{
+		outMesh->InitializeBoneWeights(index, BoneDescriptor{ boneMapping, boneInfoList, bones }, clist);
+	}
 	return outMesh;
 }
 
@@ -157,7 +140,7 @@ Mesh* ModelLoader::Load(std::string filename, ID3D12GraphicsCommandList* clist)
 
 	if (pScene == NULL)
 		return nullptr;
-	Mesh* mesh = new Mesh(device, pScene->mNumMeshes);
+	Mesh* mesh = new Mesh(device, pScene->mNumMeshes, pScene->HasAnimations());
 	for (UINT i = 0; i < pScene->mNumMeshes; ++i)
 	{
 		ProcessMesh(i, pScene->mMeshes[i], pScene, mesh, clist);

@@ -27,7 +27,8 @@ enum DefaultRootParameterSlotType {
 	RootSigCBVertex0 = 0,
 	RootSigCBPixel0,
 	RootSigSRVPixel1,
-	RootSigCBVertex1,
+	RootSigCBAll1,
+	RootSigCBAll2
 };
 
 typedef GBufferRenderTargetOrder GBufferType;
@@ -56,6 +57,7 @@ class DeferredRenderer
 	ID3D12Resource* selectedDepthTexture;
 	ID3D12Resource* selectedOutlineTexture;
 
+
 	ID3D12PipelineState* deferredPSO;
 	ID3D12PipelineState* dirLightPassPSO;
 	ID3D12PipelineState* shapeLightPassPSO;
@@ -74,8 +76,10 @@ class DeferredRenderer
 	CDescriptorHeapWrapper samplerHeap;
 	CDescriptorHeapWrapper cbHeap;
 	CDescriptorHeapWrapper pixelCbHeap;
+	CDescriptorHeapWrapper boneCBHeap;
 
 	PerFrameConstantBuffer frameCB;
+
 	//Shadows
 	PointShadowBuffer pShadowBuffer;
 	CDescriptorHeapWrapper shadowResHeap;
@@ -101,6 +105,7 @@ class DeferredRenderer
 	ConstantBufferWrapper cbWrapper;
 	ConstantBufferWrapper pixelCbWrapper;
 	ConstantBufferWrapper perFrameCbWrapper;
+	ConstantBufferWrapper perArmatureWrapper;
 
 	std::unique_ptr<Texture> selectedDepthBufferSRV;
 	std::unique_ptr<Texture> selectedOutlineSRV;
@@ -124,6 +129,7 @@ class DeferredRenderer
 	ID3D12Resource *lightCB;
 	ID3D12Resource *worldViewCB;
 	ID3D12Resource *perFrameCB;
+	ID3D12Resource *perArmatureCB;
 
 	Mesh* sphereMesh;
 	Mesh* cubeMesh;
@@ -159,8 +165,9 @@ class DeferredRenderer
 	void CreateShadowBuffers();
 	void CreateSelectionFilterBuffers();
 	void Draw(Mesh* m, ID3D12GraphicsCommandList* commandList);
+	void DrawAnimated(Mesh* m, ID3D12GraphicsCommandList* clist);
 	void DrawInstanced(MeshInstanceGroupEntity* instanced, Mesh* mesh, ID3D12GraphicsCommandList* commandList);
-	void PrepareGPUHeap(std::vector<Entity*> entities, PixelConstantBuffer& pixelCb);
+	void PrepareGPUHeap(std::vector<Entity*> entities, std::vector<Entity*> animEntities, PixelConstantBuffer& pixelCb);
 public:
 	DeferredRenderer(ID3D12Device *dxDevice, int width, int height);
 
@@ -195,6 +202,7 @@ public:
 	void RenderSelectionDepthBuffer(ID3D12GraphicsCommandList* commandList, std::vector<Entity*> entities, Camera* camera);
 	void RenderShadowMap(ID3D12GraphicsCommandList* commandList, std::vector<Entity*> entities, std::vector<MeshInstanceGroupEntity*> instancedEntities);
 	void Draw(ID3D12GraphicsCommandList* commandList, std::vector<Entity*> entities);
+	void DrawAnimated(ID3D12GraphicsCommandList* clist, std::vector<Entity*> entities);
 	void DrawInstanced(ID3D12GraphicsCommandList* commandList, std::vector<MeshInstanceGroupEntity*> entities);
 	void DrawSkybox(ID3D12GraphicsCommandList* commandList, Texture* skybox);
 	void DrawScreenQuad(ID3D12GraphicsCommandList* commandList);
@@ -203,7 +211,7 @@ public:
 	void DrawResult(ID3D12GraphicsCommandList* commandList, D3D12_CPU_DESCRIPTOR_HANDLE &rtvHandle, Texture* resultTex);
 
 	void StartFrame(ID3D12GraphicsCommandList* commandList);
-	void PrepareFrame(std::vector<Entity*> entities, Camera* camera, PixelConstantBuffer& pixelCb);
+	void PrepareFrame(std::vector<Entity*> entities, std::vector<Entity*> animEntities, Camera* camera, PixelConstantBuffer& pixelCb);
 	void TransitionToPostProcess(ID3D12GraphicsCommandList* commandList);
 	void EndFrame(ID3D12GraphicsCommandList* commandList);
 

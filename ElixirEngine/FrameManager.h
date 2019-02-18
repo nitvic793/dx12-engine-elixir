@@ -6,6 +6,8 @@ struct FrameHeapParameters
 {
 	uint32_t GBuffer;
 	uint32_t Entities;
+	uint32_t AnimEntities;
+	uint32_t BoneCB;
 	uint32_t Textures;
 	uint32_t PixelCB;
 	uint32_t LightShapes;

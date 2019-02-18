@@ -34,11 +34,11 @@ Mesh::Mesh(std::string objFile, ID3D12Device * device, ID3D12GraphicsCommandList
 		// Loop over faces(polygon)
 		size_t index_offset = 0;
 		bool hasNormals = true;
-		for (size_t f = 0; f < shapes[s].mesh.num_face_vertices.size(); f++) 
+		for (size_t f = 0; f < shapes[s].mesh.num_face_vertices.size(); f++)
 		{
 			int fv = shapes[s].mesh.num_face_vertices[f];
 			// Loop over vertices in the face.
-			for (size_t v = 0; v < fv; v++) 
+			for (size_t v = 0; v < fv; v++)
 			{
 				// access to vertex
 				Vertex vertex;
@@ -97,10 +97,17 @@ Mesh::Mesh(std::string objFile, ID3D12Device * device, ID3D12GraphicsCommandList
 	Initialize(0, vertices.data(), (UINT)vertices.size(), indexVals.data(), (UINT)indexVals.size(), commandList);
 }
 
-Mesh::Mesh(ID3D12Device * device, int subMeshCount)
+Mesh::Mesh(ID3D12Device * device, int subMeshCount, bool hasBones)
 {
 	this->device = device;
 	subMeshes.resize(subMeshCount);
+	if (hasBones)
+	{
+		mIsAnimated = true;
+		boneMeshes.resize(subMeshCount);
+		boneDescriptors.resize(subMeshCount);
+		boneCBs.resize(subMeshCount);
+	}
 }
 
 
@@ -195,6 +202,53 @@ void Mesh::Initialize(UINT meshIndex, Vertex * vertices, UINT vertexCount, UINT 
 	subMeshes[meshIndex] = subMesh;
 }
 
+void Mesh::InitializeBoneWeights(UINT meshIndex, BoneDescriptor boneData, ID3D12GraphicsCommandList * commandList)
+{
+	BoneMesh boneMesh;
+	boneMesh.vBufferSize = sizeof(VertexBoneData) * (UINT)boneData.bones.size();
+
+	device->CreateCommittedResource(
+		&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
+		D3D12_HEAP_FLAG_NONE, // no flags
+		&CD3DX12_RESOURCE_DESC::Buffer(boneMesh.vBufferSize),
+		D3D12_RESOURCE_STATE_COPY_DEST,
+		nullptr,
+		IID_PPV_ARGS(&boneMesh.boneVertexBuffer));
+
+	boneMesh.boneVertexBuffer->SetName(L"Vertex Buffer Resource Heap");
+
+	device->CreateCommittedResource(
+		&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
+		D3D12_HEAP_FLAG_NONE,
+		&CD3DX12_RESOURCE_DESC::Buffer(boneMesh.vBufferSize),
+		D3D12_RESOURCE_STATE_GENERIC_READ,
+		nullptr,
+		IID_PPV_ARGS(&boneMesh.vBufferUploadHeap));
+
+	boneMesh.vBufferUploadHeap->SetName(L"Vertex Buffer Upload Resource Heap");
+	D3D12_SUBRESOURCE_DATA vertexData = {};
+	vertexData.pData = reinterpret_cast<BYTE*>(boneData.bones.data());
+	vertexData.RowPitch = boneMesh.vBufferSize;
+	vertexData.SlicePitch = boneMesh.vBufferSize;
+
+	UpdateSubresources(commandList, boneMesh.boneVertexBuffer, boneMesh.vBufferUploadHeap, 0, 0, 1, &vertexData);
+
+	boneMesh.vBufferView.BufferLocation = boneMesh.boneVertexBuffer->GetGPUVirtualAddress();
+	boneMesh.vBufferView.StrideInBytes = sizeof(VertexBoneData);
+	boneMesh.vBufferView.SizeInBytes = boneMesh.vBufferSize;
+
+	PerArmatureConstantBuffer cb = {};
+	for (int i = 0; i < boneData.boneInfoList.size(); ++i)
+	{
+		auto m = XMMatrixTranspose(XMLoadFloat4x4(&boneData.boneInfoList[i].OffsetMatrix));
+		XMStoreFloat4x4(&cb.bones[i], m);
+	}
+
+	boneCBs[meshIndex] = cb;
+	boneMeshes[meshIndex] = boneMesh;
+	boneDescriptors[meshIndex] = boneData;
+}
+
 void Mesh::CalculateTangents(Vertex * vertices, UINT vertexCount, UINT * indices, UINT indexCount)
 {
 	XMFLOAT3 *tan1 = new XMFLOAT3[vertexCount * 2];
@@ -258,9 +312,19 @@ void Mesh::CalculateTangents(Vertex * vertices, UINT vertexCount, UINT * indices
 	delete[] tan1;
 }
 
+const PerArmatureConstantBuffer Mesh::GetArmatureCB(UINT index)
+{
+	return boneCBs[index];
+}
+
 const D3D12_VERTEX_BUFFER_VIEW & Mesh::GetVertexBufferView(UINT index)
 {
 	return subMeshes[index].vBufferView;
+}
+
+const D3D12_VERTEX_BUFFER_VIEW& Mesh::GetVertexBoneBufferView(UINT index)
+{
+	return boneMeshes[index].vBufferView;
 }
 
 const D3D12_INDEX_BUFFER_VIEW & Mesh::GetIndexBufferView(UINT index)
@@ -288,6 +352,11 @@ const BoundingOrientedBox & Mesh::GetBoundingOrientedBox()
 	return boundingBox;
 }
 
+const bool Mesh::IsAnimated()
+{
+	return mIsAnimated;
+}
+
 Mesh::~Mesh()
 {
 	for (auto sm : subMeshes)
@@ -296,5 +365,11 @@ Mesh::~Mesh()
 		if (sm.indexBuffer)sm.indexBuffer->Release();
 		if (sm.iBufferUploadHeap)sm.iBufferUploadHeap->Release(); //Most probably should have one upload heap for all meshes
 		if (sm.vBufferUploadHeap)sm.vBufferUploadHeap->Release();
+	}
+
+	for (auto bm : boneMeshes)
+	{
+		if (bm.boneVertexBuffer)bm.boneVertexBuffer->Release();
+		if (bm.vBufferUploadHeap)bm.vBufferUploadHeap->Release();
 	}
 }

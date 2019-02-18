@@ -145,11 +145,15 @@ void Game::Draw()
 
 	deferredRenderer->StartFrame(commandList);
 	std::vector<Entity*> entityList;
+	std::vector<Entity*> animatedEntityList;
 	for (auto& entity : entities)
 	{
 		entityList.push_back(entity);
+		if (entity->IsAnimated())
+			animatedEntityList.push_back(entity);
 	}
-	deferredRenderer->PrepareFrame(entityList, camera, pixelCb);
+
+	deferredRenderer->PrepareFrame(entityList, animatedEntityList, camera, pixelCb);
 
 	commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
@@ -170,8 +174,9 @@ void Game::Draw()
 	deferredRenderer->RenderSelectionDepthBuffer(commandList, selectedEntities, camera);
 	deferredRenderer->SetGBUfferPSO(commandList, camera, pixelCb);
 	deferredRenderer->Draw(commandList, entityList);
+	deferredRenderer->DrawAnimated(commandList, animatedEntityList);
 	deferredRenderer->DrawInstanced(commandList, { instanced });
-	//TODO: Need to fix resource transition in one of the passes
+
 	deferredRenderer->RenderLightShapePass(commandList, pixelCb);
 	deferredRenderer->RenderLightPass(commandList, pixelCb);
 	deferredRenderer->RenderAmbientPass(commandList);

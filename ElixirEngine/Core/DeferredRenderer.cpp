@@ -245,7 +245,7 @@ void DeferredRenderer::RenderLightShapePass(ID3D12GraphicsCommandList * command,
 	command->OMSetRenderTargets(1, &gRTVHeap.handleCPU(RTV_ORDER_LIGHTSHAPE), true, nullptr);
 	command->SetPipelineState(shapeLightPassPSO);
 	command->SetGraphicsRootDescriptorTable(RootSigCBPixel0, frame->GetGPUHandle(frameHeapParams.PixelCB));
-	command->SetGraphicsRootDescriptorTable(RootSigCBVertex1, frame->GetGPUHandle(frameHeapParams.PerFrameCB));
+	command->SetGraphicsRootDescriptorTable(RootSigCBAll1, frame->GetGPUHandle(frameHeapParams.PerFrameCB));
 	command->SetGraphicsRootDescriptorTable(RootSigSRVPixel1, frame->GetGPUHandle(frameHeapParams.GBuffer));
 
 	DrawLightShapePass(command, pixelCb);
@@ -272,7 +272,7 @@ void DeferredRenderer::RenderSelectionDepthBuffer(ID3D12GraphicsCommandList* com
 	commandList->OMSetRenderTargets(1, &pRTVHeap.hCPUHeapStart, false, &dsvHeap.handleCPU(1));
 	commandList->SetPipelineState(selectionFilterPSO);
 
-	commandList->SetGraphicsRootDescriptorTable(RootSigCBVertex1, frame->GetGPUHandle(frameHeapParams.PerFrameCB)); //Per frame const buffer
+	commandList->SetGraphicsRootDescriptorTable(RootSigCBAll1, frame->GetGPUHandle(frameHeapParams.PerFrameCB)); //Per frame const buffer
 	for (auto e : entities)
 	{
 		commandList->SetGraphicsRootDescriptorTable(RootSigCBVertex0, frame->GetGPUHandle(frameHeapParams.Entities, e->GetID()));
@@ -344,7 +344,7 @@ void DeferredRenderer::RenderShadowMap(ID3D12GraphicsCommandList * commandList, 
 	commandList->SetPipelineState(shadowMapPointLightPSO);
 	sIndex = 0;
 	auto shadowFrameIndex = frame->CopyAllocate(1, pointShadowCbHeap, 0);
-	commandList->SetGraphicsRootDescriptorTable(RootSigCBVertex1, frame->GetGPUHandle(shadowFrameIndex));
+	commandList->SetGraphicsRootDescriptorTable(RootSigCBAll1, frame->GetGPUHandle(shadowFrameIndex));
 	for (auto e : entities)
 	{
 		if (!e->CastsShadow()) continue;
@@ -355,7 +355,7 @@ void DeferredRenderer::RenderShadowMap(ID3D12GraphicsCommandList * commandList, 
 
 	//Instanced entities
 	commandList->SetPipelineState(sysRM->GetPSO(StringID("shadowInstancedPointLightPSO")));
-	commandList->SetGraphicsRootDescriptorTable(RootSigCBVertex1, frame->GetGPUHandle(shadowFrameIndex));
+	commandList->SetGraphicsRootDescriptorTable(RootSigCBAll1, frame->GetGPUHandle(shadowFrameIndex));
 	for (auto e : instancedEntities)
 	{
 		if (!e->CastsShadow()) continue;
@@ -372,19 +372,35 @@ void DeferredRenderer::RenderShadowMap(ID3D12GraphicsCommandList * commandList, 
 
 void DeferredRenderer::Draw(ID3D12GraphicsCommandList* commandList, std::vector<Entity*> entities)
 {
-	commandList->SetGraphicsRootDescriptorTable(RootSigCBVertex1, frame->GetGPUHandle(frameHeapParams.PerFrameCB));
+	commandList->SetGraphicsRootDescriptorTable(RootSigCBAll1, frame->GetGPUHandle(frameHeapParams.PerFrameCB));
 	for (auto e : entities)
 	{
+		if (e->IsAnimated())continue;
 		commandList->SetGraphicsRootDescriptorTable(RootSigSRVPixel1, frame->GetGPUHandle(frameHeapParams.Textures, e->GetMaterial()->GetStartIndex())); //Set start of material texture in root descriptor
 		commandList->SetGraphicsRootDescriptorTable(RootSigCBVertex0, frame->GetGPUHandle(frameHeapParams.Entities, e->GetID()));
 		Draw(e->GetMesh(), commandList);
 	}
 }
 
+void DeferredRenderer::DrawAnimated(ID3D12GraphicsCommandList * clist, std::vector<Entity*> entities)
+{
+	clist->SetPipelineState(sysRM->GetPSO(StringID("animDeferredPSO")));
+	clist->SetGraphicsRootDescriptorTable(RootSigCBAll1, frame->GetGPUHandle(frameHeapParams.PerFrameCB));
+	auto boneCBIndex = 0;
+	for (auto e : entities)
+	{
+		clist->SetGraphicsRootDescriptorTable(RootSigSRVPixel1, frame->GetGPUHandle(frameHeapParams.Textures, e->GetMaterial()->GetStartIndex())); //Set start of material texture in root descriptor
+		clist->SetGraphicsRootDescriptorTable(RootSigCBVertex0, frame->GetGPUHandle(frameHeapParams.Entities, e->GetID()));
+		clist->SetGraphicsRootDescriptorTable(RootSigCBAll2, frame->GetGPUHandle(frameHeapParams.BoneCB, boneCBIndex));
+		DrawAnimated(e->GetMesh(), clist);
+		boneCBIndex++;
+	}
+}
+
 void DeferredRenderer::DrawInstanced(ID3D12GraphicsCommandList * commandList, std::vector<MeshInstanceGroupEntity*> entities)
 {
 	commandList->SetPipelineState(sysRM->GetPSO(StringID("instancedDeferredPSO")));
-	commandList->SetGraphicsRootDescriptorTable(RootSigCBVertex1, frame->GetGPUHandle(frameHeapParams.PerFrameCB));
+	commandList->SetGraphicsRootDescriptorTable(RootSigCBAll1, frame->GetGPUHandle(frameHeapParams.PerFrameCB));
 	commandList->SetGraphicsRootDescriptorTable(RootSigCBVertex0, frame->GetGPUHandle(frameHeapParams.Entities)); //Set the first CB as the world matrix is not used, only view and projection
 	for (auto e : entities)
 	{
@@ -466,10 +482,10 @@ void DeferredRenderer::StartFrame(ID3D12GraphicsCommandList* commandList)
 	commandList->SetDescriptorHeaps(1, frameHeap);
 }
 
-void DeferredRenderer::PrepareFrame(std::vector<Entity*> entities, Camera * camera, PixelConstantBuffer & pixelCb)
+void DeferredRenderer::PrepareFrame(std::vector<Entity*> entities, std::vector<Entity*> animEntities, Camera * camera, PixelConstantBuffer & pixelCb)
 {
 	this->camera = camera;
-	PrepareGPUHeap(entities, pixelCb);
+	PrepareGPUHeap(entities, animEntities, pixelCb);
 }
 
 void DeferredRenderer::TransitionToPostProcess(ID3D12GraphicsCommandList * commandList)
@@ -503,6 +519,17 @@ void DeferredRenderer::Draw(Mesh * m, ID3D12GraphicsCommandList* commandList)
 	}
 }
 
+void DeferredRenderer::DrawAnimated(Mesh * m, ID3D12GraphicsCommandList * clist)
+{
+	for (UINT i = 0; i < m->GetSubMeshCount(); ++i)
+	{
+		const D3D12_VERTEX_BUFFER_VIEW views[] = { m->GetVertexBufferView(i) , m->GetVertexBoneBufferView(i) };
+		clist->IASetVertexBuffers(0, 2, views);
+		clist->IASetIndexBuffer(&m->GetIndexBufferView(i));
+		clist->DrawIndexedInstanced(m->GetIndexCount(i), 1, 0, 0, 0);
+	}
+}
+
 void DeferredRenderer::DrawInstanced(MeshInstanceGroupEntity * instanced, Mesh * mesh, ID3D12GraphicsCommandList * commandList)
 {
 	for (UINT i = 0; i < mesh->GetSubMeshCount(); ++i)
@@ -514,11 +541,13 @@ void DeferredRenderer::DrawInstanced(MeshInstanceGroupEntity * instanced, Mesh *
 	}
 }
 
-void DeferredRenderer::PrepareGPUHeap(std::vector<Entity*> entities, PixelConstantBuffer & pixelCb)
+//Copies constant buffer heaps and other heaps to the frame descriptor heap before drawing 
+void DeferredRenderer::PrepareGPUHeap(std::vector<Entity*> entities, std::vector<Entity*> animEntities, PixelConstantBuffer & pixelCb)
 {
 	auto currentGBufferIndex = frame->CopyAllocate(16, gBufferHeap);
 	auto srvGpuHeapIndex = frame->CopyAllocate(srvHeapIndex, srvHeap); //Copy textures
 	auto index = constBufferIndex;
+	auto armatureIndex = 0;
 
 	//Create Entity Constant Buffers and copy to CBVs
 	for (auto e : entities)
@@ -537,12 +566,20 @@ void DeferredRenderer::PrepareGPUHeap(std::vector<Entity*> entities, PixelConsta
 		};
 
 		cbWrapper.CopyData(&cb, ConstantBufferSize, index);
+		if (e->IsAnimated())
+		{
+			auto boneCB = e->GetMesh()->GetArmatureCB(0);
+			perArmatureWrapper.CopyData(&boneCB, sizeof(boneCB), armatureIndex);
+			armatureIndex++;
+		}
 		index++;
 	}
 
 	auto entitiesHeapIndex = frame->CopyAllocate((UINT)entities.size(), cbHeap, constBufferIndex);
 	constBufferIndex = index;
+	auto boneCBHeapIndex = frame->CopyAllocate(armatureIndex, boneCBHeap);
 
+	constBufferIndex = index;
 	auto dir = -XMVector3Normalize(XMLoadFloat3(&pixelCb.light[0].Direction));
 	auto eyePosV = XMVectorSet(0, 0, 0, 0) + 10 * dir;
 	XMFLOAT3 eyePos;
@@ -555,11 +592,8 @@ void DeferredRenderer::PrepareGPUHeap(std::vector<Entity*> entities, PixelConsta
 		XMVectorSet(0, 1, 0, 0));	// Up is up
 	XMStoreFloat4x4(&shadowViewTransposed, XMMatrixTranspose(shView));
 
-
 	XMMATRIX shProj = XMMatrixOrthographicLH(40.0f, 40.0f, 0.1f, 100.0f);
 	XMStoreFloat4x4(&shadowProjTransposed, XMMatrixTranspose(shProj));
-
-
 
 	//Create Point Light CBVs and corresponding mesh CBVs
 	Entity e;
@@ -590,13 +624,11 @@ void DeferredRenderer::PrepareGPUHeap(std::vector<Entity*> entities, PixelConsta
 		if (!e->CastsShadow()) continue;
 		cb.world = e->GetWorldMatrixTransposed();
 		shadowCBWrapper.CopyData(&cb, sizeof(DirShadowBuffer), count); //0th position taken by Point Shadow Buffer
-		//index++;
 		count++;
 	}
 
 	auto shadowHeapIndex = frame->CopyAllocate(count, shadowCbHeap, 0);
 	constBufferIndex = index;
-
 
 	//Create Skybox CBV
 	XMFLOAT4X4 identity;
@@ -671,9 +703,12 @@ void DeferredRenderer::PrepareGPUHeap(std::vector<Entity*> entities, PixelConsta
 	//Assign heap indices to frame heap parameters
 	frameHeapParams.GBuffer = currentGBufferIndex;
 	frameHeapParams.Entities = entitiesHeapIndex;
+	frameHeapParams.BoneCB = boneCBHeapIndex;
+
 	frameHeapParams.PixelCB = pixelCbHeapIndex;
 	frameHeapParams.Textures = srvGpuHeapIndex;
 	frameHeapParams.LightShapes = lightPassCBHeapIndex;
+
 	frameHeapParams.PerFrameCB = perFrameCBVHeapIndex;
 	frameHeapParams.ShadowCB = shadowHeapIndex;
 	frameHeapParams.SkyCB = skyCBIndex;
@@ -710,13 +745,16 @@ void DeferredRenderer::CreateCB()
 	resourceDesc.Height = 1;
 	resourceDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
 
-	device->CreateCommittedResource(&heapProperty, D3D12_HEAP_FLAG_NONE, &resourceDesc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(&worldViewCB));
+	worldViewCB = sysRM->CreateResource(StringID("worldViewCB"), resourceDesc, ResourceTypeConstantBuffer);
 
 	resourceDesc.Width = 1024 * 1024 * 2;
-	device->CreateCommittedResource(&heapProperty, D3D12_HEAP_FLAG_NONE, &resourceDesc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(&lightCB));
+	lightCB = sysRM->CreateResource(StringID("lightCB"), resourceDesc, ResourceTypeConstantBuffer);
 
 	resourceDesc.Width = 1024 * 128;
-	device->CreateCommittedResource(&heapProperty, D3D12_HEAP_FLAG_NONE, &resourceDesc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(&perFrameCB));
+	perFrameCB = sysRM->CreateResource(StringID("perFrameCB"), resourceDesc, ResourceTypeConstantBuffer);
+
+	resourceDesc.Width = ((sizeof(PerArmatureConstantBuffer) + 255) & ~255) * 4;
+	perArmatureCB = sysRM->CreateResource(StringID("perArmatureCB"), resourceDesc, ResourceTypeConstantBuffer);
 
 }
 
@@ -727,6 +765,7 @@ void DeferredRenderer::CreateViews()
 	int numCBsForNow = ConstBufferCount;
 	cbHeap.Create(device, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, numCBsForNow);
 	pixelCbHeap.Create(device, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, numCBsForNow);
+	boneCBHeap.Create(device, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 4);
 
 	//Camera CBV
 	D3D12_CONSTANT_BUFFER_VIEW_DESC	descBuffer;
@@ -754,6 +793,16 @@ void DeferredRenderer::CreateViews()
 	descBuffer.SizeInBytes = (UINT)perFrameCBSize;
 	device->CreateConstantBufferView(&descBuffer, cbHeap.handleCPU(ConstBufferCount - 1));
 
+	auto perArmatureSize = (UINT)((sizeof(PerArmatureConstantBuffer) + 255) & ~255);
+	descBuffer.BufferLocation = perArmatureCB->GetGPUVirtualAddress();
+	descBuffer.SizeInBytes = perArmatureSize;
+	for (int i = 0; i < 4; ++i)
+	{
+		descBuffer.BufferLocation = perArmatureCB->GetGPUVirtualAddress() + i * perArmatureSize;
+		device->CreateConstantBufferView(&descBuffer, boneCBHeap.handleCPU(i));
+	}
+
+	perArmatureWrapper.Initialize(perArmatureCB, perArmatureSize);
 	perFrameCbWrapper.Initialize(perFrameCB, perFrameCBSize);
 	cbWrapper.Initialize(worldViewCB, ConstantBufferSize);
 	pixelCbWrapper.Initialize(lightCB, PixelConstantBufferSize);
@@ -784,6 +833,11 @@ void DeferredRenderer::CreatePSO()
 	descPipelineState.DSVFormat = mDsvFormat;
 	descPipelineState.SampleDesc.Count = 1;
 	deferredPSO = sysRM->CreatePSO(StringID("deferredPSO"), descPipelineState);
+
+	descPipelineState.VS = ShaderManager::LoadShader(L"AnimationDefaultVS.cso");
+	descPipelineState.InputLayout.pInputElementDescs = InputLayout::AnimationLayout;
+	descPipelineState.InputLayout.NumElements = _countof(InputLayout::AnimationLayout);
+	auto animDeferredPSO = sysRM->CreatePSO(StringID("animDeferredPSO"), descPipelineState);
 
 	descPipelineState.VS = ShaderManager::LoadShader(L"InstancedDefaultVS.cso");
 	descPipelineState.InputLayout.pInputElementDescs = InputLayout::InstanceDefaultLayout;
@@ -886,7 +940,7 @@ void DeferredRenderer::CreateLightPassPSO()
 	descPipelineState.InputLayout.NumElements = _countof(InputLayout::DefaultLayout);
 	descPipelineState.RasterizerState = rasterizer;
 	descPipelineState.RTVFormats[0] = DXGI_FORMAT_R32G32B32A32_FLOAT;
-	
+
 	device->CreateGraphicsPipelineState(&descPipelineState, IID_PPV_ARGS(&shapeLightPassPSO));
 
 }
@@ -1058,7 +1112,7 @@ void DeferredRenderer::CreateDSV()
 
 void DeferredRenderer::CreateRootSignature()
 {
-	CD3DX12_DESCRIPTOR_RANGE range[4];
+	CD3DX12_DESCRIPTOR_RANGE range[5];
 	//view dependent CBV
 	range[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0);
 	//light dependent CBV
@@ -1067,18 +1121,18 @@ void DeferredRenderer::CreateRootSignature()
 	range[2].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 16, 0);
 	//per frame CBV
 	range[3].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 1);
+	//per bone 
+	range[4].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 2);
 
-	//range[4].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER, 2, 1);
-
-	CD3DX12_ROOT_PARAMETER rootParameters[4];
+	CD3DX12_ROOT_PARAMETER rootParameters[5];
 	rootParameters[0].InitAsDescriptorTable(1, &range[0], D3D12_SHADER_VISIBILITY_VERTEX);
 	rootParameters[1].InitAsDescriptorTable(1, &range[1], D3D12_SHADER_VISIBILITY_PIXEL);
 	rootParameters[2].InitAsDescriptorTable(1, &range[2], D3D12_SHADER_VISIBILITY_ALL);
 	rootParameters[3].InitAsDescriptorTable(1, &range[3], D3D12_SHADER_VISIBILITY_ALL);
-	//rootParameters[4].InitAsDescriptorTable(1, &range[4], D3D12_SHADER_VISIBILITY_PIXEL);
+	rootParameters[4].InitAsDescriptorTable(1, &range[4], D3D12_SHADER_VISIBILITY_ALL);
 
 	CD3DX12_ROOT_SIGNATURE_DESC descRootSignature;
-	descRootSignature.Init(4, rootParameters, 0, nullptr, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT | // we can deny shader stages here for better performance
+	descRootSignature.Init(5, rootParameters, 0, nullptr, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT | // we can deny shader stages here for better performance
 		D3D12_ROOT_SIGNATURE_FLAG_DENY_HULL_SHADER_ROOT_ACCESS |
 		D3D12_ROOT_SIGNATURE_FLAG_DENY_DOMAIN_SHADER_ROOT_ACCESS);
 
@@ -1238,7 +1292,7 @@ void DeferredRenderer::CreateShadowBuffers()
 		device->CreateConstantBufferView(&descBuffer, shadowCbHeap.handleCPU(i));
 	}
 	shadowCBWrapper.Initialize(shadowCB, dirShadowBufferSize);
-	
+
 
 	D3D12_DEPTH_STENCIL_VIEW_DESC desc;
 	ZeroMemory(&desc, sizeof(desc));
@@ -1422,9 +1476,6 @@ DeferredRenderer::~DeferredRenderer()
 	shadowMapPointLightPSO->Release();
 	selectionFilterPSO->Release();
 
-	perFrameCB->Release();
-	lightCB->Release();
-	worldViewCB->Release();
 	shadowCB->Release();
 	pointShadowCB->Release();
 	delete sphereMesh;
