@@ -26,3 +26,21 @@ XMFLOAT4X4 aiMatrixToXMFloat4x4(const aiMatrix4x4* aiMe)
 
 	return output;
 }
+
+XMFLOAT3X3 aiMatrixToXMFloat3x3(const aiMatrix3x3 * aiMe)
+{
+	XMFLOAT3X3 output;
+	output._11 = aiMe->a1;
+	output._12 = aiMe->a2;
+	output._13 = aiMe->a3;
+
+	output._21 = aiMe->b1;
+	output._22 = aiMe->b2;
+	output._23 = aiMe->b3;
+
+	output._31 = aiMe->c1;
+	output._32 = aiMe->c2;
+	output._33 = aiMe->c3;
+
+	return output;
+}

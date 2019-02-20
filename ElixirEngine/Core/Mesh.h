@@ -91,7 +91,7 @@ public:
 	void InitializeBoneWeights(UINT meshIndex, BoneDescriptor boneData, ID3D12GraphicsCommandList* commandList);
 	void CalculateTangents(Vertex* vertices, UINT vertexCount, UINT * indices, UINT indexCount);
 	void BoneTransform(UINT meshIndex, float totalTime);
-	void ReadNodeHeirarchy();
+	void ReadNodeHeirarchy(float AnimationTime, const aiNode* pNode, const XMFLOAT4X4 parentTransform);
 
 	const PerArmatureConstantBuffer GetArmatureCB(UINT index);
 	const D3D12_VERTEX_BUFFER_VIEW& GetVertexBufferView(UINT index);

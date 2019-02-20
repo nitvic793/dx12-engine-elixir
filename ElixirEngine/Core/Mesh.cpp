@@ -98,7 +98,7 @@ Mesh::Mesh(std::string objFile, ID3D12Device * device, ID3D12GraphicsCommandList
 	Initialize(0, vertices.data(), (UINT)vertices.size(), indexVals.data(), (UINT)indexVals.size(), commandList);
 }
 
-Mesh::Mesh(ID3D12Device * device, int subMeshCount, bool hasBones, const aiScene* scene):
+Mesh::Mesh(ID3D12Device * device, int subMeshCount, bool hasBones, const aiScene* scene) :
 	mAiScene(scene)
 {
 	this->device = device;
@@ -241,15 +241,16 @@ void Mesh::InitializeBoneWeights(UINT meshIndex, BoneDescriptor boneData, ID3D12
 	boneMesh.vBufferView.SizeInBytes = boneMesh.vBufferSize;
 
 	PerArmatureConstantBuffer cb = {};
-	for (int i = 0; i < boneData.boneInfoList.size(); ++i)
-	{
-		auto m = XMMatrixTranspose(XMLoadFloat4x4(&boneData.boneInfoList[i].OffsetMatrix));
-		XMStoreFloat4x4(&cb.bones[i], m);
-	}
+	//for (int i = 0; i < boneData.boneInfoList.size(); ++i)
+	//{
+	//	auto m = XMMatrixTranspose(XMLoadFloat4x4(&boneData.boneInfoList[i].OffsetMatrix));
+	//	XMStoreFloat4x4(&cb.bones[i], m);
+	//}
 
 	boneCBs[meshIndex] = cb;
 	boneMeshes[meshIndex] = boneMesh;
 	boneDescriptors[meshIndex] = boneData;
+	BoneTransform(0, 0);
 }
 
 void Mesh::CalculateTangents(Vertex * vertices, UINT vertexCount, UINT * indices, UINT indexCount)
@@ -324,11 +325,179 @@ void Mesh::BoneTransform(UINT meshIndex, float totalTime)
 	float TimeInTicks = totalTime * TicksPerSecond;
 	float AnimationTime = fmod(TimeInTicks, (float)mAiScene->mAnimations[0]->mDuration);
 
-	//ReadNodeHeirarchy(AnimationTime, mAiScene->mRootNode, identity);
+	ReadNodeHeirarchy(AnimationTime, mAiScene->mRootNode, identity);
+
+	for (uint32_t i = 0; i < boneDescriptors[meshIndex].boneInfoList.size(); i++)
+	{
+		XMFLOAT4X4 finalTransform;
+		XMStoreFloat4x4(&finalTransform, XMMatrixTranspose(XMLoadFloat4x4(&boneDescriptors[meshIndex].boneInfoList[i].FinalTransform)));
+		boneCBs[meshIndex].bones[i] = finalTransform;
+		//XMStoreFloat4x4(&boneCBs[meshIndex].bones[i], XMMatrixTranspose(XMLoadFloat4x4(&boneDescriptors[meshIndex].boneInfoList[i].OffsetMatrix)));
+	}
+}
+
+const aiNodeAnim* FindNodeAnim(const aiAnimation* pAnimation, const std::string NodeName)
+{
+	for (uint32_t i = 0; i < pAnimation->mNumChannels; i++) {
+		const aiNodeAnim* pNodeAnim = pAnimation->mChannels[i];
+
+		if (std::string(pNodeAnim->mNodeName.data) == NodeName) {
+			return pNodeAnim;
+		}
+	}
+
+	return nullptr;
+}
+
+uint32_t FindPosition(float AnimationTime, const aiNodeAnim* pNodeAnim)
+{
+	for (uint32_t i = 0; i < pNodeAnim->mNumPositionKeys - 1; i++) {
+		if (AnimationTime < (float)pNodeAnim->mPositionKeys[i + 1].mTime) {
+			return i;
+		}
+	}
+
+	assert(0);
+
+	return 0;
+}
+
+uint32_t FindRotation(float AnimationTime, const aiNodeAnim* pNodeAnim)
+{
+	assert(pNodeAnim->mNumRotationKeys > 0);
+
+	for (uint32_t i = 0; i < pNodeAnim->mNumRotationKeys - 1; i++) {
+		if (AnimationTime < (float)pNodeAnim->mRotationKeys[i + 1].mTime) {
+			return i;
+		}
+	}
+
+	assert(0);
+
+	return 0;
+}
 
 
-	for (uint32_t i = 0; i < boneDescriptors[meshIndex].boneInfoList.size(); i++) {
-		boneCBs[meshIndex].bones[i] = boneDescriptors[meshIndex].boneInfoList[i].FinalTransform;
+uint32_t FindScaling(float AnimationTime, const aiNodeAnim* pNodeAnim)
+{
+	assert(pNodeAnim->mNumScalingKeys > 0);
+
+	for (uint32_t i = 0; i < pNodeAnim->mNumScalingKeys - 1; i++) {
+		if (AnimationTime < (float)pNodeAnim->mScalingKeys[i + 1].mTime) {
+			return i;
+		}
+	}
+
+	assert(0);
+
+	return 0;
+}
+
+void CalcInterpolatedPosition(aiVector3D& Out, float AnimationTime, const aiNodeAnim* pNodeAnim)
+{
+	if (pNodeAnim->mNumPositionKeys == 1) {
+		Out = pNodeAnim->mPositionKeys[0].mValue;
+		return;
+	}
+
+	uint32_t PositionIndex = FindPosition(AnimationTime, pNodeAnim);
+	uint32_t NextPositionIndex = (PositionIndex + 1);
+	assert(NextPositionIndex < pNodeAnim->mNumPositionKeys);
+	float DeltaTime = (float)(pNodeAnim->mPositionKeys[NextPositionIndex].mTime - pNodeAnim->mPositionKeys[PositionIndex].mTime);
+	float Factor = (AnimationTime - (float)pNodeAnim->mPositionKeys[PositionIndex].mTime) / DeltaTime;
+	assert(Factor >= 0.0f && Factor <= 1.0f);
+	const aiVector3D& Start = pNodeAnim->mPositionKeys[PositionIndex].mValue;
+	const aiVector3D& End = pNodeAnim->mPositionKeys[NextPositionIndex].mValue;
+	aiVector3D Delta = End - Start;
+	Out = Start + Factor * Delta;
+}
+
+
+void CalcInterpolatedRotation(aiQuaternion& Out, float AnimationTime, const aiNodeAnim* pNodeAnim)
+{
+	// we need at least two values to interpolate...
+	if (pNodeAnim->mNumRotationKeys == 1) {
+		Out = pNodeAnim->mRotationKeys[0].mValue;
+		return;
+	}
+
+	uint32_t RotationIndex = FindRotation(AnimationTime, pNodeAnim);
+	uint32_t NextRotationIndex = (RotationIndex + 1);
+	assert(NextRotationIndex < pNodeAnim->mNumRotationKeys);
+	float DeltaTime = (float)(pNodeAnim->mRotationKeys[NextRotationIndex].mTime - pNodeAnim->mRotationKeys[RotationIndex].mTime);
+	float Factor = (AnimationTime - (float)pNodeAnim->mRotationKeys[RotationIndex].mTime) / DeltaTime;
+	assert(Factor >= 0.0f && Factor <= 1.0f);
+	const aiQuaternion& StartRotationQ = pNodeAnim->mRotationKeys[RotationIndex].mValue;
+	const aiQuaternion& EndRotationQ = pNodeAnim->mRotationKeys[NextRotationIndex].mValue;
+	aiQuaternion::Interpolate(Out, StartRotationQ, EndRotationQ, Factor);
+	Out = Out.Normalize();
+}
+
+
+void CalcInterpolatedScaling(aiVector3D& Out, float AnimationTime, const aiNodeAnim* pNodeAnim)
+{
+	if (pNodeAnim->mNumScalingKeys == 1) {
+		Out = pNodeAnim->mScalingKeys[0].mValue;
+		return;
+	}
+
+	uint32_t ScalingIndex = FindScaling(AnimationTime, pNodeAnim);
+	uint32_t NextScalingIndex = (ScalingIndex + 1);
+	assert(NextScalingIndex < pNodeAnim->mNumScalingKeys);
+	float DeltaTime = (float)(pNodeAnim->mScalingKeys[NextScalingIndex].mTime - pNodeAnim->mScalingKeys[ScalingIndex].mTime);
+	float Factor = (AnimationTime - (float)pNodeAnim->mScalingKeys[ScalingIndex].mTime) / DeltaTime;
+	assert(Factor >= 0.0f && Factor <= 1.0f);
+	const aiVector3D& Start = pNodeAnim->mScalingKeys[ScalingIndex].mValue;
+	const aiVector3D& End = pNodeAnim->mScalingKeys[NextScalingIndex].mValue;
+	aiVector3D Delta = End - Start;
+	Out = Start + Factor * Delta;
+}
+
+void Mesh::ReadNodeHeirarchy(float AnimationTime, const aiNode * pNode, const XMFLOAT4X4 parentTransform)
+{
+	std::string NodeName(pNode->mName.data);
+
+	const aiAnimation* pAnimation = mAiScene->mAnimations[0];
+
+	XMMATRIX NodeTransformation = XMLoadFloat4x4(&aiMatrixToXMFloat4x4(&pNode->mTransformation));
+
+	const aiNodeAnim* pNodeAnim = FindNodeAnim(pAnimation, NodeName);
+
+	if (pNodeAnim) {
+		// Interpolate scaling and generate scaling transformation matrix
+		aiVector3D Scaling;
+		CalcInterpolatedScaling(Scaling, AnimationTime, pNodeAnim);
+		XMMATRIX ScalingM = XMMatrixScaling(Scaling.x, Scaling.y, Scaling.z);
+
+		// Interpolate rotation and generate rotation transformation matrix
+		aiQuaternion RotationQ;
+		CalcInterpolatedRotation(RotationQ, AnimationTime, pNodeAnim);
+		XMMATRIX RotationM = XMMatrixRotationQuaternion(XMVectorSet(RotationQ.x, RotationQ.y, RotationQ.z, RotationQ.w));
+		//XMMATRIX RotationM = XMLoadFloat3x3(&aiMatrixToXMFloat3x3(&RotationQ.GetMatrix()));
+
+		// Interpolate translation and generate translation transformation matrix
+		aiVector3D Translation;
+		CalcInterpolatedPosition(Translation, AnimationTime, pNodeAnim);
+		XMMATRIX TranslationM = XMMatrixTranslation(Translation.x, Translation.y, Translation.z);
+
+		// Combine the above transformations
+		NodeTransformation = ScalingM * RotationM * TranslationM;
+	}
+
+	XMMATRIX GlobalTransformation = NodeTransformation * XMLoadFloat4x4(&parentTransform);
+
+	auto globalInverseTransform = XMMatrixInverse(nullptr, XMLoadFloat4x4(&aiMatrixToXMFloat4x4(&mAiScene->mRootNode->mTransformation)));
+
+	if (boneDescriptors[0].boneMapping.find(NodeName) != boneDescriptors[0].boneMapping.end()) {
+		uint32_t BoneIndex = boneDescriptors[0].boneMapping[NodeName];
+		auto finalTransform = XMLoadFloat4x4(&boneDescriptors[0].boneInfoList[BoneIndex].OffsetMatrix) * GlobalTransformation * globalInverseTransform;
+		XMStoreFloat4x4(&boneDescriptors[0].boneInfoList[BoneIndex].FinalTransform, finalTransform);
+	}
+
+	XMFLOAT4X4 globalTransform;
+	XMStoreFloat4x4(&globalTransform, GlobalTransformation);
+	for (uint32_t i = 0; i < pNode->mNumChildren; i++) {
+		ReadNodeHeirarchy(AnimationTime, pNode->mChildren[i], globalTransform);
 	}
 }
 

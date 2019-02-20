@@ -59,6 +59,16 @@ float LinearZ(float4 outPosition)
 	return linearZ;
 }
 
+float4x4 SkinTransform(float4 weights, uint4 bones)
+{
+		// Calculate the skin transform from up to four bones and weights
+	float4x4 skinTransform = bones[bones.x] * weights.x +
+			bones[bones.y] * weights.y +
+			bones[bones.z] * weights.z +
+			bones[bones.w] * weights.w;
+	return skinTransform;
+}
+
 void SkinVertex(float4 weights, uint4 bones, inout float4 position, inout float3 normal)
 {
 	// If there are skin weights apply vertex skinning
@@ -81,11 +91,17 @@ void SkinVertex(float4 weights, uint4 bones, inout float4 position, inout float3
 VertexOutput main(VertexAnimatedInput input)
 {
 	VertexOutput output;
-	float4x4 shadowVP = mul(mul(world, shadowView), shadowProjection);
-	float4 outPosition = float4(input.pos, 1.f);
-	//SkinVertex(input.skinWeights, input.skinIndices, outPosition, input.normal);
 
-	output.pos = mul(outPosition, worldViewProjection);
+	float4x4 skinTransform = SkinTransform(input.skinWeights, input.skinIndices);
+	float4 position = float4(input.pos, 1.0f);
+	if (input.skinWeights.x != 0)
+	{
+		//position = mul(float4(input.pos, 1.0f), skinTransform);
+	}
+
+	float4x4 shadowVP = mul(mul(world, shadowView), shadowProjection);
+
+	output.pos = mul(position, worldViewProjection);
 	output.uv = input.uv;
 	output.normal = normalize(mul(input.normal, (float3x3)world));
 	output.tangent = normalize(mul(input.tangent, (float3x3)world));

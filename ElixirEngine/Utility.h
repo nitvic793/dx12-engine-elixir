@@ -4,3 +4,4 @@
 #include <assimp/Importer.hpp>      // C++ importer interface
 
 XMFLOAT4X4 aiMatrixToXMFloat4x4(const aiMatrix4x4* aiMe);
+XMFLOAT3X3 aiMatrixToXMFloat3x3(const aiMatrix3x3* aiMe);
