@@ -22,7 +22,7 @@ bool Core::InitializeDirectX()
 	D3D12GetDebugInterface(IID_PPV_ARGS(&debugInterface));
 	debugInterface->EnableDebugLayer();
 	//debugInterface->SetEnableGPUBasedValidation(true);
-	//debugInterface->SetEnableSynchronizedCommandQueueValidation(true);
+	debugInterface->SetEnableSynchronizedCommandQueueValidation(true);
 
 	IDXGIFactory4* dxgiFactory;
 	auto hr = CreateDXGIFactory1(IID_PPV_ARGS(&dxgiFactory));
@@ -48,7 +48,7 @@ bool Core::InitializeDirectX()
 		}
 
 		//direct3d 12 (feature level 11 or higher)
-		hr = D3D12CreateDevice(adapter, D3D_FEATURE_LEVEL_11_0, _uuidof(ID3D12Device), nullptr);
+		hr = D3D12CreateDevice(adapter, D3D_FEATURE_LEVEL_12_1, _uuidof(ID3D12Device), nullptr);
 		if (SUCCEEDED(hr))
 		{
 			adapterFound = true;
@@ -640,16 +640,16 @@ void Core::Run(std::function<void(Core*)> coreLogicCallback)
 			Update();
 			Render();
 
-			//Quick frame rate limiter to 60fps
-			float targetFPS = 60.f;
-			QueryPerformanceCounter((LARGE_INTEGER*)&now);
-			time_t t = now;
-			auto d = (float)((t - previousTime) * perfCounterSeconds);
-			if (d < 1.f / targetFPS)
-			{
-				auto t = 1.f / targetFPS - d;
-				this_thread::sleep_for(std::chrono::milliseconds((INT64)(t * 1000)));
-			}
+			////Quick frame rate limiter to 60fps
+			//float targetFPS = 60.f;
+			//QueryPerformanceCounter((LARGE_INTEGER*)&now);
+			//time_t t = now;
+			//auto d = (float)((t - previousTime) * perfCounterSeconds);
+			//if (d < 1.f / targetFPS)
+			//{
+			//	auto t = 1.f / targetFPS - d;
+			//	this_thread::sleep_for(std::chrono::milliseconds((INT64)(t * 1000)));
+			//}
 		}
 	}
 

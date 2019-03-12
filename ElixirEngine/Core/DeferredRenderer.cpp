@@ -571,7 +571,7 @@ void DeferredRenderer::PrepareGPUHeap(std::vector<Entity*> entities, std::vector
 		if (e->IsAnimated())
 		{
 			auto boneCB = e->GetMesh()->GetArmatureCB(0);
-			perArmatureWrapper.CopyData(&boneCB, sizeof(boneCB), armatureIndex);
+			perArmatureWrapper.CopyData(&boneCB, sizeof(PerArmatureConstantBuffer), armatureIndex);
 			armatureIndex++;
 		}
 		index++;
