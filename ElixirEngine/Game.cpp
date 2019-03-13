@@ -83,13 +83,14 @@ void Game::Initialize()
 
 float CurrentTime = 0.f;
 
+int animIndex = 0;
 void Game::Update()
 {
 	CurrentTime += deltaTime;
 	camera->Update(deltaTime);
 	entities[0]->SetRotation(XMFLOAT3(sin(totalTime), 0, 0));
 	entities[0]->SetPosition(XMFLOAT3(2 * sin(totalTime) + 2, 1.f, cos(totalTime)));
-	//entities[8]->SetRotation(XMFLOAT3(30, 0, 0));
+	entities[8]->SetRotation(XMFLOAT3(XM_PIDIV2, 0, 0));
 	pixelCb.pointLight[1].Position = XMFLOAT3(2 * sin(totalTime * 2) + 1, 0, -1);
 	pixelCb.pointLight[0].Position = XMFLOAT3(2 * sin(totalTime * 2) + 5, 1.0f, -2 + -2 * cos(totalTime));
 	if (GetAsyncKeyState('Q'))
@@ -99,6 +100,20 @@ void Game::Update()
 	else
 	{
 		isBlurEnabled = false;
+	}
+
+	if (GetAsyncKeyState(VK_UP) & 0xFFFF8000 && CurrentTime > 1.f)
+	{
+		animIndex++;
+		if (animIndex > 6) animIndex = 6;
+		CurrentTime = 0.f;
+	}
+
+	if (GetAsyncKeyState(VK_DOWN) & 0xFFFF8000 && CurrentTime > 1.f)
+	{
+		animIndex--;
+		if (animIndex < 0)animIndex = 0;
+		CurrentTime = 0.f;
 	}
 }
 
@@ -138,6 +153,7 @@ bool IsIntersecting(Entity* entity, Camera* camera, int mouseX, int mouseY, floa
 	return intersecting;
 }
 
+
 void Game::Draw()
 {
 	//Update CB
@@ -152,13 +168,12 @@ void Game::Draw()
 		entityList.push_back(entity);
 		if (entity->IsAnimated())
 		{
-			entity->UpdateAnimation(totalTime);
+			entity->UpdateAnimation(totalTime, animIndex);
 			animatedEntityList.push_back(entity);
 		}
 	}
-	
-	deferredRenderer->PrepareFrame(entityList, animatedEntityList, camera, pixelCb);
 
+	deferredRenderer->PrepareFrame(entityList, animatedEntityList, camera, pixelCb);
 	commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 	//Render shadow Map before setting viewport and scissor rect
