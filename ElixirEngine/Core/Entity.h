@@ -44,6 +44,7 @@ public:
 	void		SetY(float y);
 	void		SetZ(float z);
 	void		SetID(uint32_t id);
+	void		UpdateAnimation(float totalTime) { if (mesh->IsAnimated()) { mesh->BoneTransform(0, totalTime); } };
 
 	const bool& CastsShadow() { return bCastsShadow; }
 	void		SetCastsShadow(bool enable) { bCastsShadow = enable; }

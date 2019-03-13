@@ -7,6 +7,7 @@
 #define TINYOBJLOADER_IMPLEMENTATION
 #include <tiny_obj_loader.h>
 
+using namespace ogldev;
 
 Mesh::Mesh(ID3D12Device * device)
 {
@@ -320,17 +321,19 @@ void Mesh::BoneTransform(UINT meshIndex, float totalTime)
 {
 	XMFLOAT4X4 identity;
 	XMStoreFloat4x4(&identity, XMMatrixIdentity());
-
+	Matrix4f Identity;
+	Identity.InitIdentity();
 	float TicksPerSecond = (float)(mAiScene->mAnimations[0]->mTicksPerSecond != 0 ? mAiScene->mAnimations[0]->mTicksPerSecond : 25.0f);
 	float TimeInTicks = totalTime * TicksPerSecond;
 	float AnimationTime = fmod(TimeInTicks, (float)mAiScene->mAnimations[0]->mDuration);
 
-	ReadNodeHeirarchy(AnimationTime, mAiScene->mRootNode, identity);
+	ReadNodeHeirarchy(AnimationTime, mAiScene->mRootNode, Identity);
 
 	for (uint32_t i = 0; i < boneDescriptors[meshIndex].boneInfoList.size(); i++)
 	{
 		XMFLOAT4X4 finalTransform;
 		XMStoreFloat4x4(&finalTransform, XMMatrixTranspose(XMLoadFloat4x4(&boneDescriptors[meshIndex].boneInfoList[i].FinalTransform)));
+		//XMStoreFloat4x4(&finalTransform, XMMatrixTranspose(XMMatrixIdentity()));
 		boneCBs[meshIndex].bones[i] = finalTransform;
 		//XMStoreFloat4x4(&boneCBs[meshIndex].bones[i], XMMatrixTranspose(XMLoadFloat4x4(&boneDescriptors[meshIndex].boneInfoList[i].OffsetMatrix)));
 	}
@@ -453,51 +456,54 @@ void CalcInterpolatedScaling(aiVector3D& Out, float AnimationTime, const aiNodeA
 	Out = Start + Factor * Delta;
 }
 
-void Mesh::ReadNodeHeirarchy(float AnimationTime, const aiNode * pNode, const XMFLOAT4X4 parentTransform)
+void Mesh::ReadNodeHeirarchy(float AnimationTime, const aiNode * pNode, const Matrix4f& ParentTransform)
 {
 	std::string NodeName(pNode->mName.data);
 
 	const aiAnimation* pAnimation = mAiScene->mAnimations[0];
-
-	XMMATRIX NodeTransformation = XMLoadFloat4x4(&aiMatrixToXMFloat4x4(&pNode->mTransformation));
+	
+	Matrix4f NodeTransformation(pNode->mTransformation);
+	//XMMATRIX NodeTransformation = XMLoadFloat4x4(&aiMatrixToXMFloat4x4(&pNode->mTransformation));// XMMATRIX(&pNode->mTransformation.a1);
 
 	const aiNodeAnim* pNodeAnim = FindNodeAnim(pAnimation, NodeName);
 
-	if (pNodeAnim) {
+	if (pNodeAnim)
+	{
 		// Interpolate scaling and generate scaling transformation matrix
 		aiVector3D Scaling;
 		CalcInterpolatedScaling(Scaling, AnimationTime, pNodeAnim);
-		XMMATRIX ScalingM = XMMatrixScaling(Scaling.x, Scaling.y, Scaling.z);
-
+		 Matrix4f ScalingM;
+		ScalingM.InitScaleTransform(Scaling.x, Scaling.y, Scaling.z);
 		// Interpolate rotation and generate rotation transformation matrix
 		aiQuaternion RotationQ;
 		CalcInterpolatedRotation(RotationQ, AnimationTime, pNodeAnim);
-		XMMATRIX RotationM = XMMatrixRotationQuaternion(XMVectorSet(RotationQ.x, RotationQ.y, RotationQ.z, RotationQ.w));
-		//XMMATRIX RotationM = XMLoadFloat3x3(&aiMatrixToXMFloat3x3(&RotationQ.GetMatrix()));
-
+		Matrix4f RotationM = Matrix4f(RotationQ.GetMatrix());
 		// Interpolate translation and generate translation transformation matrix
 		aiVector3D Translation;
 		CalcInterpolatedPosition(Translation, AnimationTime, pNodeAnim);
-		XMMATRIX TranslationM = XMMatrixTranslation(Translation.x, Translation.y, Translation.z);
-
+		Matrix4f TranslationM;
+		TranslationM.InitTranslationTransform(Translation.x, Translation.y, Translation.z);
 		// Combine the above transformations
-		NodeTransformation = ScalingM * RotationM * TranslationM;
+		NodeTransformation = TranslationM * RotationM * ScalingM;
 	}
 
-	XMMATRIX GlobalTransformation = NodeTransformation * XMLoadFloat4x4(&parentTransform);
+	Matrix4f GlobalTransformation = ParentTransform * NodeTransformation;
+	
+	Matrix4f m_GlobalInverseTransform = mAiScene->mRootNode->mTransformation;
+	m_GlobalInverseTransform.Inverse();
+//	auto globalInverseTransform = XMMatrixInverse(nullptr, XMLoadFloat4x4(&aiMatrixToXMFloat4x4(&mAiScene->mRootNode->mTransformation)));
 
-	auto globalInverseTransform = XMMatrixInverse(nullptr, XMLoadFloat4x4(&aiMatrixToXMFloat4x4(&mAiScene->mRootNode->mTransformation)));
-
-	if (boneDescriptors[0].boneMapping.find(NodeName) != boneDescriptors[0].boneMapping.end()) {
+	if (boneDescriptors[0].boneMapping.find(NodeName) != boneDescriptors[0].boneMapping.end()) 
+	{
 		uint32_t BoneIndex = boneDescriptors[0].boneMapping[NodeName];
-		auto finalTransform = XMLoadFloat4x4(&boneDescriptors[0].boneInfoList[BoneIndex].OffsetMatrix) * GlobalTransformation * globalInverseTransform;
-		XMStoreFloat4x4(&boneDescriptors[0].boneInfoList[BoneIndex].FinalTransform, finalTransform);
+		Matrix4f finalTransform = m_GlobalInverseTransform * GlobalTransformation * boneDescriptors[0].boneInfoList[BoneIndex].Offset;
+		XMStoreFloat4x4(&boneDescriptors[0].boneInfoList[BoneIndex].FinalTransform, XMMATRIX(&finalTransform.m[0][0]));
 	}
 
-	XMFLOAT4X4 globalTransform;
-	XMStoreFloat4x4(&globalTransform, GlobalTransformation);
+	//XMFLOAT4X4 globalTransform;
+	//XMStoreFloat4x4(&globalTransform, GlobalTransformation);
 	for (uint32_t i = 0; i < pNode->mNumChildren; i++) {
-		ReadNodeHeirarchy(AnimationTime, pNode->mChildren[i], globalTransform);
+		ReadNodeHeirarchy(AnimationTime, pNode->mChildren[i], GlobalTransformation);
 	}
 }
 

@@ -150,9 +150,12 @@ void Game::Draw()
 	{
 		entityList.push_back(entity);
 		if (entity->IsAnimated())
+		{
+			//entity->UpdateAnimation(totalTime);
 			animatedEntityList.push_back(entity);
+		}
 	}
-
+	
 	deferredRenderer->PrepareFrame(entityList, animatedEntityList, camera, pixelCb);
 
 	commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);

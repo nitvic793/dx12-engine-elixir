@@ -14,6 +14,7 @@ struct MeshEntry
 
 class ModelLoader
 {
+	Assimp::Importer importer;
 	static ModelLoader*	Instance;
 	ID3D12Device*		device;
 

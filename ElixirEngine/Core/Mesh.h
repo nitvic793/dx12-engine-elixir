@@ -7,6 +7,8 @@
 #include <assimp/postprocess.h>     // Post processing flags
 #include <assimp/Importer.hpp>      // C++ importer interface
 
+#include "../OGLMath.h"
+
 #define MaxBonesPerVertex 4
 
 /// TODO:
@@ -15,6 +17,7 @@
 
 struct BoneInfo
 {
+	ogldev::Matrix4f  Offset;
 	XMFLOAT4X4 OffsetMatrix;
 	XMFLOAT4X4 FinalTransform;
 };
@@ -91,7 +94,7 @@ public:
 	void InitializeBoneWeights(UINT meshIndex, BoneDescriptor boneData, ID3D12GraphicsCommandList* commandList);
 	void CalculateTangents(Vertex* vertices, UINT vertexCount, UINT * indices, UINT indexCount);
 	void BoneTransform(UINT meshIndex, float totalTime);
-	void ReadNodeHeirarchy(float AnimationTime, const aiNode* pNode, const XMFLOAT4X4 parentTransform);
+	void ReadNodeHeirarchy(float AnimationTime, const aiNode* pNode, const ogldev::Matrix4f& ParentTransform);
 
 	const PerArmatureConstantBuffer GetArmatureCB(UINT index);
 	const D3D12_VERTEX_BUFFER_VIEW& GetVertexBufferView(UINT index);

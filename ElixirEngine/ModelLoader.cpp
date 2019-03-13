@@ -150,6 +150,7 @@ void ModelLoader::LoadBones(UINT index, const aiMesh * mesh, const aiScene * sce
 
 			boneMapping[boneName] = boneIndex;
 			boneInfoList[boneIndex].OffsetMatrix = aiMatrixToXMFloat4x4(&mesh->mBones[i]->mOffsetMatrix);
+			boneInfoList[boneIndex].Offset = mesh->mBones[i]->mOffsetMatrix;
 
 			for (uint32_t j = 0; j < mesh->mBones[i]->mNumWeights; j++)
 			{
@@ -175,13 +176,11 @@ void ModelLoader::ProcessNode(aiNode * node, const aiScene * scene, ID3D12Graphi
 	}
 }
 
-
 Mesh* ModelLoader::Load(std::string filename, ID3D12GraphicsCommandList* clist)
 {
-	Assimp::Importer importer;
 	const aiScene* pScene = importer.ReadFile(filename,
 		aiProcess_Triangulate |
-		aiProcess_ConvertToLeftHanded);
+		aiProcess_ConvertToLeftHanded | aiProcess_ValidateDataStructure | aiProcess_JoinIdenticalVertices);
 
 	if (pScene == NULL)
 		return nullptr;
@@ -208,7 +207,6 @@ Mesh* ModelLoader::Load(std::string filename, ID3D12GraphicsCommandList* clist)
 	bones.resize(NumVertices);
 
 	Mesh* mesh = new Mesh(device, 1, pScene->HasAnimations(), pScene);
-	//TODO: Rework this to load it as one Big mesh instead of multiple sub meshes
 	
 	for (UINT i = 0; i < pScene->mNumMeshes; ++i)
 	{
