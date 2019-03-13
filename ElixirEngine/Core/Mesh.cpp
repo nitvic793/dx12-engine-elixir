@@ -251,7 +251,7 @@ void Mesh::InitializeBoneWeights(UINT meshIndex, BoneDescriptor boneData, ID3D12
 	boneCBs[meshIndex] = cb;
 	boneMeshes[meshIndex] = boneMesh;
 	boneDescriptors[meshIndex] = boneData;
-	BoneTransform(0, 0);
+	BoneTransform(0, 15.8f, 0);
 }
 
 void Mesh::CalculateTangents(Vertex * vertices, UINT vertexCount, UINT * indices, UINT indexCount)
@@ -317,22 +317,22 @@ void Mesh::CalculateTangents(Vertex * vertices, UINT vertexCount, UINT * indices
 	delete[] tan1;
 }
 
-void Mesh::BoneTransform(UINT meshIndex, float totalTime)
+void Mesh::BoneTransform(UINT meshIndex, float totalTime, UINT animationIndex)
 {
 	XMFLOAT4X4 identity;
 	XMStoreFloat4x4(&identity, XMMatrixIdentity());
 	Matrix4f Identity;
 	Identity.InitIdentity();
-	float TicksPerSecond = (float)(mAiScene->mAnimations[0]->mTicksPerSecond != 0 ? mAiScene->mAnimations[0]->mTicksPerSecond : 25.0f);
+	float TicksPerSecond = (float)(mAiScene->mAnimations[animationIndex]->mTicksPerSecond != 0 ? mAiScene->mAnimations[animationIndex]->mTicksPerSecond : 25.0f);
 	float TimeInTicks = totalTime * TicksPerSecond;
-	float AnimationTime = fmod(TimeInTicks, (float)mAiScene->mAnimations[0]->mDuration);
+	float AnimationTime = fmod(TimeInTicks, (float)mAiScene->mAnimations[animationIndex]->mDuration);
 
-	ReadNodeHeirarchy(AnimationTime, mAiScene->mRootNode, Identity);
+	ReadNodeHeirarchy(AnimationTime, mAiScene->mRootNode, Identity, animationIndex);
 
 	for (uint32_t i = 0; i < boneDescriptors[meshIndex].boneInfoList.size(); i++)
 	{
 		XMFLOAT4X4 finalTransform;
-		XMStoreFloat4x4(&finalTransform, XMMatrixTranspose(XMLoadFloat4x4(&boneDescriptors[meshIndex].boneInfoList[i].FinalTransform)));
+		XMStoreFloat4x4(&finalTransform, /*XMMatrixTranspose*/(XMLoadFloat4x4(&boneDescriptors[meshIndex].boneInfoList[i].FinalTransform)));
 		//XMStoreFloat4x4(&finalTransform, XMMatrixTranspose(XMMatrixIdentity()));
 		boneCBs[meshIndex].bones[i] = finalTransform;
 		//XMStoreFloat4x4(&boneCBs[meshIndex].bones[i], XMMatrixTranspose(XMLoadFloat4x4(&boneDescriptors[meshIndex].boneInfoList[i].OffsetMatrix)));
@@ -456,11 +456,11 @@ void CalcInterpolatedScaling(aiVector3D& Out, float AnimationTime, const aiNodeA
 	Out = Start + Factor * Delta;
 }
 
-void Mesh::ReadNodeHeirarchy(float AnimationTime, const aiNode * pNode, const Matrix4f& ParentTransform)
+void Mesh::ReadNodeHeirarchy(float AnimationTime, const aiNode * pNode, const Matrix4f& ParentTransform, UINT animationIndex)
 {
 	std::string NodeName(pNode->mName.data);
 
-	const aiAnimation* pAnimation = mAiScene->mAnimations[0];
+	const aiAnimation* pAnimation = mAiScene->mAnimations[animationIndex];
 	
 	Matrix4f NodeTransformation(pNode->mTransformation);
 	//XMMATRIX NodeTransformation = XMLoadFloat4x4(&aiMatrixToXMFloat4x4(&pNode->mTransformation));// XMMATRIX(&pNode->mTransformation.a1);
@@ -503,7 +503,7 @@ void Mesh::ReadNodeHeirarchy(float AnimationTime, const aiNode * pNode, const Ma
 	//XMFLOAT4X4 globalTransform;
 	//XMStoreFloat4x4(&globalTransform, GlobalTransformation);
 	for (uint32_t i = 0; i < pNode->mNumChildren; i++) {
-		ReadNodeHeirarchy(AnimationTime, pNode->mChildren[i], GlobalTransformation);
+		ReadNodeHeirarchy(AnimationTime, pNode->mChildren[i], GlobalTransformation, animationIndex);
 	}
 }
 
@@ -566,5 +566,10 @@ Mesh::~Mesh()
 	{
 		if (bm.boneVertexBuffer)bm.boneVertexBuffer->Release();
 		if (bm.vBufferUploadHeap)bm.vBufferUploadHeap->Release();
+	}
+
+	if (mIsAnimated)
+	{
+		delete mAiScene;
 	}
 }

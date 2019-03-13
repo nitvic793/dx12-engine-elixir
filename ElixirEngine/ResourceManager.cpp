@@ -125,7 +125,8 @@ Scene ResourceManager::LoadScene(std::string filename, std::vector<Entity*> &out
 		auto ne = new Entity();
 		ne->SetPosition(e.Position);
 		ne->SetScale(e.Scale);
-		ne->SetRotation(e.Rotation);
+		XMFLOAT3 rotation(e.Rotation.Vector.x * XM_PIDIV2, e.Rotation.Vector.y * XM_PIDIV2, e.Rotation.Vector.z * XM_PIDIV2);
+		ne->SetRotation(rotation);
 		ne->SetMesh(GetMesh(StringID(e.MeshID)));
 		ne->SetMaterial(GetMaterial(StringID(e.MaterialID)));
 		ne->SetCastsShadow(e.CastShadows);

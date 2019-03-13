@@ -84,7 +84,7 @@ class Mesh
 	BoundingSphere							boundingSphere;
 	BoundingOrientedBox						boundingBox;
 	bool									mIsAnimated;
-	const aiScene*								mAiScene;
+	
 public:
 	Mesh(ID3D12Device* device);
 	Mesh(std::string objFile, ID3D12Device* device, ID3D12GraphicsCommandList* commandList);
@@ -93,8 +93,8 @@ public:
 	void Initialize(UINT meshIndex, Vertex* vertices, UINT vertexCount, UINT* indices, UINT indexCount, ID3D12GraphicsCommandList* commandList);
 	void InitializeBoneWeights(UINT meshIndex, BoneDescriptor boneData, ID3D12GraphicsCommandList* commandList);
 	void CalculateTangents(Vertex* vertices, UINT vertexCount, UINT * indices, UINT indexCount);
-	void BoneTransform(UINT meshIndex, float totalTime);
-	void ReadNodeHeirarchy(float AnimationTime, const aiNode* pNode, const ogldev::Matrix4f& ParentTransform);
+	void BoneTransform(UINT meshIndex, float totalTime, UINT animationIndex);
+	void ReadNodeHeirarchy(float AnimationTime, const aiNode* pNode, const ogldev::Matrix4f& ParentTransform, UINT animationIndex);
 
 	const PerArmatureConstantBuffer GetArmatureCB(UINT index);
 	const D3D12_VERTEX_BUFFER_VIEW& GetVertexBufferView(UINT index);
@@ -107,5 +107,6 @@ public:
 	const BoundingOrientedBox&		GetBoundingOrientedBox();
 	const bool						IsAnimated();
 	
+	const aiScene*					mAiScene;
 	~Mesh();
 };

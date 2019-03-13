@@ -95,9 +95,10 @@ VertexOutput main(VertexAnimatedInput input)
 
 	float4x4 skinTransform = SkinTransform(input.skinWeights, input.skinIndices);
 	float4 position = float4(input.pos, 1.0f);
+	//position = mul(position, worldViewProjection);
 	if (input.skinWeights.x != 0)
 	{
-		position += mul(float4(input.pos, 1.0f), skinTransform);
+		position += mul(position, skinTransform);
 	}
 
 	float4x4 shadowVP = mul(mul(world, shadowView), shadowProjection);

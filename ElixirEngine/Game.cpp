@@ -64,7 +64,6 @@ void Game::InitializeAssets()
 	);
 
 	skyTexture = rm->GetTexture(StringID("skybox"));
-	entities[8]->SetRotation(XMFLOAT3(XM_PIDIV2, 0, 0));
 	entities[9]->SetUVScale(XMFLOAT2(10, 10));
 	//auto meshes = ModelLoader::LoadFile("../../Assets/Models/man.fbx", commandList);
 }
@@ -88,7 +87,9 @@ void Game::Update()
 {
 	CurrentTime += deltaTime;
 	camera->Update(deltaTime);
+	entities[0]->SetRotation(XMFLOAT3(sin(totalTime), 0, 0));
 	entities[0]->SetPosition(XMFLOAT3(2 * sin(totalTime) + 2, 1.f, cos(totalTime)));
+	//entities[8]->SetRotation(XMFLOAT3(30, 0, 0));
 	pixelCb.pointLight[1].Position = XMFLOAT3(2 * sin(totalTime * 2) + 1, 0, -1);
 	pixelCb.pointLight[0].Position = XMFLOAT3(2 * sin(totalTime * 2) + 5, 1.0f, -2 + -2 * cos(totalTime));
 	if (GetAsyncKeyState('Q'))
@@ -151,7 +152,7 @@ void Game::Draw()
 		entityList.push_back(entity);
 		if (entity->IsAnimated())
 		{
-			//entity->UpdateAnimation(totalTime);
+			entity->UpdateAnimation(totalTime);
 			animatedEntityList.push_back(entity);
 		}
 	}
