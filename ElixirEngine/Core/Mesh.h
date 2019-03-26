@@ -94,6 +94,7 @@ public:
 	void InitializeBoneWeights(UINT meshIndex, BoneDescriptor boneData, ID3D12GraphicsCommandList* commandList);
 	void CalculateTangents(Vertex* vertices, UINT vertexCount, UINT * indices, UINT indexCount);
 	void BoneTransform(UINT meshIndex, float totalTime, UINT animationIndex);
+	void ReadNodeHeirarchy(float AnimationTime, UINT animationIndex);
 	void ReadNodeHeirarchy(float AnimationTime, const aiNode* pNode, const ogldev::Matrix4f& ParentTransform, UINT animationIndex);
 	void ReadNodeHeirarchy(float AnimationTime, const aiNode* pNode, XMMATRIX ParentTransform, UINT animationIndex);
 

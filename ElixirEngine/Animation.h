@@ -2,6 +2,7 @@
 
 #include "stdafx.h"
 #include <unordered_map>
+#include "OGLMath.h"
 
 struct VectorKey
 {
@@ -32,6 +33,8 @@ struct Animation
 struct AnimationDescriptor
 {
 	std::string RootNode;
+	XMFLOAT4X4 GlobalInverseTransform;
 	std::unordered_map<std::string, std::vector<std::string>> NodeHeirarchy;
+	std::unordered_map<std::string, XMFLOAT4X4> NodeTransformsMap;
 	std::vector<Animation> Animations;
 };

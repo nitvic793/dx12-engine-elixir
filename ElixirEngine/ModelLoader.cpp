@@ -6,7 +6,7 @@
 #include <stack>
 #include <queue>
 #include "Animation.h"
-
+#include "OGLMath.h"
 
 ModelLoader* ModelLoader::Instance = nullptr;
 Assimp::Importer ModelLoader::importer;
@@ -25,14 +25,25 @@ void TransformChannel(aiNodeAnim* animNode, AnimationChannel& channel)
 
 void LoadAnimations(const aiScene* scene, AnimationDescriptor& descriptor)
 {
+	//Get global inverse
+	ogldev::Matrix4f m_GlobalInverseTransform = scene->mRootNode->mTransformation;
+	m_GlobalInverseTransform.Inverse();
+	auto GlobalInverse = XMMatrixTranspose(OGLtoXM(m_GlobalInverseTransform));
+	XMStoreFloat4x4(&descriptor.GlobalInverseTransform, GlobalInverse);
+
 	descriptor.RootNode = std::string(scene->mRootNode->mName.data);
 	descriptor.Animations.resize(scene->mNumAnimations);
 	std::queue<aiNode*> nodeQueue;
 	nodeQueue.push(scene->mRootNode);
-	while (!nodeQueue.empty()) //Flatten Heirarchy
+	XMFLOAT4X4 transform;
+
+	//Flatten Heirarchy and map node heirarchy 
+	while (!nodeQueue.empty()) 
 	{
 		auto node = nodeQueue.front();
 		auto name = std::string(node->mName.data);
+		ogldev::Matrix4f Transformation(node->mTransformation);
+		XMMATRIX NodeTransformation = XMMatrixTranspose(OGLtoXM(Transformation));
 		if (descriptor.NodeHeirarchy.find(name) == descriptor.NodeHeirarchy.end()) //If node not in heirarchy
 		{
 			std::vector<std::string> children;
@@ -45,12 +56,15 @@ void LoadAnimations(const aiScene* scene, AnimationDescriptor& descriptor)
 				nodeQueue.push(child);
 			}
 
+			XMStoreFloat4x4(&transform, NodeTransformation);
+			descriptor.NodeTransformsMap.insert(std::pair<std::string, XMFLOAT4X4>(name, transform)); //Store node transform
 			descriptor.NodeHeirarchy.insert(std::pair<std::string, std::vector<std::string>>(name, children));
 		}
 
 		nodeQueue.pop();
 	}
 
+	//Load animations
 	auto& anims = descriptor.Animations;
 	for (auto i = 0u; i < scene->mNumAnimations; ++i)
 	{

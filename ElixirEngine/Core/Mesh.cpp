@@ -332,6 +332,11 @@ void Mesh::BoneTransform(UINT meshIndex, float totalTime, UINT animationIndex)
 	}
 }
 
+void Mesh::ReadNodeHeirarchy(float AnimationTime, UINT animationIndex)
+{
+
+}
+
 const aiNodeAnim* FindNodeAnim(const aiAnimation* pAnimation, const std::string NodeName)
 {
 	for (uint32_t i = 0; i < pAnimation->mNumChannels; i++) {
@@ -446,18 +451,6 @@ void CalcInterpolatedScaling(aiVector3D& Out, float AnimationTime, const aiNodeA
 	const aiVector3D& End = pNodeAnim->mScalingKeys[NextScalingIndex].mValue;
 	aiVector3D Delta = End - Start;
 	Out = Start + Factor * Delta;
-}
-
-XMMATRIX OGLtoXM(const Matrix4f& mat)
-{
-	auto xm = XMMATRIX(
-		mat.m[0][0], mat.m[0][1], mat.m[0][2], mat.m[0][3],
-		mat.m[1][0], mat.m[1][1], mat.m[1][2], mat.m[1][3],
-		mat.m[2][0], mat.m[2][1], mat.m[2][2], mat.m[2][3],
-		mat.m[3][0], mat.m[3][1], mat.m[3][2], mat.m[3][3]
-	);
-
-	return xm;
 }
 
 void Mesh::ReadNodeHeirarchy(float AnimationTime, const aiNode * pNode, XMMATRIX ParentTransform, UINT animationIndex)
