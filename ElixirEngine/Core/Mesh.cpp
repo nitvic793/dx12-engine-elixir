@@ -3,6 +3,7 @@
 #include <vector>
 #include "DirectXMesh.h"
 #include "../Utility.h"
+#include <stack>
 
 #define TINYOBJLOADER_IMPLEMENTATION
 #include <tiny_obj_loader.h>
@@ -322,6 +323,7 @@ void Mesh::BoneTransform(UINT meshIndex, float totalTime, UINT animationIndex)
 	float TimeInTicks = totalTime * TicksPerSecond;
 	float AnimationTime = fmod(TimeInTicks, (float)mAiScene->mAnimations[animationIndex]->mDuration);
 
+	ReadNodeHeirarchy(totalTime, animationIndex);
 	ReadNodeHeirarchy(AnimationTime, mAiScene->mRootNode, XMMatrixIdentity(), animationIndex);
 
 	for (uint32_t i = 0; i < boneDescriptors[meshIndex].boneInfoList.size(); i++)
@@ -334,7 +336,45 @@ void Mesh::BoneTransform(UINT meshIndex, float totalTime, UINT animationIndex)
 
 void Mesh::ReadNodeHeirarchy(float AnimationTime, UINT animationIndex)
 {
+	auto& nodes = Animations.NodeHeirarchy;
+	auto rootNode = Animations.RootNode;
+	std::stack<std::string> nodeStack;
+	std::stack<XMMATRIX> transformationStack;
+	auto globalInvernse = XMLoadFloat4x4(&Animations.GlobalInverseTransform);
+	auto rootTransform = XMLoadFloat4x4(&Animations.NodeTransformsMap[rootNode]);
+	nodeStack.push(rootNode);
+	transformationStack.push(rootTransform);
 
+	while(!nodeStack.empty())
+	{
+		auto node = nodeStack.top();
+		auto parentTransformation = transformationStack.top();
+		auto nodeTransformation = XMLoadFloat4x4(&Animations.NodeTransformsMap[node]);
+
+		nodeStack.pop();
+		transformationStack.pop();
+
+		auto anim = Animations.GetChannel(animationIndex, node);
+		if (anim != nullptr)
+		{
+
+		}
+
+		auto globalTransformation = nodeTransformation * parentTransformation;
+		if (boneDescriptors[0].boneMapping.find(node) != boneDescriptors[0].boneMapping.end())
+		{
+			uint32_t BoneIndex = boneDescriptors[0].boneMapping[node];
+			auto finalTransform = XMMatrixTranspose(OGLtoXM(boneDescriptors[0].boneInfoList[BoneIndex].Offset)) * globalTransformation * globalInvernse;
+			//XMStoreFloat4x4(&boneDescriptors[0].boneInfoList[BoneIndex].FinalTransform, finalTransform);
+		}
+
+		auto children = Animations.NodeHeirarchy[node];
+		for (auto child : children)
+		{
+			nodeStack.push(child);
+			transformationStack.push(globalTransformation);
+		}
+	}
 }
 
 const aiNodeAnim* FindNodeAnim(const aiAnimation* pAnimation, const std::string NodeName)

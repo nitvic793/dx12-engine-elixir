@@ -298,9 +298,9 @@ Mesh* ModelLoader::Load(std::string filename, ID3D12GraphicsCommandList* clist)
 	mesh->Initialize(0, vertices.data(), (UINT)vertices.size(), indices.data(), (UINT)indices.size(), clist);
 	if (pScene->HasAnimations())
 	{
+		LoadAnimations(pScene, mesh->Animations);
 		mesh->mAiScene = importer.GetOrphanedScene();
 		mesh->InitializeBoneWeights(0, BoneDescriptor{ boneMapping, boneInfoList, bones }, clist);
-		LoadAnimations(pScene, mesh->Animations);
 	}
 
 	return mesh;

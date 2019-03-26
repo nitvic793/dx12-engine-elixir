@@ -37,4 +37,29 @@ struct AnimationDescriptor
 	std::unordered_map<std::string, std::vector<std::string>> NodeHeirarchy;
 	std::unordered_map<std::string, XMFLOAT4X4> NodeTransformsMap;
 	std::vector<Animation> Animations;
+
+	int32_t GetChannelIndex(uint32_t animationIndex, std::string node)
+	{
+		auto& map = Animations[animationIndex].NodeChannelMap;
+		auto index = -1;
+		while (map.find(node) == map.end())
+		{
+			return index;
+		}
+
+		index = map[node];
+		return index;
+	}
+
+	AnimationChannel* GetChannel(uint32_t animIndex, std::string node)
+	{
+		auto channelIndex = GetChannelIndex(animIndex, node);
+		if (channelIndex == -1)
+		{
+			return nullptr;
+		}
+
+		return &Animations[animIndex].Channels[channelIndex];
+	}
+
 };
