@@ -242,11 +242,6 @@ void Mesh::InitializeBoneWeights(UINT meshIndex, BoneDescriptor boneData, ID3D12
 	boneMesh.vBufferView.SizeInBytes = boneMesh.vBufferSize;
 
 	PerArmatureConstantBuffer cb = {};
-	//for (int i = 0; i < boneData.boneInfoList.size(); ++i)
-	//{
-	//	auto m = XMMatrixTranspose(XMLoadFloat4x4(&boneData.boneInfoList[i].OffsetMatrix));
-	//	XMStoreFloat4x4(&cb.bones[i], m);
-	//}
 
 	boneCBs[meshIndex] = cb;
 	boneMeshes[meshIndex] = boneMesh;
@@ -333,9 +328,7 @@ void Mesh::BoneTransform(UINT meshIndex, float totalTime, UINT animationIndex)
 	{
 		XMFLOAT4X4 finalTransform;
 		XMStoreFloat4x4(&finalTransform, XMMatrixTranspose(XMLoadFloat4x4(&boneDescriptors[meshIndex].boneInfoList[i].FinalTransform)));
-		//XMStoreFloat4x4(&finalTransform, XMMatrixTranspose(XMMatrixIdentity()));
 		boneCBs[meshIndex].bones[i] = finalTransform;
-		//XMStoreFloat4x4(&boneCBs[meshIndex].bones[i], XMMatrixTranspose(XMLoadFloat4x4(&boneDescriptors[meshIndex].boneInfoList[i].OffsetMatrix)));
 	}
 }
 
@@ -343,7 +336,6 @@ const aiNodeAnim* FindNodeAnim(const aiAnimation* pAnimation, const std::string 
 {
 	for (uint32_t i = 0; i < pAnimation->mNumChannels; i++) {
 		const aiNodeAnim* pNodeAnim = pAnimation->mChannels[i];
-
 		if (std::string(pNodeAnim->mNodeName.data) == NodeName) {
 			return pNodeAnim;
 		}
@@ -471,11 +463,11 @@ XMMATRIX OGLtoXM(const Matrix4f& mat)
 void Mesh::ReadNodeHeirarchy(float AnimationTime, const aiNode * pNode, XMMATRIX ParentTransform, UINT animationIndex)
 {
 	std::string NodeName(pNode->mName.data);
-
+	
 	const aiAnimation* pAnimation = mAiScene->mAnimations[animationIndex];
 
 	Matrix4f Transformation(pNode->mTransformation);
-	XMMATRIX NodeTransformation = XMMatrixTranspose(OGLtoXM(Transformation));// XMMATRIX(&pNode->mTransformation.a1);
+	XMMATRIX NodeTransformation = XMMatrixTranspose(OGLtoXM(Transformation));
 
 	const aiNodeAnim* pNodeAnim = FindNodeAnim(pAnimation, NodeName);
 
@@ -495,7 +487,7 @@ void Mesh::ReadNodeHeirarchy(float AnimationTime, const aiNode * pNode, XMMATRIX
 		auto TranslationM = XMMatrixTranslation(Translation.x, Translation.y, Translation.z);
 
 		// Combine the above transformations
-		NodeTransformation += ScalingM * RotationM * TranslationM ;
+		NodeTransformation += ScalingM * RotationM * TranslationM;
 	}
 
 	auto GlobalTransformation =  NodeTransformation * ParentTransform;
@@ -508,7 +500,7 @@ void Mesh::ReadNodeHeirarchy(float AnimationTime, const aiNode * pNode, XMMATRIX
 	{
 		uint32_t BoneIndex = boneDescriptors[0].boneMapping[NodeName];
 		auto finalTransform = XMMatrixTranspose(OGLtoXM(boneDescriptors[0].boneInfoList[BoneIndex].Offset)) * GlobalTransformation * GlobalInverse;
-		XMStoreFloat4x4(&boneDescriptors[0].boneInfoList[BoneIndex].FinalTransform, finalTransform);//XMMATRIX(&finalTransform.m[0][0]));
+		XMStoreFloat4x4(&boneDescriptors[0].boneInfoList[BoneIndex].FinalTransform, finalTransform);
 	}
 
 	for (uint32_t i = 0; i < pNode->mNumChildren; i++) {

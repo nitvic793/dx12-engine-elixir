@@ -6,7 +6,7 @@
 #include <assimp/scene.h>           // Output data structure
 #include <assimp/postprocess.h>     // Post processing flags
 #include <assimp/Importer.hpp>      // C++ importer interface
-
+#include "../Animation.h"
 #include "../OGLMath.h"
 
 #define MaxBonesPerVertex 4
@@ -109,5 +109,6 @@ public:
 	const bool						IsAnimated();
 	
 	const aiScene*					mAiScene;
+	AnimationDescriptor				Animations = {};
 	~Mesh();
 };

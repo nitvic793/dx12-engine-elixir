@@ -2,10 +2,77 @@
 #include "ModelLoader.h"
 #include <map>
 #include "Utility.h"
+#include <unordered_map>
+#include <stack>
+#include <queue>
+#include "Animation.h"
 
 
 ModelLoader* ModelLoader::Instance = nullptr;
 Assimp::Importer ModelLoader::importer;
+
+void TransformChannel(aiNodeAnim* animNode, AnimationChannel& channel)
+{
+	channel.NodeName = std::string(animNode->mNodeName.data);
+	channel.PositionKeys.resize(animNode->mNumPositionKeys);
+	channel.RotationKeys.resize(animNode->mNumRotationKeys);
+	channel.ScalingKeys.resize(animNode->mNumScalingKeys);
+
+	memcpy(&channel.PositionKeys[0], animNode->mPositionKeys, sizeof(aiVectorKey) * animNode->mNumPositionKeys);
+	memcpy(&channel.RotationKeys[0], animNode->mRotationKeys, sizeof(aiVectorKey) * animNode->mNumRotationKeys);
+	memcpy(&channel.ScalingKeys[0], animNode->mScalingKeys, sizeof(aiVectorKey) * animNode->mNumScalingKeys);
+}
+
+void LoadAnimations(const aiScene* scene, AnimationDescriptor& descriptor)
+{
+	descriptor.RootNode = std::string(scene->mRootNode->mName.data);
+	descriptor.Animations.resize(scene->mNumAnimations);
+	std::queue<aiNode*> nodeQueue;
+	nodeQueue.push(scene->mRootNode);
+	while (!nodeQueue.empty()) //Flatten Heirarchy
+	{
+		auto node = nodeQueue.front();
+		auto name = std::string(node->mName.data);
+		if (descriptor.NodeHeirarchy.find(name) == descriptor.NodeHeirarchy.end()) //If node not in heirarchy
+		{
+			std::vector<std::string> children;
+			children.resize(node->mNumChildren);
+			for (auto i = 0u; i < node->mNumChildren; ++i)
+			{
+				auto child = node->mChildren[i];
+				auto childName = std::string(child->mName.data);
+				children[i] = childName;
+				nodeQueue.push(child);
+			}
+
+			descriptor.NodeHeirarchy.insert(std::pair<std::string, std::vector<std::string>>(name, children));
+		}
+
+		nodeQueue.pop();
+	}
+
+	auto& anims = descriptor.Animations;
+	for (auto i = 0u; i < scene->mNumAnimations; ++i)
+	{
+		Animation animation;
+		animation.Channels.resize(scene->mAnimations[i]->mNumChannels);
+		for (auto cIndex = 0u; cIndex < animation.Channels.size(); ++cIndex)
+		{
+			TransformChannel(scene->mAnimations[i]->mChannels[cIndex], animation.Channels[cIndex]);
+		}
+		anims[i] = animation;
+	}
+
+	for (auto& anim : anims)
+	{
+		auto index = 0u;
+		for (auto& channel : anim.Channels)
+		{
+			anim.NodeChannelMap.insert(std::pair<std::string, uint32_t>(channel.NodeName, index));
+			index++;
+		}
+	}
+}
 
 
 Mesh* ModelLoader::ProcessMesh(UINT index, aiMesh* mesh, const aiScene * scene, Mesh* &outMesh, ID3D12GraphicsCommandList* clist)
@@ -219,6 +286,7 @@ Mesh* ModelLoader::Load(std::string filename, ID3D12GraphicsCommandList* clist)
 	{
 		mesh->mAiScene = importer.GetOrphanedScene();
 		mesh->InitializeBoneWeights(0, BoneDescriptor{ boneMapping, boneInfoList, bones }, clist);
+		LoadAnimations(pScene, mesh->Animations);
 	}
 
 	return mesh;
