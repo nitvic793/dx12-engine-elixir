@@ -81,8 +81,11 @@ void Game::Initialize()
 }
 
 float CurrentTime = 0.f;
-
+float delay = 0.2f;
 int animIndex = 0;
+bool debugMode = false;
+int gBufferIndex = RTV_ORDER_ALBEDO;
+
 void Game::Update()
 {
 	CurrentTime += deltaTime;
@@ -101,17 +104,29 @@ void Game::Update()
 		isBlurEnabled = false;
 	}
 
-	if (GetAsyncKeyState(VK_UP) & 0xFFFF8000 && CurrentTime > 1.f)
+	if (GetAsyncKeyState(VK_UP) & 0xFFFF8000 && CurrentTime > delay)
 	{
 		animIndex++;
 		if (animIndex > 6) animIndex = 6;
 		CurrentTime = 0.f;
 	}
 
-	if (GetAsyncKeyState(VK_DOWN) & 0xFFFF8000 && CurrentTime > 1.f)
+	if (GetAsyncKeyState(VK_DOWN) & 0xFFFF8000 && CurrentTime > delay)
 	{
 		animIndex--;
 		if (animIndex < 0)animIndex = 0;
+		CurrentTime = 0.f;
+	}
+
+	if (GetAsyncKeyState(192) & 0xFFFF8000 && CurrentTime > delay)
+	{
+		debugMode = !debugMode;
+		CurrentTime = 0.f;
+	}
+
+	if (GetAsyncKeyState(VK_ADD) & 0xFFFF8000 && CurrentTime > delay)
+	{
+		gBufferIndex = (gBufferIndex + 1) % RTV_ORDER_COUNT;
 		CurrentTime = 0.f;
 	}
 }
@@ -214,7 +229,15 @@ void Game::Draw()
 	//finalTexture = edgeFilter->Apply(commandList, deferredRenderer->GetSelectionDepthBufferSRV(), finalTexture, texturePool);
 	//finalTexture = compositeTextures->Composite(commandList, finalTexture, deferredRenderer->GetSelectionOutlineSRV(), texturePool);
 
-	deferredRenderer->DrawResult(commandList, rtvHandle, finalTexture); //Draw renderer result to given main Render Target handle
+	if (!debugMode)
+	{
+		deferredRenderer->DrawResult(commandList, rtvHandle, finalTexture); //Draw renderer result to given main Render Target handle
+	}
+	else
+	{
+		deferredRenderer->DrawResult(commandList, rtvHandle, deferredRenderer->GetGBufferTextureSRV((GBufferType)gBufferIndex));
+	}
+
 	deferredRenderer->EndFrame(commandList);
 }
 
