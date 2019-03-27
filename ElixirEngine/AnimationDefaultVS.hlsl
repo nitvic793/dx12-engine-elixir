@@ -92,8 +92,8 @@ VertexOutput main(VertexAnimatedInput input)
 	output.uv = input.uv;
 	output.normal = normalize(mul(input.normal, (float3x3)world));
 	output.tangent = normalize(mul(input.tangent, (float3x3)world));
-	output.worldPos = mul(position, world).xyz;
+	output.worldPos = mul(float4(input.pos, 1.f), world).xyz;
 	output.linearZ = LinearZ(output.pos);
-	output.shadowPos = mul(position, shadowVP);
+	output.shadowPos = mul(float4(input.pos, 1.f), shadowVP);
 	return output;
 }
