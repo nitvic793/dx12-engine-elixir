@@ -38,7 +38,23 @@ struct AnimationDescriptor
 	XMFLOAT4X4 GlobalInverseTransform;
 	std::unordered_map<std::string, std::vector<std::string>> NodeHeirarchy;
 	std::unordered_map<std::string, XMFLOAT4X4> NodeTransformsMap;
+	std::unordered_map<std::string, uint32_t> AnimationIndexMap;
 	std::vector<Animation> Animations;
+
+	Animation* GetAnimation(std::string animName)
+	{
+		if (AnimationIndexMap.find(animName) == AnimationIndexMap.end()) 
+		{
+			return nullptr;
+		}
+
+		return &Animations[AnimationIndexMap[animName]];
+	}
+
+	Animation* GetAnimation(uint32_t index)
+	{
+		return &Animations[index];
+	}
 
 	int32_t GetChannelIndex(uint32_t animationIndex, std::string node)
 	{

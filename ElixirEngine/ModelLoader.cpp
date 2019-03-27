@@ -72,11 +72,14 @@ void LoadAnimations(const aiScene* scene, AnimationDescriptor& descriptor)
 		animation.Duration = scene->mAnimations[i]->mDuration;
 		animation.TicksPerSecond = scene->mAnimations[i]->mTicksPerSecond;
 		animation.Channels.resize(scene->mAnimations[i]->mNumChannels);
+		auto animName = std::string(scene->mAnimations[i]->mName.data);
 		for (auto cIndex = 0u; cIndex < animation.Channels.size(); ++cIndex)
 		{
 			TransformChannel(scene->mAnimations[i]->mChannels[cIndex], animation.Channels[cIndex]);
 		}
+
 		anims[i] = animation;
+		descriptor.AnimationIndexMap.insert(std::pair<std::string, uint32_t>(animName, i));
 	}
 
 	for (auto& anim : anims)

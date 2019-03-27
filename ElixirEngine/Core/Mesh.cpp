@@ -314,9 +314,10 @@ void Mesh::CalculateTangents(Vertex * vertices, UINT vertexCount, UINT * indices
 
 void Mesh::BoneTransform(UINT meshIndex, float totalTime, UINT animationIndex)
 {
-	float TicksPerSecond = (float)(Animations.Animations[animationIndex].TicksPerSecond != 0 ? Animations.Animations[animationIndex].TicksPerSecond : 25.0f);
+	auto animation = Animations.GetAnimation(animationIndex);
+	float TicksPerSecond = (float)(animation->TicksPerSecond != 0 ? animation->TicksPerSecond : 25.0f);
 	float TimeInTicks = totalTime * TicksPerSecond;
-	float AnimationTime = fmod(TimeInTicks, (float)Animations.Animations[animationIndex].Duration);
+	float AnimationTime = fmod(TimeInTicks, (float)animation->Duration);
 
 	ReadNodeHeirarchy(AnimationTime, animationIndex);
 
