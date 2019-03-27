@@ -69,6 +69,8 @@ void LoadAnimations(const aiScene* scene, AnimationDescriptor& descriptor)
 	for (auto i = 0u; i < scene->mNumAnimations; ++i)
 	{
 		Animation animation;
+		animation.Duration = scene->mAnimations[i]->mDuration;
+		animation.TicksPerSecond = scene->mAnimations[i]->mTicksPerSecond;
 		animation.Channels.resize(scene->mAnimations[i]->mNumChannels);
 		for (auto cIndex = 0u; cIndex < animation.Channels.size(); ++cIndex)
 		{
@@ -299,7 +301,6 @@ Mesh* ModelLoader::Load(std::string filename, ID3D12GraphicsCommandList* clist)
 	if (pScene->HasAnimations())
 	{
 		LoadAnimations(pScene, mesh->Animations);
-		mesh->mAiScene = importer.GetOrphanedScene();
 		mesh->InitializeBoneWeights(0, BoneDescriptor{ boneMapping, boneInfoList, bones }, clist);
 	}
 

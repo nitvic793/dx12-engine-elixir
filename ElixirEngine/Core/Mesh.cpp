@@ -3,6 +3,7 @@
 #include <vector>
 #include "DirectXMesh.h"
 #include "../Utility.h"
+#include <queue>
 #include <stack>
 
 #define TINYOBJLOADER_IMPLEMENTATION
@@ -100,12 +101,10 @@ Mesh::Mesh(std::string objFile, ID3D12Device * device, ID3D12GraphicsCommandList
 	Initialize(0, vertices.data(), (UINT)vertices.size(), indexVals.data(), (UINT)indexVals.size(), commandList);
 }
 
-Mesh::Mesh(ID3D12Device * device, int subMeshCount, bool hasBones, const aiScene* scene) :
-	mAiScene(scene)
+Mesh::Mesh(ID3D12Device * device, int subMeshCount, bool hasBones, const aiScene* scene) 
 {
 	this->device = device;
 	subMeshes.resize(subMeshCount);
-	this->mAiScene = scene;
 	if (hasBones)
 	{
 		mIsAnimated = true;
@@ -315,16 +314,11 @@ void Mesh::CalculateTangents(Vertex * vertices, UINT vertexCount, UINT * indices
 
 void Mesh::BoneTransform(UINT meshIndex, float totalTime, UINT animationIndex)
 {
-	XMFLOAT4X4 identity;
-	XMStoreFloat4x4(&identity, XMMatrixIdentity());
-	Matrix4f Identity;
-	Identity.InitIdentity();
-	float TicksPerSecond = (float)(mAiScene->mAnimations[animationIndex]->mTicksPerSecond != 0 ? mAiScene->mAnimations[animationIndex]->mTicksPerSecond : 25.0f);
+	float TicksPerSecond = (float)(Animations.Animations[animationIndex].TicksPerSecond != 0 ? Animations.Animations[animationIndex].TicksPerSecond : 25.0f);
 	float TimeInTicks = totalTime * TicksPerSecond;
-	float AnimationTime = fmod(TimeInTicks, (float)mAiScene->mAnimations[animationIndex]->mDuration);
+	float AnimationTime = fmod(TimeInTicks, (float)Animations.Animations[animationIndex].Duration);
 
-	ReadNodeHeirarchy(totalTime, animationIndex);
-	ReadNodeHeirarchy(AnimationTime, mAiScene->mRootNode, XMMatrixIdentity(), animationIndex);
+	ReadNodeHeirarchy(AnimationTime, animationIndex);
 
 	for (uint32_t i = 0; i < boneDescriptors[meshIndex].boneInfoList.size(); i++)
 	{
@@ -334,261 +328,171 @@ void Mesh::BoneTransform(UINT meshIndex, float totalTime, UINT animationIndex)
 	}
 }
 
+uint32_t FindPosition(float AnimationTime, AnimationChannel* channel)
+{
+	for (uint32_t i = 0; i < channel->PositionKeys.size() - 1; i++) {
+		if (AnimationTime < (float)channel->PositionKeys[i + 1].Time) {
+			return i;
+		}
+	}
+
+	assert(0);
+	return 0;
+}
+
+uint32_t FindScaling(float AnimationTime, AnimationChannel* channel)
+{
+	for (uint32_t i = 0; i < channel->ScalingKeys.size() - 1; i++) {
+		if (AnimationTime < (float)channel->ScalingKeys[i + 1].Time) {
+			return i;
+		}
+	}
+
+	assert(0);
+	return 0;
+}
+
+uint32_t FindRotation(float AnimationTime, AnimationChannel* channel)
+{
+	for (uint32_t i = 0; i < channel->RotationKeys.size() - 1; i++) {
+		if (AnimationTime < (float)channel->RotationKeys[i + 1].Time) {
+			return i;
+		}
+	}
+
+	assert(0);
+	return 0;
+}
+
+XMFLOAT3 InterpolatePosition(float animTime, AnimationChannel* channel)
+{
+	auto outFloat3 = XMFLOAT3();
+	auto Out = XMVectorSet(0, 0, 0, 0);
+	if (channel->PositionKeys.size() == 1) {
+		//Out = XMLoadFloat3(&channel->PositionKeys[0].Value);
+		return channel->PositionKeys[0].Value;
+	}
+
+	uint32_t PositionIndex = FindPosition(animTime, channel);
+	uint32_t NextPositionIndex = (PositionIndex + 1);
+	assert(NextPositionIndex < channel->PositionKeys.size());
+
+	float DeltaTime = (float)(channel->PositionKeys[NextPositionIndex].Time - channel->PositionKeys[PositionIndex].Time);
+	float Factor = (animTime - (float)channel->PositionKeys[PositionIndex].Time) / DeltaTime;
+	assert(Factor >= 0.0f && Factor <= 1.0f);
+
+	auto Start = XMLoadFloat3(&channel->PositionKeys[PositionIndex].Value);
+	auto End = XMLoadFloat3(&channel->PositionKeys[NextPositionIndex].Value);
+	auto Delta = End - Start;
+	Out = Start + Factor * Delta;
+	XMStoreFloat3(&outFloat3, Out);
+	return outFloat3;
+}
+
+
+XMFLOAT3 InterpolateScaling(float animTime, AnimationChannel* channel)
+{
+	auto outFloat3 = XMFLOAT3();
+	auto Out = XMVectorSet(0, 0, 0, 0);
+	if (channel->ScalingKeys.size() == 1) {
+		//Out = XMLoadFloat3(&channel->ScalingKeys[0].Value);
+		return channel->ScalingKeys[0].Value;
+	}
+
+	uint32_t ScaleIndex = FindScaling(animTime, channel);
+	uint32_t NextScaleIndex = (ScaleIndex + 1);
+	assert(NextScaleIndex < channel->ScalingKeys.size());
+
+	float DeltaTime = (float)(channel->ScalingKeys[NextScaleIndex].Time - channel->ScalingKeys[ScaleIndex].Time);
+	float Factor = (animTime - (float)channel->ScalingKeys[ScaleIndex].Time) / DeltaTime;
+	assert(Factor >= 0.0f && Factor <= 1.0f);
+
+	auto Start = XMLoadFloat3(&channel->ScalingKeys[ScaleIndex].Value);
+	auto End = XMLoadFloat3(&channel->ScalingKeys[NextScaleIndex].Value);
+	auto Delta = End - Start;
+	Out = Start + Factor * Delta;
+	XMStoreFloat3(&outFloat3, Out);
+	return outFloat3;
+}
+
+XMFLOAT4 InterpolateRotation(float animTime, AnimationChannel* channel)
+{
+	auto outFloat4 = XMFLOAT4();
+	auto Out = XMVectorSet(0, 0, 0, 0);
+	if (channel->RotationKeys.size() == 1) {
+		//Out = XMLoadFloat4(&channel->RotationKeys[0].Value);
+		return channel->RotationKeys[0].Value;
+	}
+
+	uint32_t RotationIndex = FindRotation(animTime, channel);
+	uint32_t NextRotationIndex = (RotationIndex + 1);
+	assert(NextRotationIndex < channel->RotationKeys.size());
+
+	float DeltaTime = (float)(channel->RotationKeys[NextRotationIndex].Time - channel->RotationKeys[RotationIndex].Time);
+	float Factor = (animTime - (float)channel->RotationKeys[RotationIndex].Time) / DeltaTime;
+	assert(Factor >= 0.0f && Factor <= 1.0f);
+
+	auto StartRotationQ = XMLoadFloat4(&channel->RotationKeys[RotationIndex].Value);
+	auto EndRotationQ = XMLoadFloat4(&channel->RotationKeys[NextRotationIndex].Value);
+	Out = XMQuaternionSlerp((StartRotationQ), (EndRotationQ), Factor);
+	Out = XMQuaternionNormalize(Out);
+	XMStoreFloat4(&outFloat4, Out);
+	return outFloat4;
+}
+
 void Mesh::ReadNodeHeirarchy(float AnimationTime, UINT animationIndex)
 {
 	auto& nodes = Animations.NodeHeirarchy;
 	auto rootNode = Animations.RootNode;
-	std::stack<std::string> nodeStack;
-	std::stack<XMMATRIX> transformationStack;
-	auto globalInvernse = XMLoadFloat4x4(&Animations.GlobalInverseTransform);
-	auto rootTransform = XMLoadFloat4x4(&Animations.NodeTransformsMap[rootNode]);
-	nodeStack.push(rootNode);
-	transformationStack.push(rootTransform);
+	std::stack<std::string> nodeQueue;
+	std::stack<XMFLOAT4X4> transformationQueue;
+	auto globalInverse = XMLoadFloat4x4(&Animations.GlobalInverseTransform);
+	auto rootTransform = XMMatrixIdentity();
+	XMFLOAT4X4 identity;
+	XMFLOAT4X4 globalFloat4x4;
+	XMStoreFloat4x4(&identity, rootTransform);
+	nodeQueue.push(rootNode);
+	transformationQueue.push(identity);
 
-	while(!nodeStack.empty())
+	while (!nodeQueue.empty())
 	{
-		auto node = nodeStack.top();
-		auto parentTransformation = transformationStack.top();
+		auto node = nodeQueue.top();
+		auto parentTransformation = XMLoadFloat4x4(&transformationQueue.top());
 		auto nodeTransformation = XMLoadFloat4x4(&Animations.NodeTransformsMap[node]);
 
-		nodeStack.pop();
-		transformationStack.pop();
+		nodeQueue.pop();
+		transformationQueue.pop();
 
 		auto anim = Animations.GetChannel(animationIndex, node);
 		if (anim != nullptr)
 		{
+			auto s = InterpolateScaling(AnimationTime, anim);
+			auto scaling = XMMatrixScaling(s.x, s.y, s.z);
 
+			auto r = InterpolateRotation(AnimationTime, anim);
+			auto rotation = XMMatrixRotationQuaternion(XMVectorSet(r.y, r.z, r.w, r.x));
+
+			auto t = InterpolatePosition(AnimationTime, anim);
+			auto translation = XMMatrixTranslation(t.x, t.y, t.z);
+
+			nodeTransformation += scaling * rotation * translation;
 		}
 
 		auto globalTransformation = nodeTransformation * parentTransformation;
 		if (boneDescriptors[0].boneMapping.find(node) != boneDescriptors[0].boneMapping.end())
 		{
 			uint32_t BoneIndex = boneDescriptors[0].boneMapping[node];
-			auto finalTransform = XMMatrixTranspose(OGLtoXM(boneDescriptors[0].boneInfoList[BoneIndex].Offset)) * globalTransformation * globalInvernse;
-			//XMStoreFloat4x4(&boneDescriptors[0].boneInfoList[BoneIndex].FinalTransform, finalTransform);
+			auto finalTransform = XMMatrixTranspose(OGLtoXM(boneDescriptors[0].boneInfoList[BoneIndex].Offset)) * globalTransformation * globalInverse;
+			XMStoreFloat4x4(&boneDescriptors[0].boneInfoList[BoneIndex].FinalTransform, finalTransform);
 		}
 
 		auto children = Animations.NodeHeirarchy[node];
-		for (auto child : children)
+		for (int i = (int)children.size() - 1; i >= 0; --i)
 		{
-			nodeStack.push(child);
-			transformationStack.push(globalTransformation);
+			XMStoreFloat4x4(&globalFloat4x4, globalTransformation);
+			nodeQueue.push(children[i]);
+			transformationQueue.push(globalFloat4x4);
 		}
-	}
-}
-
-const aiNodeAnim* FindNodeAnim(const aiAnimation* pAnimation, const std::string NodeName)
-{
-	for (uint32_t i = 0; i < pAnimation->mNumChannels; i++) {
-		const aiNodeAnim* pNodeAnim = pAnimation->mChannels[i];
-		if (std::string(pNodeAnim->mNodeName.data) == NodeName) {
-			return pNodeAnim;
-		}
-	}
-
-	return nullptr;
-}
-
-uint32_t FindPosition(float AnimationTime, const aiNodeAnim* pNodeAnim)
-{
-	for (uint32_t i = 0; i < pNodeAnim->mNumPositionKeys - 1; i++) {
-		if (AnimationTime < (float)pNodeAnim->mPositionKeys[i + 1].mTime) {
-			return i;
-		}
-	}
-
-	assert(0);
-
-	return 0;
-}
-
-uint32_t FindRotation(float AnimationTime, const aiNodeAnim* pNodeAnim)
-{
-	assert(pNodeAnim->mNumRotationKeys > 0);
-
-	for (uint32_t i = 0; i < pNodeAnim->mNumRotationKeys - 1; i++) {
-		if (AnimationTime < (float)pNodeAnim->mRotationKeys[i + 1].mTime) {
-			return i;
-		}
-	}
-
-	assert(0);
-
-	return 0;
-}
-
-
-uint32_t FindScaling(float AnimationTime, const aiNodeAnim* pNodeAnim)
-{
-	assert(pNodeAnim->mNumScalingKeys > 0);
-
-	for (uint32_t i = 0; i < pNodeAnim->mNumScalingKeys - 1; i++) {
-		if (AnimationTime < (float)pNodeAnim->mScalingKeys[i + 1].mTime) {
-			return i;
-		}
-	}
-
-	assert(0);
-
-	return 0;
-}
-
-void CalcInterpolatedPosition(aiVector3D& Out, float AnimationTime, const aiNodeAnim* pNodeAnim)
-{
-	if (pNodeAnim->mNumPositionKeys == 1) {
-		Out = pNodeAnim->mPositionKeys[0].mValue;
-		return;
-	}
-
-	uint32_t PositionIndex = FindPosition(AnimationTime, pNodeAnim);
-	uint32_t NextPositionIndex = (PositionIndex + 1);
-	assert(NextPositionIndex < pNodeAnim->mNumPositionKeys);
-	float DeltaTime = (float)(pNodeAnim->mPositionKeys[NextPositionIndex].mTime - pNodeAnim->mPositionKeys[PositionIndex].mTime);
-	float Factor = (AnimationTime - (float)pNodeAnim->mPositionKeys[PositionIndex].mTime) / DeltaTime;
-	assert(Factor >= 0.0f && Factor <= 1.0f);
-	const aiVector3D& Start = pNodeAnim->mPositionKeys[PositionIndex].mValue;
-	const aiVector3D& End = pNodeAnim->mPositionKeys[NextPositionIndex].mValue;
-	aiVector3D Delta = End - Start;
-	Out = Start + Factor * Delta;
-}
-
-
-void CalcInterpolatedRotation(aiQuaternion& Out, float AnimationTime, const aiNodeAnim* pNodeAnim)
-{
-	// we need at least two values to interpolate...
-	if (pNodeAnim->mNumRotationKeys == 1) {
-		Out = pNodeAnim->mRotationKeys[0].mValue;
-		return;
-	}
-
-	uint32_t RotationIndex = FindRotation(AnimationTime, pNodeAnim);
-	uint32_t NextRotationIndex = (RotationIndex + 1);
-	assert(NextRotationIndex < pNodeAnim->mNumRotationKeys);
-	float DeltaTime = (float)(pNodeAnim->mRotationKeys[NextRotationIndex].mTime - pNodeAnim->mRotationKeys[RotationIndex].mTime);
-	float Factor = (AnimationTime - (float)pNodeAnim->mRotationKeys[RotationIndex].mTime) / DeltaTime;
-	assert(Factor >= 0.0f && Factor <= 1.0f);
-	const aiQuaternion& StartRotationQ = pNodeAnim->mRotationKeys[RotationIndex].mValue;
-	const aiQuaternion& EndRotationQ = pNodeAnim->mRotationKeys[NextRotationIndex].mValue;
-	aiQuaternion::Interpolate(Out, StartRotationQ, EndRotationQ, Factor);
-	Out = Out.Normalize();
-}
-
-
-void CalcInterpolatedScaling(aiVector3D& Out, float AnimationTime, const aiNodeAnim* pNodeAnim)
-{
-	if (pNodeAnim->mNumScalingKeys == 1) {
-		Out = pNodeAnim->mScalingKeys[0].mValue;
-		return;
-	}
-
-	uint32_t ScalingIndex = FindScaling(AnimationTime, pNodeAnim);
-	uint32_t NextScalingIndex = (ScalingIndex + 1);
-	assert(NextScalingIndex < pNodeAnim->mNumScalingKeys);
-	float DeltaTime = (float)(pNodeAnim->mScalingKeys[NextScalingIndex].mTime - pNodeAnim->mScalingKeys[ScalingIndex].mTime);
-	float Factor = (AnimationTime - (float)pNodeAnim->mScalingKeys[ScalingIndex].mTime) / DeltaTime;
-	assert(Factor >= 0.0f && Factor <= 1.0f);
-	const aiVector3D& Start = pNodeAnim->mScalingKeys[ScalingIndex].mValue;
-	const aiVector3D& End = pNodeAnim->mScalingKeys[NextScalingIndex].mValue;
-	aiVector3D Delta = End - Start;
-	Out = Start + Factor * Delta;
-}
-
-void Mesh::ReadNodeHeirarchy(float AnimationTime, const aiNode * pNode, XMMATRIX ParentTransform, UINT animationIndex)
-{
-	std::string NodeName(pNode->mName.data);
-	
-	const aiAnimation* pAnimation = mAiScene->mAnimations[animationIndex];
-
-	Matrix4f Transformation(pNode->mTransformation);
-	XMMATRIX NodeTransformation = XMMatrixTranspose(OGLtoXM(Transformation));
-
-	const aiNodeAnim* pNodeAnim = FindNodeAnim(pAnimation, NodeName);
-
-	if (pNodeAnim)
-	{
-		// Interpolate scaling and generate scaling transformation matrix
-		aiVector3D Scaling;
-		CalcInterpolatedScaling(Scaling, AnimationTime, pNodeAnim);
-		auto ScalingM = XMMatrixScaling(Scaling.x, Scaling.y, Scaling.z);
-		// Interpolate rotation and generate rotation transformation matrix
-		aiQuaternion RotationQ;
-		CalcInterpolatedRotation(RotationQ, AnimationTime, pNodeAnim);
-		auto RotationM = XMMatrixRotationQuaternion(XMVectorSet(RotationQ.x, RotationQ.y, RotationQ.z, RotationQ.w));
-		// Interpolate translation and generate translation transformation matrix
-		aiVector3D Translation;
-		CalcInterpolatedPosition(Translation, AnimationTime, pNodeAnim);
-		auto TranslationM = XMMatrixTranslation(Translation.x, Translation.y, Translation.z);
-
-		// Combine the above transformations
-		NodeTransformation += ScalingM * RotationM * TranslationM;
-	}
-
-	auto GlobalTransformation =  NodeTransformation * ParentTransform;
-
-	Matrix4f m_GlobalInverseTransform = mAiScene->mRootNode->mTransformation;
-	m_GlobalInverseTransform.Inverse();
-	auto GlobalInverse = XMMatrixTranspose(OGLtoXM(m_GlobalInverseTransform));
-
-	if (boneDescriptors[0].boneMapping.find(NodeName) != boneDescriptors[0].boneMapping.end())
-	{
-		uint32_t BoneIndex = boneDescriptors[0].boneMapping[NodeName];
-		auto finalTransform = XMMatrixTranspose(OGLtoXM(boneDescriptors[0].boneInfoList[BoneIndex].Offset)) * GlobalTransformation * GlobalInverse;
-		XMStoreFloat4x4(&boneDescriptors[0].boneInfoList[BoneIndex].FinalTransform, finalTransform);
-	}
-
-	for (uint32_t i = 0; i < pNode->mNumChildren; i++) {
-		ReadNodeHeirarchy(AnimationTime, pNode->mChildren[i], GlobalTransformation, animationIndex);
-	}
-}
-
-void Mesh::ReadNodeHeirarchy(float AnimationTime, const aiNode * pNode, const Matrix4f& ParentTransform, UINT animationIndex)
-{
-	std::string NodeName(pNode->mName.data);
-
-	const aiAnimation* pAnimation = mAiScene->mAnimations[animationIndex];
-	
-	Matrix4f NodeTransformation(pNode->mTransformation);
-	//XMMATRIX NodeTransformation = XMLoadFloat4x4(&aiMatrixToXMFloat4x4(&pNode->mTransformation));// XMMATRIX(&pNode->mTransformation.a1);
-
-	const aiNodeAnim* pNodeAnim = FindNodeAnim(pAnimation, NodeName);
-
-	if (pNodeAnim)
-	{
-		// Interpolate scaling and generate scaling transformation matrix
-		aiVector3D Scaling;
-		CalcInterpolatedScaling(Scaling, AnimationTime, pNodeAnim);
-		 Matrix4f ScalingM;
-		ScalingM.InitScaleTransform(Scaling.x, Scaling.y, Scaling.z);
-		// Interpolate rotation and generate rotation transformation matrix
-		aiQuaternion RotationQ;
-		CalcInterpolatedRotation(RotationQ, AnimationTime, pNodeAnim);
-		Matrix4f RotationM = Matrix4f(RotationQ.GetMatrix());
-		// Interpolate translation and generate translation transformation matrix
-		aiVector3D Translation;
-		CalcInterpolatedPosition(Translation, AnimationTime, pNodeAnim);
-		Matrix4f TranslationM;
-		TranslationM.InitTranslationTransform(Translation.x, Translation.y, Translation.z);
-		// Combine the above transformations
-		NodeTransformation = TranslationM * RotationM * ScalingM;
-	}
-
-	Matrix4f GlobalTransformation = ParentTransform * NodeTransformation;
-	
-	Matrix4f m_GlobalInverseTransform = mAiScene->mRootNode->mTransformation;
-	m_GlobalInverseTransform.Inverse();
-//	auto globalInverseTransform = XMMatrixInverse(nullptr, XMLoadFloat4x4(&aiMatrixToXMFloat4x4(&mAiScene->mRootNode->mTransformation)));
-
-	if (boneDescriptors[0].boneMapping.find(NodeName) != boneDescriptors[0].boneMapping.end()) 
-	{
-		uint32_t BoneIndex = boneDescriptors[0].boneMapping[NodeName];
-		Matrix4f finalTransform = m_GlobalInverseTransform * GlobalTransformation * boneDescriptors[0].boneInfoList[BoneIndex].Offset;
-		XMStoreFloat4x4(&boneDescriptors[0].boneInfoList[BoneIndex].FinalTransform, OGLtoXM(finalTransform));//XMMATRIX(&finalTransform.m[0][0]));
-	}
-
-	//XMFLOAT4X4 globalTransform;
-	//XMStoreFloat4x4(&globalTransform, GlobalTransformation);
-	for (uint32_t i = 0; i < pNode->mNumChildren; i++) {
-		ReadNodeHeirarchy(AnimationTime, pNode->mChildren[i], GlobalTransformation, animationIndex);
 	}
 }
 
@@ -651,10 +555,5 @@ Mesh::~Mesh()
 	{
 		if (bm.boneVertexBuffer)bm.boneVertexBuffer->Release();
 		if (bm.vBufferUploadHeap)bm.vBufferUploadHeap->Release();
-	}
-
-	if (mIsAnimated)
-	{
-		delete mAiScene;
 	}
 }

@@ -26,6 +26,8 @@ struct AnimationChannel
 
 struct Animation
 {
+	double TicksPerSecond;
+	double Duration;
 	std::vector<AnimationChannel> Channels;
 	std::unordered_map<std::string, uint32_t> NodeChannelMap;
 };

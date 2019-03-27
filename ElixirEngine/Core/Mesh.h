@@ -95,8 +95,6 @@ public:
 	void CalculateTangents(Vertex* vertices, UINT vertexCount, UINT * indices, UINT indexCount);
 	void BoneTransform(UINT meshIndex, float totalTime, UINT animationIndex);
 	void ReadNodeHeirarchy(float AnimationTime, UINT animationIndex);
-	void ReadNodeHeirarchy(float AnimationTime, const aiNode* pNode, const ogldev::Matrix4f& ParentTransform, UINT animationIndex);
-	void ReadNodeHeirarchy(float AnimationTime, const aiNode* pNode, XMMATRIX ParentTransform, UINT animationIndex);
 
 	const PerArmatureConstantBuffer GetArmatureCB(UINT index);
 	const D3D12_VERTEX_BUFFER_VIEW& GetVertexBufferView(UINT index);
@@ -108,8 +106,7 @@ public:
 	const BoundingSphere&			GetBoundingSphere();
 	const BoundingOrientedBox&		GetBoundingOrientedBox();
 	const bool						IsAnimated();
-	
-	const aiScene*					mAiScene;
+
 	AnimationDescriptor				Animations = {};
 	~Mesh();
 };
