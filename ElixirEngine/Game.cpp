@@ -65,7 +65,6 @@ void Game::InitializeAssets()
 
 	skyTexture = rm->GetTexture(StringID("skybox"));
 	entities[9]->SetUVScale(XMFLOAT2(10, 10));
-	//auto meshes = ModelLoader::LoadFile("../../Assets/Models/man.fbx", commandList);
 }
 
 Game::Game(HINSTANCE hInstance, int ShowWnd, int width, int height, bool fullscreen) :
