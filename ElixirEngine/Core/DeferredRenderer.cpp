@@ -1033,7 +1033,8 @@ void DeferredRenderer::CreateRTV()
 	{
 		descSRV.Format = mRtvFormat[i];
 		device->CreateShaderResourceView(gBufferTextures[i], &descSRV, gBufferHeap.handleCPU(i));
-		gBufferTextureVector.push_back(new Texture(this, device, gBufferTextures[i], i, TextureTypeSRV, &gBufferHeap));
+		auto heapIndex = SetSRV(gBufferTextures[i]);
+		gBufferTextureVector.push_back(new Texture(this, device, gBufferTextures[i], heapIndex, TextureTypeSRV, &srvHeap));
 	}
 
 	D3D12_UNORDERED_ACCESS_VIEW_DESC UAVDesc = {};
