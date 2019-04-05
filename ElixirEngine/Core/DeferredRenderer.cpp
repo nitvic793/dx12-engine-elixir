@@ -312,8 +312,24 @@ void DeferredRenderer::RenderShadowMap(ID3D12GraphicsCommandList * commandList, 
 	{
 		if (!e->CastsShadow()) continue;
 		commandList->SetGraphicsRootDescriptorTable(RootSigCBVertex0, frame->GetGPUHandle(frameHeapParams.ShadowCB, sIndex));
-		Draw(e->GetMesh(), commandList);
 		sIndex++;
+		if (e->IsAnimated()) continue;
+		Draw(e->GetMesh(), commandList);
+	}
+
+	//Animated entities
+	commandList->SetPipelineState(sysRM->GetPSO(StringID("shadowMapDirLightAnimatedPSO")));
+	sIndex = 0;
+	int boneIndex = 0;
+	for (auto e : entities)
+	{
+		if (!e->CastsShadow()) continue;
+		commandList->SetGraphicsRootDescriptorTable(RootSigCBVertex0, frame->GetGPUHandle(frameHeapParams.ShadowCB, sIndex));
+		commandList->SetGraphicsRootDescriptorTable(RootSigCBAll1, frame->GetGPUHandle(frameHeapParams.BoneCB, boneIndex));
+		sIndex++;
+		if (!e->IsAnimated()) continue;
+		DrawAnimated(e->GetMesh(), commandList);
+		boneIndex++;
 	}
 
 	//Instanced entities
@@ -1198,6 +1214,12 @@ void DeferredRenderer::CreateShadowBuffers()
 	descPipelineState.SampleDesc.Count = 1;
 
 	device->CreateGraphicsPipelineState(&descPipelineState, IID_PPV_ARGS(&shadowMapDirLightPSO));
+
+	descPipelineState.InputLayout.pInputElementDescs = InputLayout::AnimationLayout;
+	descPipelineState.InputLayout.NumElements = _countof(InputLayout::AnimationLayout);
+	descPipelineState.VS = ShaderManager::LoadShader(L"ShadowAnimatedVS.cso");
+
+	sysRM->CreatePSO(StringID("shadowMapDirLightAnimatedPSO"), descPipelineState);
 
 	descPipelineState.InputLayout.pInputElementDescs = InputLayout::InstanceDefaultLayout;
 	descPipelineState.InputLayout.NumElements = _countof(InputLayout::InstanceDefaultLayout);

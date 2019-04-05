@@ -346,6 +346,9 @@
     <FxCompile Include="AnimationDefaultVS.hlsl">
       <Filter>Shaders\Deferred</Filter>
     </FxCompile>
+    <FxCompile Include="ShadowAnimatedVS.hlsl">
+      <Filter>Shaders\Shadows</Filter>
+    </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

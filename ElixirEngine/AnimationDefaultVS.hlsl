@@ -40,7 +40,7 @@ cbuffer PerFrame : register(b1)
 
 cbuffer PerArmature: register(b2)
 {
-	matrix bones[128];
+	matrix bones[MAX_BONES];
 };
 
 float2 ProjectionConstants(float nearZ, float farZ)
