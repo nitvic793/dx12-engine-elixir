@@ -26,6 +26,11 @@ ResourceManager * ResourceManager::GetInstance()
 	return Instance;
 }
 
+void ResourceManager::Initialize(AnimationManager* animationManager)
+{
+	animManager = animationManager;
+}
+
 void ResourceManager::LoadTexture(
 	ID3D12CommandQueue * commandQueue,
 	DeferredRenderer * renderer,
@@ -98,8 +103,11 @@ void ResourceManager::LoadMesh(ID3D12GraphicsCommandList * commandList, std::str
 void ResourceManager::LoadMesh(ID3D12GraphicsCommandList * commandList, HashID hashId, std::string filePath)
 {
 	auto mesh = ModelLoader::LoadFile(filePath, commandList);
-	//auto mesh = new Mesh(filePath, device, commandList);
 	meshes.insert(std::pair<HashID, Mesh*>(hashId, mesh));
+	if (mesh->IsAnimated())
+	{
+		animManager->RegisterMeshAnimations(hashId, &mesh->Animations);
+	}
 }
 
 Mesh * ResourceManager::GetMesh(HashID hashId)
@@ -120,17 +128,24 @@ Texture * ResourceManager::GetTexture(HashID textureID)
 Scene ResourceManager::LoadScene(std::string filename, std::vector<Entity*> &outEntities)
 {
 	auto scene = SceneSerDe::LoadScene(filename);
+	int idx = 0;
 	for (auto e : scene.Entities)
 	{
 		auto ne = new Entity();
+		auto meshID = StringID(e.MeshID);
 		ne->SetPosition(e.Position);
 		ne->SetScale(e.Scale);
 		XMFLOAT3 rotation(e.Rotation.Vector.x * XM_PIDIV2, e.Rotation.Vector.y * XM_PIDIV2, e.Rotation.Vector.z * XM_PIDIV2);
 		ne->SetRotation(rotation);
-		ne->SetMesh(GetMesh(StringID(e.MeshID)));
+		ne->SetMesh(GetMesh(meshID));
 		ne->SetMaterial(GetMaterial(StringID(e.MaterialID)));
 		ne->SetCastsShadow(e.CastShadows);
 		outEntities.push_back(ne);
+		if (ne->IsAnimated())
+		{
+			animManager->RegisterEntity(idx, meshID);
+		}
+		idx++;
 	}
 
 	return scene;

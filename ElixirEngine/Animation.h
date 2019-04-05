@@ -81,3 +81,11 @@ struct AnimationDescriptor
 	}
 
 };
+
+uint32_t FindPosition(float AnimationTime, AnimationChannel* channel);
+uint32_t FindScaling(float AnimationTime, AnimationChannel* channel);
+uint32_t FindRotation(float AnimationTime, AnimationChannel* channel);
+
+XMFLOAT3 InterpolatePosition(float animTime, AnimationChannel* channel);
+XMFLOAT3 InterpolateScaling(float animTime, AnimationChannel* channel);
+XMFLOAT4 InterpolateRotation(float animTime, AnimationChannel* channel);

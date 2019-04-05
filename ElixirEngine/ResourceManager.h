@@ -8,7 +8,7 @@
 #include <typeinfo>
 #include "../Engine.Serialization/SceneSerDe.h"
 #include "../Engine.Serialization/ResourcePackSerDe.h"
-
+#include "AnimationManager.h"
 #include "Core/Entity.h"
 
 // Engine Specific
@@ -30,14 +30,16 @@ private:
 	static ResourceManager* Instance;
 
 protected:
-	ID3D12Device*	device;
-	MeshMap			meshes;
-	MaterialMap		materials;
-	TextureMap		textures;
+	ID3D12Device*			device;
+	MeshMap					meshes;
+	MaterialMap				materials;
+	TextureMap				textures;
+	AnimationManager*		animManager;
 	ResourceManager(ID3D12Device* device);
 public:
 	static ResourceManager* CreateInstance(ID3D12Device* device);
 	static ResourceManager* GetInstance();
+	void					Initialize(AnimationManager* animationManager);
 
 	void LoadTexture(
 		ID3D12CommandQueue* commandQueue,

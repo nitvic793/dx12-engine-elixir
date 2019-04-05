@@ -102,6 +102,7 @@ public:
 	const D3D12_INDEX_BUFFER_VIEW&	GetIndexBufferView(UINT index);
 	const UINT&						GetIndexCount(UINT index);
 	const UINT						GetSubMeshCount();
+	const BoneDescriptor&			GetBoneDescriptor(UINT index = 0);
 
 	const BoundingSphere&			GetBoundingSphere();
 	const BoundingOrientedBox&		GetBoundingOrientedBox();

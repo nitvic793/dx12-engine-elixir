@@ -8,7 +8,7 @@
 void Game::InitializeAssets()
 {
 	auto rm = resourceManager;
-
+	rm->Initialize(animationManager.get());
 	rm->LoadResources("../../SceneData/resources.json", commandQueue, commandList, deferredRenderer);
 	rm->LoadScene("../../SceneData/scene.json", entities);
 
@@ -71,6 +71,7 @@ Game::Game(HINSTANCE hInstance, int ShowWnd, int width, int height, bool fullscr
 	Core(hInstance, ShowWnd, width, height, fullscreen)
 {
 	resourceManager = ResourceManager::CreateInstance(device);
+	animationManager = std::make_unique<AnimationManager>();
 }
 
 void Game::Initialize()
@@ -182,6 +183,7 @@ void Game::Draw()
 		entityList.push_back(entity);
 		if (entity->IsAnimated())
 		{
+			//Store entities with Index and map that index to mesh and materials. Then update animation using that index values.
 			entity->UpdateAnimation(totalTime, animIndex);
 			animatedEntityList.push_back(entity);
 		}

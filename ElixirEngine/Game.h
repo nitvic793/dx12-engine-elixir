@@ -12,15 +12,13 @@
 #include "ResourceManager.h"
 #include "DownScaleTexture.h"
 #include "MeshInstanceGroupEntity.h"
+#include "AnimationManager.h"
 
 class Game : public Core
 {
 protected:
-	ResourceManager* resourceManager;
-	ID3D12Resource* skyboxTexture;
-	ID3D12Resource* skyboxIRTexture;
-	ID3D12Resource* brdfLutTexture;
-	ID3D12Resource* skyboxPreFilter;
+	ResourceManager*					resourceManager;
+	std::unique_ptr<AnimationManager>	animationManager;
 
 	Texture*	skyTexture;
 	Camera*		camera;
@@ -28,19 +26,19 @@ protected:
 	TexturePool*	texturePool;
 	ComputeCore*	computeCore;
 	POINT			prevMousePos;
-	BlurFilter*		blurFilter;
-
+	
 	std::vector<Entity*> selectedEntities;
 	std::vector<Entity*> entities;
 	MeshInstanceGroupEntity* instanced;
 
+	BlurFilter*							blurFilter;
 	std::unique_ptr<DepthOfFieldPass>	dofPass;
 	std::unique_ptr<SunRaysPass>		sunRaysPass;
 	std::unique_ptr<EdgeFilter>			edgeFilter;
 	std::unique_ptr<CompositeTextures>	compositeTextures;
 	std::unique_ptr<DownScaleTexture>	downScaler;
 
-	bool			isBlurEnabled;
+	bool isBlurEnabled;
 	void InitializeAssets();
 public:
 	Game(HINSTANCE hInstance, int ShowWnd, int width, int height, bool fullscreen);
