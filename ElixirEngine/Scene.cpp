@@ -54,6 +54,26 @@ void Elixir::Scene::SetTransform(NodeID nodeId, const Transform & transform)
 	scale[nodeId] = transform.Scale;
 }
 
+void Elixir::Scene::SetTranslation(NodeID nodeId, const XMFLOAT3 & translation)
+{
+	position[nodeId] = translation;
+}
+
+void Elixir::Scene::SetRotation(NodeID nodeId, const XMFLOAT3 & rotationV)
+{
+	rotation[nodeId] = rotationV;
+}
+
+void Elixir::Scene::SetScale(NodeID nodeId, const XMFLOAT3 & scaleV)
+{
+	scale[nodeId] = scaleV;
+}
+
+Transform Elixir::Scene::GetTransform(NodeID nodeId)
+{
+	return Transform{ position[nodeId], rotation[nodeId], scale[nodeId] };
+}
+
 Scene::~Scene()
 {
 }

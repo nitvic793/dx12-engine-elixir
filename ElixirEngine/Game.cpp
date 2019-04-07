@@ -65,11 +65,13 @@ void Game::InitializeAssets()
 
 	skyTexture = rm->GetTexture(StringID("skybox"));
 	entities[9]->SetUVScale(XMFLOAT2(10, 10));
-	scene.CreateNode(0, Elixir::Transform::Create({ 5,4,3 }));
+	auto id = entityManager.CreateEntity("Test", StringID("sphere"), StringID("floor"));
+	auto e = entityManager.GetEntity(id);
 }
 
 Game::Game(HINSTANCE hInstance, int ShowWnd, int width, int height, bool fullscreen) :
-	Core(hInstance, ShowWnd, width, height, fullscreen)
+	Core(hInstance, ShowWnd, width, height, fullscreen),
+	entityManager(&scene)
 {
 	resourceManager = ResourceManager::CreateInstance(device);
 	animationManager = std::make_unique<AnimationManager>();

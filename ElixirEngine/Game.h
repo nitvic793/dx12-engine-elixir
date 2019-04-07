@@ -14,6 +14,7 @@
 #include "MeshInstanceGroupEntity.h"
 #include "AnimationManager.h"
 #include "Scene.h"
+#include "EntityManager.h"
 
 class Game : public Core
 {
@@ -39,6 +40,7 @@ protected:
 	std::unique_ptr<CompositeTextures>	compositeTextures;
 	std::unique_ptr<DownScaleTexture>	downScaler;
 	Elixir::Scene						scene;
+	Elixir::EntityManager				entityManager;
 	bool isBlurEnabled;
 	void InitializeAssets();
 public:

@@ -1,29 +1,9 @@
 #pragma once
+#include "SceneCommon.h"
 #include "Node.h"
 
 namespace Elixir
 {
-	struct Transform
-	{
-		XMFLOAT3 Position;
-		XMFLOAT3 Rotation;
-		XMFLOAT3 Scale;
-		
-		static Transform Create(XMFLOAT3 position = XMFLOAT3(0, 0, 0), XMFLOAT3 rotation = XMFLOAT3(0, 0, 0), XMFLOAT3 scale = XMFLOAT3(1.f, 1.f, 1.f))
-		{
-			Transform transform;
-			transform.Position = position;
-			transform.Rotation = rotation;
-			transform.Scale = scale;
-			return transform;
-		}
-	};
-
-	static const Transform DefaultTransform =
-	{
-		{}, {}, {1.f,1.f,1.f}
-	};
-
 	class Scene
 	{
 	protected:
@@ -44,6 +24,11 @@ namespace Elixir
 		inline void				UpdateTransforms() { UpdateNodes(nodeList.data(), nodeList.size(), position.data(), scale.data(), rotation.data()); };
 
 		void					SetTransform(NodeID nodeId, const Transform& transform);
+		void					SetTranslation(NodeID nodeId, const XMFLOAT3& translation);
+		void					SetRotation(NodeID nodeId, const XMFLOAT3& rotationV);
+		void					SetScale(NodeID nodeId, const XMFLOAT3& scaleV);
+
+		Transform				GetTransform(NodeID nodeId);
 		~Scene();
 	};
 }

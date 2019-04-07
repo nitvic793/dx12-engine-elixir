@@ -1,10 +1,8 @@
 #pragma once
 #include "stdafx.h"
-
+#include "SceneCommon.h"
 namespace Elixir
 {
-	typedef int NodeID;
-
 	struct Node
 	{
 	public:

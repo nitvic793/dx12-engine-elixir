@@ -128,6 +128,7 @@
     <ClCompile Include="Animation.cpp" />
     <ClCompile Include="AnimationManager.cpp" />
     <ClCompile Include="BlurFilter.cpp" />
+    <ClCompile Include="Component.cpp" />
     <ClCompile Include="CompositeTextures.cpp" />
     <ClCompile Include="ComputeCore.cpp" />
     <ClCompile Include="ComputeProcess.cpp" />
@@ -164,6 +165,7 @@
     <ClInclude Include="Animation.h" />
     <ClInclude Include="AnimationManager.h" />
     <ClInclude Include="BlurFilter.h" />
+    <ClInclude Include="Component.h" />
     <ClInclude Include="CompositeTextures.h" />
     <ClInclude Include="ComputeCore.h" />
     <ClInclude Include="ComputeProcess.h" />
@@ -194,6 +196,7 @@
     <ClInclude Include="OGLMath.h" />
     <ClInclude Include="ResourceManager.h" />
     <ClInclude Include="Scene.h" />
+    <ClInclude Include="SceneCommon.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="SunRaysPass.h" />
     <ClInclude Include="SystemResourceManager.h" />
