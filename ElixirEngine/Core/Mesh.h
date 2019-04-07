@@ -11,10 +11,6 @@
 
 #define MaxBonesPerVertex 4
 
-/// TODO:
-/// Render animated mesh using AnimationDefaultVS first
-/// Load Animations using aiScene and ogldev tutorial
-
 struct BoneInfo
 {
 	ogldev::Matrix4f  Offset;
@@ -24,8 +20,8 @@ struct BoneInfo
 
 struct VertexBoneData
 {
-	uint32_t IDs[MaxBonesPerVertex];
-	float Weights[MaxBonesPerVertex];
+	uint32_t	IDs[MaxBonesPerVertex];
+	float		Weights[MaxBonesPerVertex];
 
 	void AddBoneData(uint32_t boneID, float weight)
 	{
@@ -81,7 +77,6 @@ class Mesh
 	std::vector<BoneMesh>					boneMeshes;
 	std::vector<BoneDescriptor>				boneDescriptors;
 	std::vector<PerArmatureConstantBuffer>	boneCBs;
-	BoundingSphere							boundingSphere;
 	BoundingOrientedBox						boundingBox;
 	bool									mIsAnimated;
 	
@@ -104,7 +99,6 @@ public:
 	const UINT						GetSubMeshCount();
 	const BoneDescriptor&			GetBoneDescriptor(UINT index = 0);
 
-	const BoundingSphere&			GetBoundingSphere();
 	const BoundingOrientedBox&		GetBoundingOrientedBox();
 	const bool						IsAnimated();
 

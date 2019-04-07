@@ -13,6 +13,7 @@
 #include "DownScaleTexture.h"
 #include "MeshInstanceGroupEntity.h"
 #include "AnimationManager.h"
+#include "Scene.h"
 
 class Game : public Core
 {
@@ -37,7 +38,7 @@ protected:
 	std::unique_ptr<EdgeFilter>			edgeFilter;
 	std::unique_ptr<CompositeTextures>	compositeTextures;
 	std::unique_ptr<DownScaleTexture>	downScaler;
-
+	Elixir::Scene						scene;
 	bool isBlurEnabled;
 	void InitializeAssets();
 public:

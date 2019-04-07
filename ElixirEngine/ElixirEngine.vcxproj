@@ -140,14 +140,17 @@
     <ClCompile Include="DepthOfFieldPass.cpp" />
     <ClCompile Include="DownScaleTexture.cpp" />
     <ClCompile Include="EdgeFilter.cpp" />
+    <ClCompile Include="EntityManager.cpp" />
     <ClCompile Include="FileUtility.cpp" />
     <ClCompile Include="FrameManager.cpp" />
     <ClCompile Include="Game.cpp" />
     <ClCompile Include="Material.cpp" />
     <ClCompile Include="MeshInstanceGroupEntity.cpp" />
     <ClCompile Include="ModelLoader.cpp" />
+    <ClCompile Include="Node.cpp" />
     <ClCompile Include="OGLMath.cpp" />
     <ClCompile Include="ResourceManager.cpp" />
+    <ClCompile Include="Scene.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
     </ClCompile>
@@ -179,6 +182,7 @@
     <ClInclude Include="DirectXHelper.h" />
     <ClInclude Include="DownScaleTexture.h" />
     <ClInclude Include="EdgeFilter.h" />
+    <ClInclude Include="EntityManager.h" />
     <ClInclude Include="FileUtility.h" />
     <ClInclude Include="FrameManager.h" />
     <ClInclude Include="Game.h" />
@@ -186,8 +190,10 @@
     <ClInclude Include="Material.h" />
     <ClInclude Include="MeshInstanceGroupEntity.h" />
     <ClInclude Include="ModelLoader.h" />
+    <ClInclude Include="Node.h" />
     <ClInclude Include="OGLMath.h" />
     <ClInclude Include="ResourceManager.h" />
+    <ClInclude Include="Scene.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="SunRaysPass.h" />
     <ClInclude Include="SystemResourceManager.h" />

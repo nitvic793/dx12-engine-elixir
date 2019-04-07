@@ -21,7 +21,6 @@ protected:
 	XMFLOAT2	uvScale;
 
 	BoundingOrientedBox boundingBox;
-	BoundingSphere		boundingSphere;
 	void				CalculateWorldMatrix();
 public:
 	Entity();
@@ -50,7 +49,6 @@ public:
 	void		SetCastsShadow(bool enable) { bCastsShadow = enable; }
 
 	inline const BoundingOrientedBox&	GetBoundingBox() { return boundingBox; };
-	inline const BoundingSphere&		GetBoundingSphere() { return boundingSphere; };
 	inline const bool					IsAnimated() { return mesh->IsAnimated(); }
 	~Entity();
 };

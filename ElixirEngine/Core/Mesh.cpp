@@ -96,7 +96,6 @@ Mesh::Mesh(std::string objFile, ID3D12Device * device, ID3D12GraphicsCommandList
 	}
 
 	BoundingOrientedBox::CreateFromPoints(boundingBox, positions.size(), positions.data(), sizeof(XMFLOAT3));
-	BoundingSphere::CreateFromPoints(boundingSphere, positions.size(), positions.data(), sizeof(XMFLOAT3));
 	this->device = device;
 	Initialize(0, vertices.data(), (UINT)vertices.size(), indexVals.data(), (UINT)indexVals.size(), commandList);
 }
@@ -418,11 +417,6 @@ const UINT Mesh::GetSubMeshCount()
 const BoneDescriptor & Mesh::GetBoneDescriptor(UINT index)
 {
 	return boneDescriptors[index];
-}
-
-const BoundingSphere & Mesh::GetBoundingSphere()
-{
-	return boundingSphere;
 }
 
 const BoundingOrientedBox & Mesh::GetBoundingOrientedBox()

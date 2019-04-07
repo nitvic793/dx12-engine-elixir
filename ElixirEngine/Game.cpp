@@ -65,6 +65,7 @@ void Game::InitializeAssets()
 
 	skyTexture = rm->GetTexture(StringID("skybox"));
 	entities[9]->SetUVScale(XMFLOAT2(10, 10));
+	scene.CreateNode(0, Elixir::Transform::Create({ 5,4,3 }));
 }
 
 Game::Game(HINSTANCE hInstance, int ShowWnd, int width, int height, bool fullscreen) :
@@ -89,6 +90,7 @@ int gBufferIndex = RTV_ORDER_ALBEDO;
 
 void Game::Update()
 {
+	scene.UpdateTransforms();
 	CurrentTime += deltaTime;
 	camera->Update(deltaTime);
 	entities[0]->SetRotation(XMFLOAT3(sin(totalTime), 0, 0));
@@ -163,8 +165,8 @@ bool IsIntersecting(Entity* entity, Camera* camera, int mouseX, int mouseY, floa
 
 	auto direction = dest - orig;
 	direction = XMVector3Normalize(direction);
-	bool intersecting = entity->GetBoundingSphere().Intersects(orig, direction, distance);
-	//bool intersecting = /*intersecting ||*/ entity->GetBoundingBox().Intersects(orig, direction, distance);
+	//bool intersecting = entity->GetBoundingSphere().Intersects(orig, direction, distance);
+	bool intersecting = /*intersecting ||*/ entity->GetBoundingBox().Intersects(orig, direction, distance);
 	return intersecting;
 }
 

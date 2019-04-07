@@ -30,11 +30,7 @@ void Entity::SetMesh(Mesh * m)
 {
 	mesh = m;
 	boundingBox = mesh->GetBoundingOrientedBox();
-	boundingSphere = mesh->GetBoundingSphere();
-	//boxCenter = boundingBox.Center;
-	//sphereCenter = boundingSphere.Center;
 	boundingBox.Center = position;
-	boundingSphere.Center = position;
 }
 
 void Entity::SetMaterial(Material * mat)
@@ -97,7 +93,6 @@ void Entity::SetPosition(const XMFLOAT3& pos)
 {
 	position = pos;
 	boundingBox.Center = position;
-	boundingSphere.Center = position;
 }
 
 void Entity::SetRotation(const XMFLOAT3 & rot)
@@ -111,29 +106,24 @@ void Entity::SetScale(const XMFLOAT3 & scale)
 	boundingBox.Extents.x = boundingBox.Extents.x * scale.x;
 	boundingBox.Extents.y = boundingBox.Extents.y * scale.y;
 	boundingBox.Extents.z = boundingBox.Extents.z * scale.z;
-
-	boundingSphere.Radius *= scale.x;
 }
 
 void Entity::SetX(float x)
 {
 	position.x = x;
 	boundingBox.Center.x = x;
-	boundingSphere.Center.x = x;
 }
 
 void Entity::SetY(float y)
 {
 	position.y = y;
 	boundingBox.Center.y = y;
-	boundingSphere.Center.y = y;
 }
 
 void Entity::SetZ(float z)
 {
 	position.z = z;
 	boundingBox.Center.z = z;
-	boundingSphere.Center.z = z;
 }
 
 void Entity::SetID(uint32_t id)
