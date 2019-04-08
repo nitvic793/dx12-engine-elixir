@@ -4,7 +4,7 @@ namespace Elixir
 {
 	typedef int32_t EntityID;
 	typedef int32_t NodeID;
-
+	typedef size_t	TypeID;
 	struct Transform
 	{
 		XMFLOAT3 Position;

@@ -66,6 +66,14 @@ void Game::InitializeAssets()
 	skyTexture = rm->GetTexture(StringID("skybox"));
 	entities[9]->SetUVScale(XMFLOAT2(10, 10));
 	entityManager.CreateEntity(0, "Test", StringID("sphere"), StringID("floor"), Elixir::Transform::Create(XMFLOAT3(-1, 0, 0)));
+	/*entityManager.RegisterComponent<Elixir::TestA>();
+	entityManager.RegisterComponent<Elixir::TestB>();
+
+	entityManager.RegisterEntity<Elixir::TestA>(0);
+	entityManager.RegisterEntity<Elixir::TestB>(1);
+	std::vector<Elixir::EntityID> e;
+	entityManager.GetMultiComponentEntities<Elixir::TestA, Elixir::TestB>(e);*/
+	
 }
 
 Game::Game(HINSTANCE hInstance, int ShowWnd, int width, int height, bool fullscreen) :
