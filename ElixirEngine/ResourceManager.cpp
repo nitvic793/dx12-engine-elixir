@@ -26,9 +26,10 @@ ResourceManager * ResourceManager::GetInstance()
 	return Instance;
 }
 
-void ResourceManager::Initialize(AnimationManager* animationManager)
+void ResourceManager::Initialize(AnimationManager* animationManager, Elixir::EntityManager* entityMgr)
 {
 	animManager = animationManager;
+	entityManager = entityMgr;
 }
 
 void ResourceManager::LoadTexture(
@@ -133,17 +134,21 @@ Scene ResourceManager::LoadScene(std::string filename, std::vector<Entity*> &out
 	{
 		auto ne = new Entity();
 		auto meshID = StringID(e.MeshID);
+		
 		ne->SetPosition(e.Position);
 		ne->SetScale(e.Scale);
 		XMFLOAT3 rotation(e.Rotation.Vector.x * XM_PIDIV2, e.Rotation.Vector.y * XM_PIDIV2, e.Rotation.Vector.z * XM_PIDIV2);
+		auto transform = Elixir::Transform::Create(e.Position, rotation, e.Scale);
+
 		ne->SetRotation(rotation);
 		ne->SetMesh(GetMesh(meshID));
 		ne->SetMaterial(GetMaterial(StringID(e.MaterialID)));
 		ne->SetCastsShadow(e.CastShadows);
 		outEntities.push_back(ne);
+		auto entityID = entityManager->CreateEntity(std::to_string(idx), StringID(e.MeshID), StringID(e.MaterialID), transform);
 		if (ne->IsAnimated())
 		{
-			animManager->RegisterEntity(idx, meshID);
+			animManager->RegisterEntity(entityID, meshID);
 		}
 		idx++;
 	}

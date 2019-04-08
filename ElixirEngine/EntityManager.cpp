@@ -10,17 +10,17 @@ EntityManager::EntityManager(Scene* scene) :
 
 EntityID Elixir::EntityManager::CreateEntity(std::string name, const Transform & transform)
 {
-	return CreateEntity(0, name, 0, 0, transform);
+	return CreateEntity(-1, name, 0, 0, transform);
 }
 
 EntityID Elixir::EntityManager::CreateEntity(std::string name, HashID mesh, HashID material, const Transform & transform)
 {
-	return CreateEntity(0, name, mesh, material, transform);
+	return CreateEntity(-1, name, mesh, material, transform);
 }
 
 EntityID Elixir::EntityManager::CreateEntity(EntityID parentId, std::string name, HashID mesh, HashID material, const Transform & transform)
 {
-	auto parentNode = parentId == 0 ? 0 : entities[parentId]; //If parent is root, return 0
+	auto parentNode = parentId == -1 ? 0 : entities[parentId]; //If parent is root, return 0
 	auto nodeId = scene->CreateNode(parentNode, transform);
 	EntityID entityId = (EntityID)entities.size();
 	entityNameIndexMap.insert(std::pair<std::string, EntityID>(name, entityId));
@@ -34,12 +34,21 @@ EntityID Elixir::EntityManager::CreateEntity(EntityID parentId, std::string name
 Entity Elixir::EntityManager::GetEntity(EntityID entity)
 {
 	auto node = entities[entity];
-	return { entity, node, meshes[entity], materials[entity], scene->GetTransform(node), this };
+	return Entity{ entity, node, meshes[entity], materials[entity], scene->GetTransformMatrix(node) };// , this};
+}
+
+void Elixir::EntityManager::GetEntities(std::vector<Entity>& outEntityList)
+{
+	outEntityList.clear();
+	for (EntityID i = 0; i < (EntityID)entities.size(); ++i)
+	{
+		auto entity = GetEntity(i);
+		outEntityList.push_back(entity);
+	}
 }
 
 void Elixir::EntityManager::UpdateEntity(const Entity & entity)
 {
-	SetTransform(entity.EntityID, entity.Transform);
 	SetMesh(entity.EntityID, entity.Mesh);
 	SetMaterial(entity.EntityID, entity.Material);
 }
@@ -81,3 +90,37 @@ void Elixir::EntityManager::SetTransform(EntityID entity, const Transform & tran
 	auto node = entities[entity];
 	scene->SetTransform(node, transform);
 }
+
+inline const XMFLOAT3 & Elixir::EntityManager::GetPosition(EntityID entity)
+{
+	auto node = entities[entity];
+	return scene->GetTranslation(node);
+}
+
+inline const XMFLOAT3 & Elixir::EntityManager::GetRotation(EntityID entity)
+{
+	auto node = entities[entity];
+	return scene->GetRotation(node);
+}
+
+inline const XMFLOAT3 & Elixir::EntityManager::GetScale(EntityID entity)
+{
+	auto node = entities[entity];
+	return scene->GetScale(node);
+}
+
+const XMFLOAT4X4 & Elixir::EntityManager::GetTransformMatrix(EntityID entity)
+{
+	auto node = entities[entity];
+	return scene->GetTransformMatrix(node);
+}
+
+EntityID Elixir::EntityManager::GetEntityID(std::string entityName) const
+{
+	return EntityID();
+}
+
+//inline void Elixir::Entity::Update()
+//{
+//	Manager->UpdateEntity(*this);
+//}

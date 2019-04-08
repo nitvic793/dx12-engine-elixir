@@ -69,6 +69,26 @@ void Elixir::Scene::SetScale(NodeID nodeId, const XMFLOAT3 & scaleV)
 	scale[nodeId] = scaleV;
 }
 
+const XMFLOAT3 & Elixir::Scene::GetTranslation(NodeID nodeId)
+{
+	return position[nodeId];
+}
+
+const XMFLOAT3 & Elixir::Scene::GetRotation(NodeID nodeId)
+{
+	return rotation[nodeId]; 
+}
+
+const XMFLOAT3 & Elixir::Scene::GetScale(NodeID nodeId)
+{
+	return scale[nodeId];
+}
+
+const XMFLOAT4X4 & Elixir::Scene::GetTransformMatrix(NodeID nodeId)
+{
+	return nodeList[nodeId].worldTransform;
+}
+
 Transform Elixir::Scene::GetTransform(NodeID nodeId)
 {
 	return Transform{ position[nodeId], rotation[nodeId], scale[nodeId] };

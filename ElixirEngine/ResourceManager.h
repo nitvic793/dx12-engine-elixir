@@ -10,6 +10,7 @@
 #include "../Engine.Serialization/ResourcePackSerDe.h"
 #include "AnimationManager.h"
 #include "Core/Entity.h"
+#include "EntityManager.h"
 
 // Engine Specific
 typedef std::unordered_map<unsigned int, Mesh*> MeshMap;
@@ -35,11 +36,12 @@ protected:
 	MaterialMap				materials;
 	TextureMap				textures;
 	AnimationManager*		animManager;
+	Elixir::EntityManager*	entityManager;
 	ResourceManager(ID3D12Device* device);
 public:
 	static ResourceManager* CreateInstance(ID3D12Device* device);
 	static ResourceManager* GetInstance();
-	void					Initialize(AnimationManager* animationManager);
+	void					Initialize(AnimationManager* animationManager, Elixir::EntityManager* entityMgr);
 
 	void LoadTexture(
 		ID3D12CommandQueue* commandQueue,

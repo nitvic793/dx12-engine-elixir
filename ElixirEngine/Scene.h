@@ -28,7 +28,11 @@ namespace Elixir
 		void					SetRotation(NodeID nodeId, const XMFLOAT3& rotationV);
 		void					SetScale(NodeID nodeId, const XMFLOAT3& scaleV);
 
-		Transform				GetTransform(NodeID nodeId);
+		inline const XMFLOAT3&		GetTranslation(NodeID nodeId);
+		inline const XMFLOAT3&		GetRotation(NodeID nodeId);
+		inline const XMFLOAT3&		GetScale(NodeID nodeId);
+		const XMFLOAT4X4&			GetTransformMatrix(NodeID nodeId);
+		Transform					GetTransform(NodeID nodeId);
 		~Scene();
 	};
 }

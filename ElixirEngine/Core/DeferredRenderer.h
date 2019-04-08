@@ -168,7 +168,7 @@ class DeferredRenderer
 	void Draw(Mesh* m, ID3D12GraphicsCommandList* commandList);
 	void DrawAnimated(Mesh* m, ID3D12GraphicsCommandList* clist);
 	void DrawInstanced(MeshInstanceGroupEntity* instanced, Mesh* mesh, ID3D12GraphicsCommandList* commandList);
-	void PrepareGPUHeap(std::vector<Entity*> entities, std::vector<Entity*> animEntities, PixelConstantBuffer& pixelCb);
+	void PrepareGPUHeap(std::vector<Elixir::Entity> entities, PixelConstantBuffer& pixelCb);
 public:
 	DeferredRenderer(ID3D12Device *dxDevice, int width, int height);
 
@@ -201,9 +201,9 @@ public:
 	void RenderAmbientPass(ID3D12GraphicsCommandList* clist);
 
 	void RenderSelectionDepthBuffer(ID3D12GraphicsCommandList* commandList, std::vector<Entity*> entities, Camera* camera);
-	void RenderShadowMap(ID3D12GraphicsCommandList* commandList, std::vector<Entity*> entities, std::vector<MeshInstanceGroupEntity*> instancedEntities);
-	void Draw(ID3D12GraphicsCommandList* commandList, std::vector<Entity*> entities);
-	void DrawAnimated(ID3D12GraphicsCommandList* clist, std::vector<Entity*> entities);
+	void RenderShadowMap(ID3D12GraphicsCommandList* commandList, std::vector<Elixir::Entity> entities, std::vector<MeshInstanceGroupEntity*> instancedEntities);
+	void Draw(ID3D12GraphicsCommandList* commandList, std::vector<Elixir::Entity> entities);
+	void DrawAnimated(ID3D12GraphicsCommandList* clist, std::vector<Elixir::Entity> entities);
 	void DrawInstanced(ID3D12GraphicsCommandList* commandList, std::vector<MeshInstanceGroupEntity*> entities);
 	void DrawSkybox(ID3D12GraphicsCommandList* commandList, Texture* skybox);
 	void DrawScreenQuad(ID3D12GraphicsCommandList* commandList);
@@ -212,7 +212,7 @@ public:
 	void DrawResult(ID3D12GraphicsCommandList* commandList, D3D12_CPU_DESCRIPTOR_HANDLE &rtvHandle, Texture* resultTex);
 
 	void StartFrame(ID3D12GraphicsCommandList* commandList);
-	void PrepareFrame(std::vector<Entity*> entities, std::vector<Entity*> animEntities, Camera* camera, PixelConstantBuffer& pixelCb);
+	void PrepareFrame(std::vector<Elixir::Entity> entities, Camera* camera, PixelConstantBuffer& pixelCb);
 	void TransitionToPostProcess(ID3D12GraphicsCommandList* commandList);
 	void EndFrame(ID3D12GraphicsCommandList* commandList);
 

@@ -4,6 +4,7 @@
 #include "DirectXTex.h"
 #include "../InputLayout.h"
 #include "../ModelLoader.h"
+#include "../MathHelper.h"
 
 struct PrefilterPixelConstBuffer
 {
@@ -282,7 +283,7 @@ void DeferredRenderer::RenderSelectionDepthBuffer(ID3D12GraphicsCommandList* com
 	commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(selectedDepthTexture, D3D12_RESOURCE_STATE_DEPTH_WRITE, D3D12_RESOURCE_STATE_GENERIC_READ));
 }
 
-void DeferredRenderer::RenderShadowMap(ID3D12GraphicsCommandList * commandList, std::vector<Entity*> entities, std::vector<MeshInstanceGroupEntity*> instancedEntities)
+void DeferredRenderer::RenderShadowMap(ID3D12GraphicsCommandList * commandList, std::vector<Elixir::Entity> entities, std::vector<MeshInstanceGroupEntity*> instancedEntities)
 {
 	D3D12_VIEWPORT viewport = {};
 	D3D12_RECT scissorRect = {};
@@ -310,11 +311,12 @@ void DeferredRenderer::RenderShadowMap(ID3D12GraphicsCommandList * commandList, 
 	int sIndex = 0;
 	for (auto e : entities)
 	{
-		if (!e->CastsShadow()) continue;
+		auto mesh = resourceManager->GetMesh(e.Mesh);
+		if (false) continue;
 		commandList->SetGraphicsRootDescriptorTable(RootSigCBVertex0, frame->GetGPUHandle(frameHeapParams.ShadowCB, sIndex));
 		sIndex++;
-		if (e->IsAnimated()) continue;
-		Draw(e->GetMesh(), commandList);
+		if (mesh->IsAnimated()) continue;
+		Draw(mesh, commandList);
 	}
 
 	//Animated entities
@@ -323,12 +325,13 @@ void DeferredRenderer::RenderShadowMap(ID3D12GraphicsCommandList * commandList, 
 	int boneIndex = 0;
 	for (auto e : entities)
 	{
-		if (!e->CastsShadow()) continue;
+		auto mesh = resourceManager->GetMesh(e.Mesh);
+		if (false) continue;
 		commandList->SetGraphicsRootDescriptorTable(RootSigCBVertex0, frame->GetGPUHandle(frameHeapParams.ShadowCB, sIndex));
 		commandList->SetGraphicsRootDescriptorTable(RootSigCBAll1, frame->GetGPUHandle(frameHeapParams.BoneCB, boneIndex));
 		sIndex++;
-		if (!e->IsAnimated()) continue;
-		DrawAnimated(e->GetMesh(), commandList);
+		if (!mesh->IsAnimated()) continue;
+		DrawAnimated(mesh, commandList);
 		boneIndex++;
 	}
 
@@ -365,9 +368,10 @@ void DeferredRenderer::RenderShadowMap(ID3D12GraphicsCommandList * commandList, 
 	commandList->SetGraphicsRootDescriptorTable(RootSigCBAll1, frame->GetGPUHandle(shadowFrameIndex));
 	for (auto e : entities)
 	{
-		if (!e->CastsShadow()) continue;
+		auto mesh = resourceManager->GetMesh(e.Mesh);
+		if (false) continue;
 		commandList->SetGraphicsRootDescriptorTable(RootSigCBVertex0, frame->GetGPUHandle(frameHeapParams.ShadowCB, sIndex));
-		Draw(e->GetMesh(), commandList);
+		Draw(mesh, commandList);
 		sIndex++;
 	}
 
@@ -388,29 +392,34 @@ void DeferredRenderer::RenderShadowMap(ID3D12GraphicsCommandList * commandList, 
 	commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(shadowMapPointTexture, D3D12_RESOURCE_STATE_DEPTH_WRITE, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE));
 }
 
-void DeferredRenderer::Draw(ID3D12GraphicsCommandList* commandList, std::vector<Entity*> entities)
+void DeferredRenderer::Draw(ID3D12GraphicsCommandList* commandList, std::vector<Elixir::Entity> entities)
 {
 	commandList->SetGraphicsRootDescriptorTable(RootSigCBAll1, frame->GetGPUHandle(frameHeapParams.PerFrameCB));
 	for (auto e : entities)
 	{
-		if (e->IsAnimated())continue;
-		commandList->SetGraphicsRootDescriptorTable(RootSigSRVPixel1, frame->GetGPUHandle(frameHeapParams.Textures, e->GetMaterial()->GetStartIndex())); //Set start of material texture in root descriptor
-		commandList->SetGraphicsRootDescriptorTable(RootSigCBVertex0, frame->GetGPUHandle(frameHeapParams.Entities, e->GetID()));
-		Draw(e->GetMesh(), commandList);
+		auto mesh = resourceManager->GetMesh(e.Mesh);
+		auto material = resourceManager->GetMaterial(e.Material);
+		if (mesh->IsAnimated())continue;
+		commandList->SetGraphicsRootDescriptorTable(RootSigSRVPixel1, frame->GetGPUHandle(frameHeapParams.Textures, material->GetStartIndex())); //Set start of material texture in root descriptor
+		commandList->SetGraphicsRootDescriptorTable(RootSigCBVertex0, frame->GetGPUHandle(frameHeapParams.Entities, e.EntityID));
+		Draw(mesh, commandList);
 	}
 }
 
-void DeferredRenderer::DrawAnimated(ID3D12GraphicsCommandList * clist, std::vector<Entity*> entities)
+void DeferredRenderer::DrawAnimated(ID3D12GraphicsCommandList * clist, std::vector<Elixir::Entity> entities)
 {
 	clist->SetPipelineState(sysRM->GetPSO(StringID("animDeferredPSO")));
 	clist->SetGraphicsRootDescriptorTable(RootSigCBAll1, frame->GetGPUHandle(frameHeapParams.PerFrameCB));
 	auto boneCBIndex = 0;
 	for (auto e : entities)
 	{
-		clist->SetGraphicsRootDescriptorTable(RootSigSRVPixel1, frame->GetGPUHandle(frameHeapParams.Textures, e->GetMaterial()->GetStartIndex())); //Set start of material texture in root descriptor
-		clist->SetGraphicsRootDescriptorTable(RootSigCBVertex0, frame->GetGPUHandle(frameHeapParams.Entities, e->GetID()));
+		auto mesh = resourceManager->GetMesh(e.Mesh);
+		auto material = resourceManager->GetMaterial(e.Material);
+		if (!mesh->IsAnimated())continue;
+		clist->SetGraphicsRootDescriptorTable(RootSigSRVPixel1, frame->GetGPUHandle(frameHeapParams.Textures, material->GetStartIndex())); //Set start of material texture in root descriptor
+		clist->SetGraphicsRootDescriptorTable(RootSigCBVertex0, frame->GetGPUHandle(frameHeapParams.Entities, e.EntityID));
 		clist->SetGraphicsRootDescriptorTable(RootSigCBAll2, frame->GetGPUHandle(frameHeapParams.BoneCB, boneCBIndex));
-		DrawAnimated(e->GetMesh(), clist);
+		DrawAnimated(mesh, clist);
 		boneCBIndex++;
 	}
 }
@@ -500,10 +509,10 @@ void DeferredRenderer::StartFrame(ID3D12GraphicsCommandList* commandList)
 	commandList->SetDescriptorHeaps(1, frameHeap);
 }
 
-void DeferredRenderer::PrepareFrame(std::vector<Entity*> entities, std::vector<Entity*> animEntities, Camera * camera, PixelConstantBuffer & pixelCb)
+void DeferredRenderer::PrepareFrame(std::vector<Elixir::Entity> entities, Camera * camera, PixelConstantBuffer & pixelCb)
 {
 	this->camera = camera;
-	PrepareGPUHeap(entities, animEntities, pixelCb);
+	PrepareGPUHeap(entities,  pixelCb);
 }
 
 void DeferredRenderer::TransitionToPostProcess(ID3D12GraphicsCommandList * commandList)
@@ -560,33 +569,36 @@ void DeferredRenderer::DrawInstanced(MeshInstanceGroupEntity * instanced, Mesh *
 }
 
 //Copies constant buffer heaps and other heaps to the frame descriptor heap before drawing 
-void DeferredRenderer::PrepareGPUHeap(std::vector<Entity*> entities, std::vector<Entity*> animEntities, PixelConstantBuffer & pixelCb)
+void DeferredRenderer::PrepareGPUHeap(std::vector<Elixir::Entity> entities, PixelConstantBuffer & pixelCb)
 {
 	auto currentGBufferIndex = frame->CopyAllocate(16, gBufferHeap);
 	auto srvGpuHeapIndex = frame->CopyAllocate(srvHeapIndex, srvHeap); //Copy textures
+	//constBufferIndex = 0;
 	auto index = constBufferIndex;
 	auto armatureIndex = 0;
+
+	auto camProj = camera->GetProjectionMatrix();
+	auto camView = camera->GetViewMatrix();
 
 	//Create Entity Constant Buffers and copy to CBVs
 	for (auto e : entities)
 	{
-		e->SetID(index);
-		auto uvScale = e->GetUVScale();
+		auto uvScale = XMFLOAT2(1.f,1.f);
 		auto cb = ConstantBuffer
 		{
-			e->GetWorldViewProjectionTransposed(camera->GetProjectionMatrix(), camera->GetViewMatrix()),
-			e->GetWorldMatrixTransposed(),
+			Elixir::GetWorldViewProjectionTransposed(e.WorldTransform, camView, camProj),
+			Elixir::Transpose(e.WorldTransform),
 			camera->GetViewMatrixTransposed(),
 			camera->GetProjectionMatrixTransposed(),
 			shadowViewTransposed,
 			shadowProjTransposed,
 			uvScale
 		};
-
+		auto mesh = resourceManager->GetMesh(e.Mesh);
 		cbWrapper.CopyData(&cb, ConstantBufferSize, index);
-		if (e->IsAnimated())
+		if (mesh->IsAnimated())
 		{
-			auto boneCB = e->GetMesh()->GetArmatureCB(0);
+			auto boneCB = mesh->GetArmatureCB(0);
 			perArmatureWrapper.CopyData(&boneCB, sizeof(PerArmatureConstantBuffer), armatureIndex);
 			armatureIndex++;
 		}
@@ -639,8 +651,9 @@ void DeferredRenderer::PrepareGPUHeap(std::vector<Entity*> entities, std::vector
 	int count = 0;
 	for (auto e : entities)
 	{
-		if (!e->CastsShadow()) continue;
-		cb.world = e->GetWorldMatrixTransposed();
+		//if (!e->CastsShadow()) continue;
+		if (false) continue;
+		cb.world = Elixir::Transpose(e.WorldTransform);
 		shadowCBWrapper.CopyData(&cb, sizeof(DirShadowBuffer), count); //0th position taken by Point Shadow Buffer
 		count++;
 	}

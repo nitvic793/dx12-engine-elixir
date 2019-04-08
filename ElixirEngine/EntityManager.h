@@ -15,13 +15,11 @@ namespace Elixir
 		const NodeID	Node;
 		HashID			Mesh;
 		HashID			Material;
-		Transform		Transform;
+		XMFLOAT4X4		WorldTransform;
+		//EntityManager*	Manager;
 
 		//Avoid using this update
-		inline void Update() { Manager->UpdateEntity(*this); };
-
-	protected:
-		EntityManager*	Manager;
+		/*inline void Update();*/
 	};
 
 	class EntityManager
@@ -38,8 +36,8 @@ namespace Elixir
 		EntityID		CreateEntity(std::string name, const Transform& transform = DefaultTransform);
 		EntityID		CreateEntity(std::string name, HashID mesh = 0u, HashID material = 0u, const Transform& transform = DefaultTransform);
 		EntityID		CreateEntity(EntityID parentId, std::string name, HashID mesh = 0u, HashID material = 0u, const Transform& transform = DefaultTransform);
-		void			Remove(EntityID entity); //Remove given entity
-		void			ExecutePurge(); //Perform all remove operations at once.
+		//void			Remove(EntityID entity); //Remove given entity
+		//void			ExecutePurge(); //Perform all remove operations at once.
 
 		//Setters
 		void			SetMesh(EntityID entity, HashID mesh);
@@ -50,12 +48,14 @@ namespace Elixir
 		void			SetTransform(EntityID entity, const Transform& transform);
 
 		//Getters
-		const XMFLOAT3& GetPosition(EntityID entity);
-		const XMFLOAT3& GetRotation(EntityID entity);
-		const XMFLOAT3& GetScale(EntityID entity);
-		EntityID		GetEntityID(std::string entityName) const;
+		inline const XMFLOAT3&		GetPosition(EntityID entity);
+		inline const XMFLOAT3&		GetRotation(EntityID entity);
+		inline const XMFLOAT3&		GetScale(EntityID entity);
+		const XMFLOAT4X4&	GetTransformMatrix(EntityID entity);
+		inline EntityID				GetEntityID(std::string entityName) const;
 
 		Entity			GetEntity(EntityID entity);
+		void			GetEntities(std::vector<Entity>& outEntityList);
 		void			UpdateEntity(const Entity& entity);
 
 		inline size_t	Count() const { return entities.size(); };

@@ -25,7 +25,7 @@ void Elixir::UpdateNode(Node & node, const Node& parentNode, const XMFLOAT3 & po
 {
 	auto transformation = GetTransformation(position, scale, rotation);
 	XMStoreFloat4x4(&node.localTransform, transformation);
-	transformation = XMLoadFloat4x4(&parentNode.worldTransform) * transformation;
+	transformation = transformation * XMLoadFloat4x4(&parentNode.worldTransform) ;
 	XMStoreFloat4x4(&node.worldTransform, transformation);
 }
 
@@ -49,7 +49,7 @@ void Elixir::UpdateNodes(Node* nodes, size_t count, XMFLOAT3 * positions, XMFLOA
 	{
 		auto nodeId = nodeQueue.front();
 		nodeQueue.pop();
-		auto node = nodes[nodeId];
+		auto &node = nodes[nodeId];
 		auto parent = nodes[node.parent];
 		UpdateNode(node, parent, positions[nodeId], scales[nodeId], rotations[nodeId]);
 		for (auto child : node.children) //Skip root node

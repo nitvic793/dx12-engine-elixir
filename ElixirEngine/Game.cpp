@@ -8,7 +8,7 @@
 void Game::InitializeAssets()
 {
 	auto rm = resourceManager;
-	rm->Initialize(animationManager.get());
+	rm->Initialize(animationManager.get(), &entityManager);
 	rm->LoadResources("../../SceneData/resources.json", commandQueue, commandList, deferredRenderer);
 	rm->LoadScene("../../SceneData/scene.json", entities);
 
@@ -65,8 +65,7 @@ void Game::InitializeAssets()
 
 	skyTexture = rm->GetTexture(StringID("skybox"));
 	entities[9]->SetUVScale(XMFLOAT2(10, 10));
-	auto id = entityManager.CreateEntity("Test", StringID("sphere"), StringID("floor"));
-	auto e = entityManager.GetEntity(id);
+	entityManager.CreateEntity(0, "Test", StringID("sphere"), StringID("floor"), Elixir::Transform::Create(XMFLOAT3(-1, 0, 0)));
 }
 
 Game::Game(HINSTANCE hInstance, int ShowWnd, int width, int height, bool fullscreen) :
@@ -92,9 +91,13 @@ int gBufferIndex = RTV_ORDER_ALBEDO;
 
 void Game::Update()
 {
-	scene.UpdateTransforms();
+	auto& entity = entityManager;
 	CurrentTime += deltaTime;
 	camera->Update(deltaTime);
+	entity.SetRotation(0, XMFLOAT3(0, sin(totalTime), 0));
+	entity.SetPosition(0, XMFLOAT3(2 * sin(totalTime) + 2, 1.f, cos(totalTime)));
+	entity.SetRotation(8, XMFLOAT3(XM_PIDIV2, 0, 0));
+
 	entities[0]->SetRotation(XMFLOAT3(sin(totalTime), 0, 0));
 	entities[0]->SetPosition(XMFLOAT3(2 * sin(totalTime) + 2, 1.f, cos(totalTime)));
 	entities[8]->SetRotation(XMFLOAT3(XM_PIDIV2, 0, 0));
@@ -134,6 +137,8 @@ void Game::Update()
 		gBufferIndex = (gBufferIndex + 1) % RTV_ORDER_COUNT;
 		CurrentTime = 0.f;
 	}
+
+	scene.UpdateTransforms();
 }
 
 bool IsIntersecting(Entity* entity, Camera* camera, int mouseX, int mouseY, float& distance)
@@ -193,11 +198,14 @@ void Game::Draw()
 		}
 	}
 
-	deferredRenderer->PrepareFrame(entityList, animatedEntityList, camera, pixelCb);
+	std::vector<Elixir::Entity> eEntities;
+	entityManager.GetEntities(eEntities);
+
+	deferredRenderer->PrepareFrame(eEntities, camera, pixelCb);
 	commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 	//Render shadow Map before setting viewport and scissor rect
-	deferredRenderer->RenderShadowMap(commandList, entityList, { instanced }); //TODO: shadows for instanced objects
+	deferredRenderer->RenderShadowMap(commandList, eEntities, { instanced }); //TODO: shadows for instanced objects
 
 	CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(rtvDescriptorHeap->GetCPUDescriptorHandleForHeapStart(), frameIndex, rtvDescriptorSize);
 	CD3DX12_CPU_DESCRIPTOR_HANDLE dsvHandle(dsDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
@@ -212,8 +220,8 @@ void Game::Draw()
 	// draw
 	deferredRenderer->RenderSelectionDepthBuffer(commandList, selectedEntities, camera);
 	deferredRenderer->SetGBUfferPSO(commandList, camera, pixelCb);
-	deferredRenderer->Draw(commandList, entityList);
-	deferredRenderer->DrawAnimated(commandList, animatedEntityList);
+	deferredRenderer->Draw(commandList, eEntities);
+	deferredRenderer->DrawAnimated(commandList, eEntities);
 	deferredRenderer->DrawInstanced(commandList, { instanced });
 
 	deferredRenderer->RenderLightShapePass(commandList, pixelCb);
