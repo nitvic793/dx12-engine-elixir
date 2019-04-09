@@ -17,10 +17,6 @@ namespace Elixir
 		HashID			Mesh;
 		HashID			Material;
 		XMFLOAT4X4		WorldTransform;
-		//EntityManager*	Manager;
-
-		//Avoid using this update
-		/*inline void Update();*/
 	};
 
 	class EntityManager
@@ -29,9 +25,10 @@ namespace Elixir
 		std::unordered_map<std::string, EntityID> entityNameIndexMap;
 		std::unordered_map<TypeID, IComponent*> components;
 
-		std::vector<NodeID> entities;
-		std::vector<HashID> meshes;
+		std::vector<NodeID> entities; // Entity List. Index of this vector will act as EntityID
+		std::vector<HashID> meshes; 
 		std::vector<HashID> materials;
+
 
 		std::vector<EntityID> removeList; //Entities to be removed
 	public:
@@ -39,7 +36,7 @@ namespace Elixir
 		EntityID		CreateEntity(std::string name, const Transform& transform = DefaultTransform);
 		EntityID		CreateEntity(std::string name, HashID mesh = 0u, HashID material = 0u, const Transform& transform = DefaultTransform);
 		EntityID		CreateEntity(EntityID parentId, std::string name, HashID mesh = 0u, HashID material = 0u, const Transform& transform = DefaultTransform);
-		//void			Remove(EntityID entity); //Remove given entity
+		//void			Remove(EntityID entity); //Remove given entity. TODO: Swap-and-pop, remove from all components too
 		//void			ExecutePurge(); //Perform all remove operations at once.
 
 		template<typename T>
@@ -50,9 +47,20 @@ namespace Elixir
 
 		template<typename T>
 		void			GetComponentEntities(std::vector<EntityID> &outEntities);
+		void			GetComponentEntities(TypeID componentId, std::vector<EntityID> &outEntities);
+
+		//This assumes that the entities sent to the function are registered with the component
+		template<typename T>
+		void			GetComponentData(EntityID* entities, size_t count, T*& outComponent);
+
+		template<typename T, typename FuncType>
+		void			GetComponentEntitiesWithCB(FuncType callback);
 
 		template<typename... Args>
-		void			GetMultiComponentEntities(std::vector<EntityID> &outEntities);
+		void			GetMultiComponentEntities(std::vector<EntityID> &outEntities, Args*& ...args);
+
+		template<typename T>
+		T&				GetComponent(EntityID entity);
 
 		//Setters
 		void			SetMesh(EntityID entity, HashID mesh);
@@ -63,11 +71,11 @@ namespace Elixir
 		void			SetTransform(EntityID entity, const Transform& transform);
 
 		//Getters
-		inline const XMFLOAT3&		GetPosition(EntityID entity);
-		inline const XMFLOAT3&		GetRotation(EntityID entity);
-		inline const XMFLOAT3&		GetScale(EntityID entity);
-		const XMFLOAT4X4&			GetTransformMatrix(EntityID entity);
-		inline EntityID				GetEntityID(std::string entityName) const;
+		const XMFLOAT3&		GetPosition(EntityID entity);
+		const XMFLOAT3&		GetRotation(EntityID entity);
+		const XMFLOAT3&		GetScale(EntityID entity);
+		const XMFLOAT4X4&	GetTransformMatrix(EntityID entity);
+		EntityID			GetEntityID(std::string entityName);
 
 		Entity			GetEntity(EntityID entity);
 		void			GetEntities(std::vector<Entity>& outEntityList);
@@ -98,18 +106,48 @@ namespace Elixir
 	inline void EntityManager::GetComponentEntities(std::vector<EntityID>& outEntities)
 	{
 		auto typeHash = typeid(T).hash_code();
-		Component<T> component = (Component<T>)components[typeHash];
-		outEntities = component.Entities;
+		Component<T>* component = (Component<T>*)components[typeHash];
+		outEntities = component->Entities;
 	}
 
-	template<typename... Args>
-	inline void EntityManager::GetMultiComponentEntities(std::vector<EntityID>& outEntities)
+	template<typename T>
+	inline void EntityManager::GetComponentData(EntityID * entities, size_t count, T *& outComponent)
 	{
+	}
+
+	template<typename T, typename FuncType>
+	inline void EntityManager::GetComponentEntitiesWithCB(FuncType callback)
+	{
+		auto typeHash = typeid(T).hash_code();
+		Component<T>* component = (Component<T>*)components[typeHash];
+		callback(component->Entities);
+	}
+
+
+	template<typename ...Args>
+	inline void EntityManager::GetMultiComponentEntities(std::vector<EntityID>& outEntities, Args*& ...args)
+	{
+		std::vector<size_t> compSizes;
+		std::vector< std::vector<EntityID> > entityList;
+		auto cb = [&](std::vector<EntityID> inEntities) {
+			std::sort(inEntities.begin(), inEntities.end());
+			if (outEntities.size() == 0)
+				outEntities = inEntities;
+			else 
+				std::set_intersection(outEntities.begin(), outEntities.end(), inEntities.begin(), inEntities.end(), outEntities.begin());
+		};
+
 		auto list = { (components.find(typeid(Args).hash_code()))... };
-		for (auto c : list)
-		{
-				
-		}
+		auto c = { 0, (GetComponentEntitiesWithCB<Args>(cb), 0) ... };
+		(void)c;
+	}
+
+	template<typename T>
+	inline T & EntityManager::GetComponent(EntityID entity)
+	{
+		auto typeHash = typeid(T).hash_code();
+		Component<T>* component = (Component<T>*)components[typeHash];
+		return component->GetData(entity);
 	}
 
 }

@@ -65,20 +65,24 @@ void Game::InitializeAssets()
 
 	skyTexture = rm->GetTexture(StringID("skybox"));
 	entities[9]->SetUVScale(XMFLOAT2(10, 10));
-	entityManager.CreateEntity(0, "Test", StringID("sphere"), StringID("floor"), Elixir::Transform::Create(XMFLOAT3(-1, 0, 0)));
-	/*entityManager.RegisterComponent<Elixir::TestA>();
+
+	auto eId = entityManager.CreateEntity(0, "Test", StringID("sphere"), StringID("floor"), Elixir::Transform::Create(XMFLOAT3(-1, 0, 0)));
+	entityManager.RegisterComponent<Elixir::TestA>();
 	entityManager.RegisterComponent<Elixir::TestB>();
 
-	entityManager.RegisterEntity<Elixir::TestA>(0);
+	entityManager.RegisterEntity<Elixir::TestA>(eId, {1.f});
+	entityManager.RegisterEntity<Elixir::TestA>(1, {1.f});
+	entityManager.RegisterEntity<Elixir::TestB>(eId);
 	entityManager.RegisterEntity<Elixir::TestB>(1);
-	std::vector<Elixir::EntityID> e;
-	entityManager.GetMultiComponentEntities<Elixir::TestA, Elixir::TestB>(e);*/
-	
+
+	systemManager.RegisterSystem<Elixir::SampleSystem>();
+	systemManager.Init();
 }
 
 Game::Game(HINSTANCE hInstance, int ShowWnd, int width, int height, bool fullscreen) :
 	Core(hInstance, ShowWnd, width, height, fullscreen),
-	entityManager(&scene)
+	entityManager(&scene),
+	systemManager(&entityManager)
 {
 	resourceManager = ResourceManager::CreateInstance(device);
 	animationManager = std::make_unique<AnimationManager>();
@@ -99,6 +103,7 @@ int gBufferIndex = RTV_ORDER_ALBEDO;
 
 void Game::Update()
 {
+	systemManager.Update(deltaTime);
 	auto& entity = entityManager;
 	CurrentTime += deltaTime;
 	camera->Update(deltaTime);
@@ -265,6 +270,7 @@ void Game::Draw()
 
 void Game::Shutdown()
 {
+	systemManager.Shutdown();
 	for (auto& e : entities) delete e;
 	delete texturePool;
 	delete blurFilter;

@@ -2,6 +2,7 @@
 #include "Scene.h"
 
 using namespace Elixir;
+static const size_t MaxNodeCount = 1024u;
 
 const Node Elixir::Scene::CreateNode(Transform transform)
 {

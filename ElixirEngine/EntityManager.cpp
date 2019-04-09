@@ -30,6 +30,11 @@ EntityID Elixir::EntityManager::CreateEntity(EntityID parentId, std::string name
 	return entityId;
 }
 
+void Elixir::EntityManager::GetComponentEntities(TypeID componentId, std::vector<EntityID>& outEntities)
+{
+	components[componentId]->GetEntities(outEntities);
+}
+
 
 Entity Elixir::EntityManager::GetEntity(EntityID entity)
 {
@@ -55,6 +60,10 @@ void Elixir::EntityManager::UpdateEntity(const Entity & entity)
 
 EntityManager::~EntityManager()
 {
+	for (auto component : components)
+	{
+		delete component.second;
+	}
 }
 
 void Elixir::EntityManager::SetMesh(EntityID entity, HashID mesh)
@@ -91,19 +100,19 @@ void Elixir::EntityManager::SetTransform(EntityID entity, const Transform & tran
 	scene->SetTransform(node, transform);
 }
 
-inline const XMFLOAT3 & Elixir::EntityManager::GetPosition(EntityID entity)
+const XMFLOAT3 & Elixir::EntityManager::GetPosition(EntityID entity)
 {
 	auto node = entities[entity];
 	return scene->GetTranslation(node);
 }
 
-inline const XMFLOAT3 & Elixir::EntityManager::GetRotation(EntityID entity)
+const XMFLOAT3 & Elixir::EntityManager::GetRotation(EntityID entity)
 {
 	auto node = entities[entity];
 	return scene->GetRotation(node);
 }
 
-inline const XMFLOAT3 & Elixir::EntityManager::GetScale(EntityID entity)
+const XMFLOAT3 & Elixir::EntityManager::GetScale(EntityID entity)
 {
 	auto node = entities[entity];
 	return scene->GetScale(node);
@@ -115,9 +124,9 @@ const XMFLOAT4X4 & Elixir::EntityManager::GetTransformMatrix(EntityID entity)
 	return scene->GetTransformMatrix(node);
 }
 
-EntityID Elixir::EntityManager::GetEntityID(std::string entityName) const
+EntityID Elixir::EntityManager::GetEntityID(std::string entityName)
 {
-	return EntityID();
+	return entityNameIndexMap[entityName];
 }
 
 //inline void Elixir::Entity::Update()

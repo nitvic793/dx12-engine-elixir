@@ -157,6 +157,8 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="SunRaysPass.cpp" />
+    <ClCompile Include="System.cpp" />
+    <ClCompile Include="SystemManager.cpp" />
     <ClCompile Include="SystemResourceManager.cpp" />
     <ClCompile Include="Texture.cpp" />
     <ClCompile Include="TexturePool.cpp" />
@@ -201,6 +203,8 @@
     <ClInclude Include="SceneCommon.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="SunRaysPass.h" />
+    <ClInclude Include="System.h" />
+    <ClInclude Include="SystemManager.h" />
     <ClInclude Include="SystemResourceManager.h" />
     <ClInclude Include="Texture.h" />
     <ClInclude Include="TexturePool.h" />

@@ -21,6 +21,14 @@ namespace Elixir
 		}
 	};
 
+	struct TransformSOA
+	{
+		XMFLOAT3*	Position;
+		XMFLOAT3*	Rotation;
+		XMFLOAT3*	Scale;
+		size_t		Count;
+	};
+
 	static const Transform DefaultTransform =
 	{
 		{}, {}, {1.f,1.f,1.f}

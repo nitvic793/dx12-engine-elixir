@@ -15,6 +15,7 @@
 #include "AnimationManager.h"
 #include "Scene.h"
 #include "EntityManager.h"
+#include "SystemManager.h"
 
 class Game : public Core
 {
@@ -41,6 +42,7 @@ protected:
 	std::unique_ptr<DownScaleTexture>	downScaler;
 	Elixir::Scene						scene;
 	Elixir::EntityManager				entityManager;
+	Elixir::SystemManager				systemManager;
 	bool isBlurEnabled;
 	void InitializeAssets();
 public:
