@@ -2,6 +2,7 @@
 #include "Game.h"
 #include "DirectXMesh.h"
 #include "Model.h"
+#include "AnimationSystem.h"
 #include "ModelLoader.h"
 
 //Initializes assets. This function's scope has access to commandList which is not closed. 
@@ -67,16 +68,16 @@ void Game::InitializeAssets()
 	entities[9]->SetUVScale(XMFLOAT2(10, 10));
 
 	auto eId = entityManager.CreateEntity(0, "Test", StringID("sphere"), StringID("floor"), Elixir::Transform::Create(XMFLOAT3(-1, 0, 0)));
-	entityManager.RegisterComponent<Elixir::TestA>();
-	entityManager.RegisterComponent<Elixir::TestB>();
-
-	entityManager.RegisterEntity<Elixir::TestA>(eId, {1.f});
-	entityManager.RegisterEntity<Elixir::TestA>(1, {1.f});
-	entityManager.RegisterEntity<Elixir::TestB>(eId);
-	entityManager.RegisterEntity<Elixir::TestB>(1);
 
 	systemManager.RegisterSystem<Elixir::SampleSystem>();
+	systemManager.RegisterSystem<AnimationSystem>();
 	systemManager.Init();
+
+	entityManager.RegisterEntity<AnimationComponent>(8);
+	entityManager.RegisterEntity<Elixir::TestA>(eId, { 1.f });
+	entityManager.RegisterEntity<Elixir::TestA>(1, { 1.f });
+	entityManager.RegisterEntity<Elixir::TestB>(eId);
+	entityManager.RegisterEntity<Elixir::TestB>(1);
 }
 
 Game::Game(HINSTANCE hInstance, int ShowWnd, int width, int height, bool fullscreen) :

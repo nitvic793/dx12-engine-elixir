@@ -29,7 +29,6 @@ namespace Elixir
 		std::vector<HashID> meshes; 
 		std::vector<HashID> materials;
 
-
 		std::vector<EntityID> removeList; //Entities to be removed
 	public:
 		EntityManager(Scene* scene);
@@ -49,10 +48,6 @@ namespace Elixir
 		void			GetComponentEntities(std::vector<EntityID> &outEntities);
 		void			GetComponentEntities(TypeID componentId, std::vector<EntityID> &outEntities);
 
-		//This assumes that the entities sent to the function are registered with the component
-		template<typename T>
-		void			GetComponentData(EntityID* entities, size_t count, T*& outComponent);
-
 		template<typename T, typename FuncType>
 		void			GetComponentEntitiesWithCB(FuncType callback);
 
@@ -61,6 +56,9 @@ namespace Elixir
 
 		template<typename T>
 		T&				GetComponent(EntityID entity);
+
+		template<typename T>
+		T*				GetComponents(size_t& outCount);
 
 		//Setters
 		void			SetMesh(EntityID entity, HashID mesh);
@@ -77,21 +75,23 @@ namespace Elixir
 		const XMFLOAT4X4&	GetTransformMatrix(EntityID entity);
 		EntityID			GetEntityID(std::string entityName);
 
-		Entity			GetEntity(EntityID entity);
-		void			GetEntities(std::vector<Entity>& outEntityList);
-		void			UpdateEntity(const Entity& entity);
+		Entity				GetEntity(EntityID entity);
+		void				GetEntities(std::vector<Entity>& outEntityList);
+		void				UpdateEntity(const Entity& entity);
 
-		inline size_t	Count() const { return entities.size(); };
+		inline size_t		Count() const { return entities.size(); };
 		~EntityManager();
 	};
-
 
 	template<typename T>
 	inline void EntityManager::RegisterComponent()
 	{
 		auto typeHash = typeid(T).hash_code();
-		auto component = new Component<T>();
-		components.insert(std::pair<TypeID, IComponent*>(typeHash, (IComponent*)component));
+		if (components.find(typeHash) == components.end())
+		{
+			auto component = new Component<T>();
+			components.insert(std::pair<TypeID, IComponent*>(typeHash, (IComponent*)component));
+		}
 	}
 
 	template<typename T>
@@ -110,11 +110,6 @@ namespace Elixir
 		outEntities = component->Entities;
 	}
 
-	template<typename T>
-	inline void EntityManager::GetComponentData(EntityID * entities, size_t count, T *& outComponent)
-	{
-	}
-
 	template<typename T, typename FuncType>
 	inline void EntityManager::GetComponentEntitiesWithCB(FuncType callback)
 	{
@@ -122,7 +117,6 @@ namespace Elixir
 		Component<T>* component = (Component<T>*)components[typeHash];
 		callback(component->Entities);
 	}
-
 
 	template<typename ...Args>
 	inline void EntityManager::GetMultiComponentEntities(std::vector<EntityID>& outEntities, Args*& ...args)
@@ -148,6 +142,15 @@ namespace Elixir
 		auto typeHash = typeid(T).hash_code();
 		Component<T>* component = (Component<T>*)components[typeHash];
 		return component->GetData(entity);
+	}
+
+	template<typename T>
+	inline T * EntityManager::GetComponents(size_t & outCount)
+	{
+
+		auto typeHash = typeid(T).hash_code();
+		Component<T>* component = (Component<T>*)components[typeHash];
+		return component->Components.data();
 	}
 
 }

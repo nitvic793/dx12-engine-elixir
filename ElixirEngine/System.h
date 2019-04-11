@@ -34,12 +34,14 @@ namespace Elixir
 	template<typename T>
 	inline void ISystem::RegisterComponent()
 	{
+		entity->RegisterComponent<T>();
 		components.push_back(typeid(T).hash_code());
 	}
 
 	template<typename T>
 	inline void ISystem::GetEntities(std::vector<EntityID>& outEntities)
 	{
+		outEntities.clear();
 		entity->GetComponentEntities<T>(outEntities);
 	}
 

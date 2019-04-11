@@ -127,6 +127,7 @@
   <ItemGroup>
     <ClCompile Include="Animation.cpp" />
     <ClCompile Include="AnimationManager.cpp" />
+    <ClCompile Include="AnimationSystem.cpp" />
     <ClCompile Include="BlurFilter.cpp" />
     <ClCompile Include="Component.cpp" />
     <ClCompile Include="CompositeTextures.cpp" />
@@ -166,7 +167,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Animation.h" />
+    <ClInclude Include="AnimationComponent.h" />
     <ClInclude Include="AnimationManager.h" />
+    <ClInclude Include="AnimationSystem.h" />
     <ClInclude Include="BlurFilter.h" />
     <ClInclude Include="Component.h" />
     <ClInclude Include="CompositeTextures.h" />
