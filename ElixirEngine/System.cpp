@@ -41,8 +41,8 @@ void Elixir::SampleSystem::Update(float deltaTime)
 	for (auto e : entities)
 	{
 		auto position = entity->GetPosition(e);
-		aData[idx]->speed = sin(totalTime) * 2.f;
-		position.x = aData[idx]->speed;
+		//aData[idx]->speed = 10.f;
+		position.y = aData[idx]->speed * sin(totalTime);
 		entity->SetPosition(e, position);
 		idx++;
 	}

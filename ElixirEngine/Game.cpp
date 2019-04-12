@@ -67,13 +67,14 @@ void Game::InitializeAssets()
 	entities[9]->SetUVScale(XMFLOAT2(10, 10));
 
 	auto eId = entityManager.CreateEntity(0, "Test", StringID("sphere"), StringID("floor"), Elixir::Transform::Create(XMFLOAT3(-1, 0, 0)));
-	entityManager.RegisterComponent<Elixir::TestA>();
-	entityManager.RegisterComponent<Elixir::TestB>();
+	auto e2 = entityManager.CreateEntity(eId, "Test", StringID("sphere"), StringID("bronze"), Elixir::Transform::Create(XMFLOAT3(-1, 0, 0)));
+	//entityManager.RegisterComponent<Elixir::TestA>();
+	//entityManager.RegisterComponent<Elixir::TestB>();
 
-	entityManager.RegisterEntity<Elixir::TestA>(eId, {1.f});
-	entityManager.RegisterEntity<Elixir::TestA>(1, {1.f});
-	entityManager.RegisterEntity<Elixir::TestB>(eId);
-	entityManager.RegisterEntity<Elixir::TestB>(1);
+	entityManager.AddComponent<Elixir::TestA>(eId, {1.f});
+	entityManager.AddComponent(1, Elixir::TestA {0.3f});
+	entityManager.AddComponent<Elixir::TestB>(eId);
+	entityManager.AddComponent<Elixir::TestB>(1);
 
 	systemManager.RegisterSystem<Elixir::SampleSystem>();
 	systemManager.Init();

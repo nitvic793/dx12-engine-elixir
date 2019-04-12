@@ -46,6 +46,9 @@ namespace Elixir
 		void			RegisterEntity(EntityID entity, const T& componentData = T());
 
 		template<typename T>
+		void			AddComponent(EntityID entity, const T& componentData = T());
+
+		template<typename T>
 		void			GetComponentEntities(std::vector<EntityID> &outEntities);
 		void			GetComponentEntities(TypeID componentId, std::vector<EntityID> &outEntities);
 
@@ -100,6 +103,17 @@ namespace Elixir
 		auto typeHash = typeid(T).hash_code();
 		Component<T>* component = (Component<T>*)components[typeHash];
 		component->AddEntity(entity, componentData);
+	}
+
+	template<typename T>
+	inline void EntityManager::AddComponent(EntityID entity, const T & componentData)
+	{
+		auto typeHash = typeid(T).hash_code();
+		if (components.find(typeHash) == components.end())
+		{
+			RegisterComponent<T>();
+		}
+		RegisterEntity(entity, componentData);
 	}
 
 	template<typename T>
