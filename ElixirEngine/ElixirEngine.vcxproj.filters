@@ -189,6 +189,9 @@
     <ClCompile Include="SystemManager.cpp">
       <Filter>Source Files\System</Filter>
     </ClCompile>
+    <ClCompile Include="AnimationSystem.cpp">
+      <Filter>Source Files\Animation</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
@@ -322,6 +325,12 @@
     </ClInclude>
     <ClInclude Include="System.h">
       <Filter>Header Files\System</Filter>
+    </ClInclude>
+    <ClInclude Include="AnimationSystem.h">
+      <Filter>Header Files\Animation</Filter>
+    </ClInclude>
+    <ClInclude Include="AnimationComponent.h">
+      <Filter>Header Files\Animation</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
