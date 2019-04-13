@@ -8,6 +8,8 @@
 //Initializes assets. This function's scope has access to commandList which is not closed. 
 void Game::InitializeAssets()
 {
+	deferredRenderer->SetAnimationManager(animationManager.get());
+	deferredRenderer->SetEntityManager(&entityManager);
 	auto rm = resourceManager;
 	rm->Initialize(animationManager.get(), &entityManager);
 	rm->LoadResources("../../SceneData/resources.json", commandQueue, commandList, deferredRenderer);
@@ -65,19 +67,17 @@ void Game::InitializeAssets()
 	);
 
 	skyTexture = rm->GetTexture(StringID("skybox"));
-	entities[9]->SetUVScale(XMFLOAT2(10, 10));
 
 	auto eId = entityManager.CreateEntity(0, "Test", StringID("sphere"), StringID("floor"), Elixir::Transform::Create(XMFLOAT3(-1, 0, 0)));
 	auto e2 = entityManager.CreateEntity(eId, "Test", StringID("sphere"), StringID("bronze"), Elixir::Transform::Create(XMFLOAT3(-1, 0, 0)));
-	//entityManager.RegisterComponent<Elixir::TestA>();
-	//entityManager.RegisterComponent<Elixir::TestB>();
 
 	entityManager.AddComponent<Elixir::TestA>(eId, {1.f});
 	entityManager.AddComponent(1, Elixir::TestA {0.3f});
 	entityManager.AddComponent<Elixir::TestB>(eId);
 	entityManager.AddComponent<Elixir::TestB>(1);
-
+	entityManager.AddComponent<AnimationComponent>(8);
 	systemManager.RegisterSystem<Elixir::SampleSystem>();
+	systemManager.RegisterSystem<AnimationSystem>(animationManager.get());
 	systemManager.Init();
 }
 
@@ -113,9 +113,6 @@ void Game::Update()
 	entity.SetPosition(0, XMFLOAT3(2 * sin(totalTime) + 2, 1.f, cos(totalTime)));
 	entity.SetRotation(8, XMFLOAT3(XM_PIDIV2, 0, 0));
 
-	entities[0]->SetRotation(XMFLOAT3(sin(totalTime), 0, 0));
-	entities[0]->SetPosition(XMFLOAT3(2 * sin(totalTime) + 2, 1.f, cos(totalTime)));
-	entities[8]->SetRotation(XMFLOAT3(XM_PIDIV2, 0, 0));
 	pixelCb.pointLight[1].Position = XMFLOAT3(2 * sin(totalTime * 2) + 1, 0, -1);
 	pixelCb.pointLight[0].Position = XMFLOAT3(2 * sin(totalTime * 2) + 5, 1.0f, -2 + -2 * cos(totalTime));
 	if (GetAsyncKeyState('Q'))
@@ -131,6 +128,7 @@ void Game::Update()
 	{
 		animIndex++;
 		if (animIndex > 6) animIndex = 6;
+		entityManager.GetComponent<AnimationComponent>(8).CurrentAnimationIndex = animIndex;
 		CurrentTime = 0.f;
 	}
 
@@ -139,6 +137,7 @@ void Game::Update()
 		animIndex--;
 		if (animIndex < 0)animIndex = 0;
 		CurrentTime = 0.f;
+		entityManager.GetComponent<AnimationComponent>(8).CurrentAnimationIndex = animIndex;
 	}
 
 	if (GetAsyncKeyState(192) & 0xFFFF8000 && CurrentTime > delay)
@@ -200,18 +199,7 @@ void Game::Draw()
 	pixelCb.invProjView = camera->GetInverseProjectionViewMatrix();
 
 	deferredRenderer->StartFrame(commandList);
-	std::vector<Entity*> entityList;
-	std::vector<Entity*> animatedEntityList;
-	for (auto& entity : entities)
-	{
-		entityList.push_back(entity);
-		if (entity->IsAnimated())
-		{
-			//Store entities with Index and map that index to mesh and materials. Then update animation using that index values.
-			entity->UpdateAnimation(totalTime, animIndex);
-			animatedEntityList.push_back(entity);
-		}
-	}
+	//entities[8]->UpdateAnimation(totalTime, animIndex);
 
 	std::vector<Elixir::Entity> eEntities;
 	entityManager.GetEntities(eEntities);

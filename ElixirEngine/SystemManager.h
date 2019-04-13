@@ -11,22 +11,22 @@ namespace Elixir
 		SystemManager(EntityManager* entityMgr);
 		~SystemManager();
 
-		template<typename SysType>
-		void RegisterSystem();
+		template<typename SysType, typename ...Args>
+		void RegisterSystem(Args&& ...args);
 
 		void Init();
 		void Update(float deltaTime);
 		void Shutdown();
 	};
 
-	template<typename SysType>
-	inline void SystemManager::RegisterSystem()
+	template<typename SysType, typename ...Args>
+	inline void SystemManager::RegisterSystem(Args&& ...args)
 	{
 		static_assert(std::is_base_of<ISystem, SysType>::value &&
 			!std::is_same<SysType, ISystem>::value,
 			"ISystem must be a base class of SysType");
 
-		ISystem* system = (ISystem*)new SysType();
+		ISystem* system = (ISystem*)new SysType(args...);
 		system->SetEntityManager(entityManager);
 		systems.push_back(system);
 	}

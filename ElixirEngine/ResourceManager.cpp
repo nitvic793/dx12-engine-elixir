@@ -132,21 +132,11 @@ Scene ResourceManager::LoadScene(std::string filename, std::vector<Entity*> &out
 	int idx = 0;
 	for (auto e : scene.Entities)
 	{
-		auto ne = new Entity();
 		auto meshID = StringID(e.MeshID);
-		
-		ne->SetPosition(e.Position);
-		ne->SetScale(e.Scale);
-		XMFLOAT3 rotation(e.Rotation.Vector.x * XM_PIDIV2, e.Rotation.Vector.y * XM_PIDIV2, e.Rotation.Vector.z * XM_PIDIV2);
+		XMFLOAT3 rotation(e.Rotation.Vector.x * XM_PIDIV2, e.Rotation.Vector.y * XM_PIDIV2, e.Rotation.Vector.z * XM_PIDIV2); //Converts degrees to radians
 		auto transform = Elixir::Transform::Create(e.Position, rotation, e.Scale);
-
-		ne->SetRotation(rotation);
-		ne->SetMesh(GetMesh(meshID));
-		ne->SetMaterial(GetMaterial(StringID(e.MaterialID)));
-		ne->SetCastsShadow(e.CastShadows);
-		outEntities.push_back(ne);
 		auto entityID = entityManager->CreateEntity(std::to_string(idx), StringID(e.MeshID), StringID(e.MaterialID), transform);
-		if (ne->IsAnimated())
+		if (GetMesh(meshID)->IsAnimated())
 		{
 			animManager->RegisterEntity(entityID, meshID);
 		}

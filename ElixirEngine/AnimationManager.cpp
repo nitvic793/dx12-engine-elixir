@@ -87,7 +87,7 @@ void AnimationManager::RegisterEntity(uint32_t entityID, HashID meshID)
 	boneDataMap.insert(std::pair<uint32_t, BoneData>(entityID, boneData));
 }
 
-void AnimationManager::BoneTransform(uint32_t entityID, HashID meshID, UINT animationIndex, float totalTime)
+void AnimationManager::BoneTransform(uint32_t entityID, HashID meshID, UINT animationIndex, float totalTime, PerArmatureConstantBuffer* cb)
 {
 	auto animation = animations[meshID]->GetAnimation(animationIndex);
 	float TicksPerSecond = (float)(animation->TicksPerSecond != 0 ? animation->TicksPerSecond : 25.0f);
@@ -101,13 +101,13 @@ void AnimationManager::BoneTransform(uint32_t entityID, HashID meshID, UINT anim
 	{
 		XMFLOAT4X4 finalTransform;
 		XMStoreFloat4x4(&finalTransform, XMMatrixTranspose(XMLoadFloat4x4(&boneDescriptor.boneInfoList[i].FinalTransform)));
-		boneCB.bones[i] = finalTransform;
+		cb->bones[i] = finalTransform;
 	}
 }
 
-const PerArmatureConstantBuffer & AnimationManager::GetConstantBuffer(uint32_t entityID)
+PerArmatureConstantBuffer* AnimationManager::GetConstantBuffer(uint32_t entityID)
 {
-	return boneDataMap[entityID].ConstantBuffer;
+	return &boneDataMap[entityID].ConstantBuffer;
 }
 
 

@@ -5,6 +5,7 @@
 #include "../InputLayout.h"
 #include "../ModelLoader.h"
 #include "../MathHelper.h"
+#include "../AnimationComponent.h"
 
 struct PrefilterPixelConstBuffer
 {
@@ -18,6 +19,16 @@ DeferredRenderer::DeferredRenderer(ID3D12Device* dxDevice, int width, int height
 	constBufferIndex(0),
 	srvHeapIndex(0)
 {
+}
+
+void DeferredRenderer::SetAnimationManager(AnimationManager * animManager)
+{
+	animationManager = animManager;
+}
+
+void DeferredRenderer::SetEntityManager(Elixir::EntityManager * eManager)
+{
+	entityManager = eManager;
 }
 
 void DeferredRenderer::ResetRenderTargetStates(ID3D12GraphicsCommandList* command)
@@ -598,8 +609,10 @@ void DeferredRenderer::PrepareGPUHeap(std::vector<Elixir::Entity> entities, Pixe
 		cbWrapper.CopyData(&cb, ConstantBufferSize, index);
 		if (mesh->IsAnimated())
 		{
-			auto boneCB = mesh->GetArmatureCB(0);
-			perArmatureWrapper.CopyData(&boneCB, sizeof(PerArmatureConstantBuffer), armatureIndex);
+			//auto boneCB = mesh->GetArmatureCB(0);
+			auto comp = entityManager->GetComponent<AnimationComponent>(e.EntityID);
+			//auto boneCB = animationManager->GetConstantBuffer(e.EntityID);
+			perArmatureWrapper.CopyData((void*)&comp.ConstantBuffer, sizeof(PerArmatureConstantBuffer), armatureIndex);
 			armatureIndex++;
 		}
 		index++;

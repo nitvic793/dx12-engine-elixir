@@ -640,16 +640,16 @@ void Core::Run(std::function<void(Core*)> coreLogicCallback)
 			Update();
 			Render();
 
-			////Quick frame rate limiter to 60fps
-			//float targetFPS = 60.f;
-			//QueryPerformanceCounter((LARGE_INTEGER*)&now);
-			//time_t t = now;
-			//auto d = (float)((t - previousTime) * perfCounterSeconds);
-			//if (d < 1.f / targetFPS)
-			//{
-			//	auto t = 1.f / targetFPS - d;
-			//	this_thread::sleep_for(std::chrono::milliseconds((INT64)(t * 1000)));
-			//}
+			//Quick frame rate limiter to 60fps
+			/*float targetFPS = 60.f;
+			QueryPerformanceCounter((LARGE_INTEGER*)&now);
+			time_t t = now;
+			auto d = (float)((t - previousTime) * perfCounterSeconds);
+			if (d < 1.f / targetFPS)
+			{
+				auto t = 1.f / targetFPS - d;
+				this_thread::sleep_for(std::chrono::milliseconds((INT64)(t * 1000)));
+			}*/
 		}
 	}
 

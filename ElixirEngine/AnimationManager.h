@@ -26,8 +26,8 @@ public:
 	AnimationManager();
 	void RegisterMeshAnimations(HashID meshID, AnimationDescriptor* meshAnimations);
 	void RegisterEntity(uint32_t entityID, HashID meshID);
-	void BoneTransform(uint32_t entityID, HashID meshID, UINT animationIndex, float totalTime);
-	const PerArmatureConstantBuffer& GetConstantBuffer(uint32_t entityID);
+	void BoneTransform(uint32_t entityID, HashID meshID, UINT animationIndex, float totalTime, PerArmatureConstantBuffer* cb);
+	PerArmatureConstantBuffer* GetConstantBuffer(uint32_t entityID);
 	~AnimationManager();
 };
 

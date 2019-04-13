@@ -414,7 +414,7 @@ const UINT Mesh::GetSubMeshCount()
 	return (UINT)subMeshes.size();
 }
 
-const BoneDescriptor & Mesh::GetBoneDescriptor(UINT index)
+BoneDescriptor & Mesh::GetBoneDescriptor(UINT index)
 {
 	return boneDescriptors[index];
 }

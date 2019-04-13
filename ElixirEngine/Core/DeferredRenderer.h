@@ -50,6 +50,8 @@ class DeferredRenderer
 	ResourceManager*				resourceManager;
 	std::unique_ptr<FrameManager>	frame;
 	FrameHeapParameters				frameHeapParams;
+	AnimationManager*				animationManager;
+	Elixir::EntityManager*			entityManager;
 
 	ID3D12Resource* gBufferTextures[numRTV];
 	ID3D12Resource* depthStencilTexture;
@@ -172,6 +174,8 @@ class DeferredRenderer
 public:
 	DeferredRenderer(ID3D12Device *dxDevice, int width, int height);
 
+	void SetAnimationManager(AnimationManager* animManager);
+	void SetEntityManager(Elixir::EntityManager* eManager);
 	void ResetRenderTargetStates(ID3D12GraphicsCommandList* command);
 	void SetSRV(ID3D12Resource* textureSRV, int index, bool isTextureCube = false);
 	void SetIBLTextures(ID3D12Resource* irradianceTextureCube, ID3D12Resource* prefilterTextureCube, ID3D12Resource* brdfLUTTexture);
