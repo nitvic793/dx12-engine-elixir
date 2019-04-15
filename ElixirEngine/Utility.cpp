@@ -45,3 +45,39 @@ XMMATRIX OGLtoXM(const ogldev::Matrix4f& mat)
 
 	return xm;
 }
+
+bool IsIntersecting(DirectX::BoundingOrientedBox boundingBox, Camera* camera, int mouseX, int mouseY, float& distance)
+{
+	uint16_t screenWidth = 1280;
+	uint16_t screenHeight = 720;
+	auto viewMatrix = XMLoadFloat4x4(&camera->GetViewMatrix());
+	auto projMatrix = XMLoadFloat4x4(&camera->GetProjectionMatrix());
+
+	auto orig = XMVector3Unproject(XMVectorSet((float)mouseX, (float)mouseY, 0.f, 0.f),
+		0,
+		0,
+		screenWidth,
+		screenHeight,
+		0,
+		1,
+		projMatrix,
+		viewMatrix,
+		XMMatrixIdentity());
+
+	auto dest = XMVector3Unproject(XMVectorSet((float)mouseX, (float)mouseY, 1.f, 0.f),
+		0,
+		0,
+		screenWidth,
+		screenHeight,
+		0,
+		1,
+		projMatrix,
+		viewMatrix,
+		XMMatrixIdentity());
+
+	auto direction = dest - orig;
+	direction = XMVector3Normalize(direction);
+	//bool intersecting = entity->GetBoundingSphere().Intersects(orig, direction, distance);
+	bool intersecting = boundingBox.Intersects(orig, direction, distance);
+	return intersecting;
+}

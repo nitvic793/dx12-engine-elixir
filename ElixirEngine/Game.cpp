@@ -4,6 +4,7 @@
 #include "Model.h"
 #include "AnimationSystem.h"
 #include "ModelLoader.h"
+#include "Utility.h"
 
 //Initializes assets. This function's scope has access to commandList which is not closed. 
 void Game::InitializeAssets()
@@ -155,42 +156,6 @@ void Game::Update()
 	scene.UpdateTransforms();
 }
 
-bool IsIntersecting(Entity* entity, Camera* camera, int mouseX, int mouseY, float& distance)
-{
-	uint16_t screenWidth = 1280;
-	uint16_t screenHeight = 720;
-	auto viewMatrix = XMLoadFloat4x4(&camera->GetViewMatrix());
-	auto projMatrix = XMLoadFloat4x4(&camera->GetProjectionMatrix());
-
-	auto orig = XMVector3Unproject(XMVectorSet((float)mouseX, (float)mouseY, 0.f, 0.f),
-		0,
-		0,
-		screenWidth,
-		screenHeight,
-		0,
-		1,
-		projMatrix,
-		viewMatrix,
-		XMMatrixIdentity());
-
-	auto dest = XMVector3Unproject(XMVectorSet((float)mouseX, (float)mouseY, 1.f, 0.f),
-		0,
-		0,
-		screenWidth,
-		screenHeight,
-		0,
-		1,
-		projMatrix,
-		viewMatrix,
-		XMMatrixIdentity());
-
-	auto direction = dest - orig;
-	direction = XMVector3Normalize(direction);
-	//bool intersecting = entity->GetBoundingSphere().Intersects(orig, direction, distance);
-	bool intersecting = /*intersecting ||*/ entity->GetBoundingBox().Intersects(orig, direction, distance);
-	return intersecting;
-}
-
 
 void Game::Draw()
 {
@@ -199,6 +164,7 @@ void Game::Draw()
 	pixelCb.invProjView = camera->GetInverseProjectionViewMatrix();
 
 	deferredRenderer->StartFrame(commandList);
+	resourceManager->GetMesh(StringID("man"))->BoneTransform(0, totalTime, 0);
 	//entities[8]->UpdateAnimation(totalTime, animIndex);
 
 	std::vector<Elixir::Entity> eEntities;
@@ -279,7 +245,7 @@ void Game::OnMouseDown(WPARAM buttonState, int x, int y)
 	for (int i = 0; i < entities.size(); ++i)
 	{
 		float distance;
-		if (IsIntersecting(entities[i], camera, x, y, distance))
+		if (IsIntersecting(entities[i]->GetBoundingBox(), camera, x, y, distance))
 		{
 			selectedEntities.push_back(entities[i]);
 			printf("Intersecting %d\n", i);

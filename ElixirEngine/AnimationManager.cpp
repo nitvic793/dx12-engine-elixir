@@ -93,8 +93,8 @@ void AnimationManager::BoneTransform(uint32_t entityID, HashID meshID, UINT anim
 	float TicksPerSecond = (float)(animation->TicksPerSecond != 0 ? animation->TicksPerSecond : 25.0f);
 	float TimeInTicks = totalTime * TicksPerSecond;
 	float AnimationTime = fmod(TimeInTicks, (float)animation->Duration);
-	auto boneDescriptor = boneDataMap[entityID].MeshBoneDescriptor;
-	auto &boneCB = boneDataMap[entityID].ConstantBuffer;
+	auto& boneDescriptor = boneDataMap[entityID].MeshBoneDescriptor;
+	auto& boneCB = boneDataMap[entityID].ConstantBuffer;
 	ReadNodeHeirarchy(entityID, meshID, animationIndex, AnimationTime);
 
 	for (uint32_t i = 0; i < boneDescriptor.boneInfoList.size(); i++)
