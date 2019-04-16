@@ -5,7 +5,7 @@
 
 void AnimationManager::ReadNodeHeirarchy(uint32_t entityID, HashID meshID, UINT animationIndex, float AnimationTime)
 {
-	auto Animations = animations[meshID];
+	auto Animations = &animations[meshID];
 	auto& boneData = boneDataMap[entityID];
 
 	auto& boneDescriptor = boneData.MeshBoneDescriptor;
@@ -65,13 +65,13 @@ void AnimationManager::ReadNodeHeirarchy(uint32_t entityID, HashID meshID, UINT 
 
 AnimationManager::AnimationManager()
 {
-	animations = std::unordered_map<HashID, AnimationDescriptor*>();
+	animations = std::unordered_map<HashID, AnimationDescriptor>();
 	resourceManager = ResourceManager::GetInstance();
 }
 
 void AnimationManager::RegisterMeshAnimations(HashID meshID, AnimationDescriptor* meshAnimations)
 {
-	animations.insert(std::pair<HashID, AnimationDescriptor*>(meshID, meshAnimations));
+	animations.insert(std::pair<HashID, AnimationDescriptor>(meshID, *meshAnimations));
 }
 
 void AnimationManager::RegisterEntity(uint32_t entityID, HashID meshID)
@@ -89,7 +89,7 @@ void AnimationManager::RegisterEntity(uint32_t entityID, HashID meshID)
 
 void AnimationManager::BoneTransform(uint32_t entityID, HashID meshID, UINT animationIndex, float totalTime, PerArmatureConstantBuffer* cb)
 {
-	auto animation = animations[meshID]->GetAnimation(animationIndex);
+	auto animation = animations[meshID].GetAnimation(animationIndex);
 	float TicksPerSecond = (float)(animation->TicksPerSecond != 0 ? animation->TicksPerSecond : 25.0f);
 	float TimeInTicks = totalTime * TicksPerSecond;
 	float AnimationTime = fmod(TimeInTicks, (float)animation->Duration);

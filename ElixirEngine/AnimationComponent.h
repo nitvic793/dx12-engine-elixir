@@ -4,5 +4,9 @@
 struct AnimationComponent
 {
 	int	CurrentAnimationIndex;
+};
+
+struct AnimationBufferComponent
+{
 	PerArmatureConstantBuffer ConstantBuffer;
 };

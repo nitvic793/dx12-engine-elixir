@@ -17,7 +17,7 @@ struct BoneData
 
 class AnimationManager
 {
-	std::unordered_map<HashID, AnimationDescriptor*> animations;
+	std::unordered_map<HashID, AnimationDescriptor> animations;
 	std::unordered_map<uint32_t, BoneData> boneDataMap;
 	ResourceManager* resourceManager;
 

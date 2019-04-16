@@ -610,9 +610,9 @@ void DeferredRenderer::PrepareGPUHeap(std::vector<Elixir::Entity> entities, Pixe
 		if (mesh->IsAnimated())
 		{
 			//auto boneCB = mesh->GetArmatureCB(0);
-			auto comp = entityManager->GetComponent<AnimationComponent>(e.EntityID);
+			auto comp = &entityManager->GetComponent<AnimationBufferComponent>(e.EntityID);
 			//auto boneCB = animationManager->GetConstantBuffer(e.EntityID);
-			perArmatureWrapper.CopyData((void*)&comp.ConstantBuffer, sizeof(PerArmatureConstantBuffer), armatureIndex);
+			perArmatureWrapper.CopyData((void*)&comp->ConstantBuffer, sizeof(PerArmatureConstantBuffer), armatureIndex);
 			armatureIndex++;
 		}
 		index++;

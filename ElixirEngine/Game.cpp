@@ -72,11 +72,12 @@ void Game::InitializeAssets()
 	auto eId = entityManager.CreateEntity(0, "Test", StringID("sphere"), StringID("floor"), Elixir::Transform::Create(XMFLOAT3(-1, 0, 0)));
 	auto e2 = entityManager.CreateEntity(eId, "Test", StringID("sphere"), StringID("bronze"), Elixir::Transform::Create(XMFLOAT3(-1, 0, 0)));
 
-	entityManager.AddComponent<Elixir::TestA>(eId, {1.f});
-	entityManager.AddComponent(1, Elixir::TestA {0.3f});
+	entityManager.AddComponent<Elixir::TestA>(eId, { 1.f });
+	entityManager.AddComponent(1, Elixir::TestA{ 0.3f });
 	entityManager.AddComponent<Elixir::TestB>(eId);
 	entityManager.AddComponent<Elixir::TestB>(1);
 	entityManager.AddComponent<AnimationComponent>(8);
+	entityManager.AddComponent<AnimationBufferComponent>(8);
 	systemManager.RegisterSystem<Elixir::SampleSystem>();
 	systemManager.RegisterSystem<AnimationSystem>(animationManager.get());
 	systemManager.Init();
@@ -156,7 +157,7 @@ void Game::Update()
 	scene.UpdateTransforms();
 }
 
-
+bool a = true;
 void Game::Draw()
 {
 	//Update CB
@@ -164,7 +165,8 @@ void Game::Draw()
 	pixelCb.invProjView = camera->GetInverseProjectionViewMatrix();
 
 	deferredRenderer->StartFrame(commandList);
-	resourceManager->GetMesh(StringID("man"))->BoneTransform(0, totalTime, 0);
+	if (a)
+		resourceManager->GetMesh(StringID("man"))->BoneTransform(0, totalTime, 0);
 	//entities[8]->UpdateAnimation(totalTime, animIndex);
 
 	std::vector<Elixir::Entity> eEntities;
