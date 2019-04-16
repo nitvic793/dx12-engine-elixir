@@ -164,7 +164,7 @@ void Game::Draw()
 	pixelCb.invProjView = camera->GetInverseProjectionViewMatrix();
 
 	deferredRenderer->StartFrame(commandList);
-	resourceManager->GetMesh(StringID("man"))->BoneTransform(0, totalTime, 0);
+	//resourceManager->GetMesh(StringID("man"))->BoneTransform(0, totalTime, 0);
 	//entities[8]->UpdateAnimation(totalTime, animIndex);
 
 	std::vector<Elixir::Entity> eEntities;

@@ -3,6 +3,6 @@
 
 struct AnimationComponent
 {
-	int	CurrentAnimationIndex;
-	PerArmatureConstantBuffer ConstantBuffer;
+	PerArmatureConstantBuffer	ConstantBuffer;
+	int							CurrentAnimationIndex;
 };
