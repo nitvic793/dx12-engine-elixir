@@ -5,6 +5,7 @@
 #include "AnimationSystem.h"
 #include "ModelLoader.h"
 #include "Utility.h"
+#include "../Engine.Systems/Sample.h"
 
 //Initializes assets. This function's scope has access to commandList which is not closed. 
 void Game::InitializeAssets()
@@ -72,14 +73,15 @@ void Game::InitializeAssets()
 	auto eId = entityManager.CreateEntity(0, "Test", StringID("sphere"), StringID("floor"), Elixir::Transform::Create(XMFLOAT3(-1, 0, 0)));
 	auto e2 = entityManager.CreateEntity(eId, "Test", StringID("sphere"), StringID("bronze"), Elixir::Transform::Create(XMFLOAT3(-1, 0, 0)));
 
-	entityManager.AddComponent<Elixir::TestA>(eId, { 1.f });
-	entityManager.AddComponent(1, Elixir::TestA{ 0.3f });
-	entityManager.AddComponent<Elixir::TestB>(eId);
-	entityManager.AddComponent<Elixir::TestB>(1);
+	entityManager.AddComponent<TestA>(eId, { 1.f });
+	entityManager.AddComponent(1, TestA{ 0.3f });
+	entityManager.AddComponent<TestB>(eId);
+	entityManager.AddComponent<TestB>(1);
 	entityManager.AddComponent<AnimationComponent>(8);
 	entityManager.AddComponent<AnimationBufferComponent>(8);
-	systemManager.RegisterSystem<Elixir::SampleSystem>();
+	//systemManager.RegisterSystem<Elixir::SampleSystem>();
 	systemManager.RegisterSystem<AnimationSystem>(animationManager.get());
+	OnLoadSystems();
 	systemManager.Init();
 }
 
@@ -151,6 +153,12 @@ void Game::Update()
 	if (GetAsyncKeyState(VK_ADD) & 0xFFFF8000 && CurrentTime > delay)
 	{
 		gBufferIndex = (gBufferIndex + 1) % RTV_ORDER_COUNT;
+		CurrentTime = 0.f;
+	}
+
+	if (GetAsyncKeyState(VK_F6) & 0xFFFF8000 && CurrentTime > delay)
+	{
+		OnLoadSystems();
 		CurrentTime = 0.f;
 	}
 
@@ -228,6 +236,7 @@ void Game::Draw()
 void Game::Shutdown()
 {
 	systemManager.Shutdown();
+	SystemsUnloadCallback(systemManager.GetSystems());
 	for (auto& e : entities) delete e;
 	delete texturePool;
 	delete blurFilter;
@@ -276,6 +285,19 @@ void Game::OnMouseMove(WPARAM buttonState, int x, int y)
 
 void Game::OnMouseWheel(float wheelDelta, int x, int y)
 {
+}
+
+void Game::OnLoadSystems()
+{
+	auto& systems = systemManager.GetSystems();
+	SystemsLoadCallback(systems);
+	systemManager.RegisterSystems();
+}
+
+void Game::SetSystemsCallback(SystemsCallback loadCallback, SystemsCallback unloadCallback)
+{
+	SystemsLoadCallback = loadCallback;
+	SystemsUnloadCallback = unloadCallback;
 }
 
 Game::~Game()

@@ -28,7 +28,7 @@ namespace Elixir
 		virtual void	Update(float deltaTime) = 0;
 		virtual void	PostUpdate() {};
 		virtual void	Shutdown() {};
-		virtual ~ISystem();
+		virtual ~ISystem() {};
 	};
 
 	template<typename T>
@@ -54,27 +54,6 @@ namespace Elixir
 			outComponents.push_back(component);
 		}
 	}
-
-
-	class SampleSystem : public ISystem
-	{
-		float totalTime;
-		std::vector<EntityID> entities;
-		std::vector<TestA*> aData;
-		std::vector<TestB*> bData;
-
-		// Inherited via ISystem
-		virtual void Init()
-		{
-			RegisterComponent<TestA>();
-			RegisterComponent<TestB>();
-			totalTime = 0.f;
-		}
-
-		virtual void PreUpdate() override;
-		virtual void Update(float deltaTime) override;
-		virtual void PostUpdate() override;
-	};
 }
 
 

@@ -17,6 +17,8 @@
 #include "EntityManager.h"
 #include "SystemManager.h"
 
+typedef std::function<void(std::vector<Elixir::ISystem*>&)> SystemsCallback;
+
 class Game : public Core
 {
 protected:
@@ -44,6 +46,8 @@ protected:
 	Elixir::EntityManager				entityManager;
 	Elixir::SystemManager				systemManager;
 	bool isBlurEnabled;
+	SystemsCallback SystemsLoadCallback;
+	SystemsCallback SystemsUnloadCallback;
 	void InitializeAssets();
 public:
 	Game(HINSTANCE hInstance, int ShowWnd, int width, int height, bool fullscreen);
@@ -56,6 +60,9 @@ public:
 	void OnMouseUp(WPARAM buttonState, int x, int y);
 	void OnMouseMove(WPARAM buttonState, int x, int y);
 	void OnMouseWheel(float wheelDelta, int x, int y);
+	void OnLoadSystems();
+	
+	void SetSystemsCallback(SystemsCallback loadCallback, SystemsCallback unloadCallback);
 	~Game();
 };
 

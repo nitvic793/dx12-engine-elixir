@@ -9,10 +9,6 @@ Elixir::ISystem::ISystem(EntityManager * entityManager):
 {
 }
 
-Elixir::ISystem::~ISystem()
-{
-}
-
 void Elixir::ISystem::GetEntities(std::vector<EntityID>& outEntities)
 {
 	std::vector<EntityID> entities;
@@ -27,30 +23,30 @@ void Elixir::ISystem::GetEntities(std::vector<EntityID>& outEntities)
 	}
 }
 
-void Elixir::SampleSystem::PreUpdate()
-{
-	GetEntities(entities);
-	GetComponents(aData, entities);
-	GetComponents(bData, entities);
-}
-
-void Elixir::SampleSystem::Update(float deltaTime)
-{
-	totalTime += deltaTime;
-	auto idx = 0;
-	for (auto e : entities)
-	{
-		auto position = entity->GetPosition(e);
-		//aData[idx]->speed = 10.f;
-		position.y = aData[idx]->speed * sin(totalTime);
-		entity->SetPosition(e, position);
-		idx++;
-	}
-}
-
-void Elixir::SampleSystem::PostUpdate()
-{
-	entities.clear();
-	aData.clear();
-	bData.clear();
-}
+//void Elixir::SampleSystem::PreUpdate()
+//{
+//	GetEntities(entities);
+//	GetComponents(aData, entities);
+//	GetComponents(bData, entities);
+//}
+//
+//void Elixir::SampleSystem::Update(float deltaTime)
+//{
+//	totalTime += deltaTime;
+//	auto idx = 0;
+//	for (auto e : entities)
+//	{
+//		auto position = entity->GetPosition(e);
+//		//aData[idx]->speed = 10.f;
+//		position.y = aData[idx]->speed * sin(totalTime);
+//		entity->SetPosition(e, position);
+//		idx++;
+//	}
+//}
+//
+//void Elixir::SampleSystem::PostUpdate()
+//{
+//	entities.clear();
+//	aData.clear();
+//	bData.clear();
+//}
