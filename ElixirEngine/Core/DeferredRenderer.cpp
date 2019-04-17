@@ -1504,7 +1504,7 @@ void DeferredRenderer::CreateSelectionFilterBuffers()
 DeferredRenderer::~DeferredRenderer()
 {
 	for (int i = 0; i < numRTV; ++i)
-		gBufferTextures[numRTV]->Release();
+		gBufferTextures[i]->Release();
 	selectedDepthTexture->Release();
 	selectedOutlineTexture->Release();
 	rootSignature->Release();
