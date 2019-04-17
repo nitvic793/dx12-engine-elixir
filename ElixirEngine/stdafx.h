@@ -21,6 +21,12 @@
 #include <DirectXCollision.h>
 #include "FileUtility.h"
 
+#include <cereal/types/complex.hpp>
+#include <cereal/types/common.hpp>
+#include <cereal/types/vector.hpp>
+#include <cereal/types/string.hpp>
+#include <cereal/archives/json.hpp>
+
 using namespace DirectX;
 
 #ifndef FRAMEBUFFERCOUNT

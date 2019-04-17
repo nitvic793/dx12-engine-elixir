@@ -1,6 +1,64 @@
 #include "../ElixirEngine/Game.h"
 #include "../Engine.Systems/Systems.h"
 
+Elixir::IComponent* a;
+
+typedef std::function<Elixir::IComponent*()> FactoryFunction;
+
+class ComponentFactory
+{
+	static std::unordered_map<HashID, FactoryFunction> factoryMap;
+public:
+	static void RegisterComponentContainer(HashID componentId, FactoryFunction function)
+	{
+		factoryMap.insert(std::pair<HashID, FactoryFunction>(componentId, function));
+	}
+
+	static Elixir::IComponent* Create(HashID componentId)
+	{
+		return factoryMap[componentId]();
+	}
+};
+
+std::unordered_map<HashID, FactoryFunction> ComponentFactory::factoryMap;
+
+template<typename T>
+class Serializable
+{
+	void RegisterType(const char* name) {
+		ComponentFactory::RegisterComponentContainer(StringID(name), []()->Elixir::IComponent* {
+			return (Elixir::IComponent*)new Elixir::Component<T>();
+		});
+	};
+
+public:
+	Serializable(const char* name) {
+		RegisterType(name);
+	}
+};
+
+template<typename T>
+struct SerializedComponentContainer
+{
+	std::string TypeName;
+	uint32_t Count;
+	std::vector<Elixir::EntityID> Entities; // one-to-one map with Components
+	std::vector<T> Components;
+};
+
+#define SerializableStruct(name) \
+	struct name; \
+	static Serializable<name> Reflectable_ ## name(#name); \
+	struct name
+
+SerializableStruct(SerialTest)
+{
+	int a;
+};
+
+
+
+
 //#include <vld.h>
 
 HINSTANCE hinstLib;

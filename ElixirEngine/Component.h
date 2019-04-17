@@ -3,6 +3,7 @@
 #include <unordered_map>
 #include "SceneCommon.h"
 
+
 namespace Elixir
 {
 	struct IComponentData
@@ -13,6 +14,8 @@ namespace Elixir
 	{
 	public:
 		virtual void GetEntities(std::vector<EntityID>& outEntities) = 0;
+		virtual void Serialize(cereal::JSONOutputArchive& archive) {};
+		virtual void Deserialize(cereal::JSONInputArchive& archive) {};
 		virtual ~IComponent() {};
 	};
 
@@ -34,6 +37,19 @@ namespace Elixir
 
 		// Inherited via IComponent
 		virtual void GetEntities(std::vector<EntityID>& outEntities) override;
+		
+		template<class Archive>
+		void serialize(Archive& archive)
+		{
+			//TODO
+			//Serialize Per Component Container
+			//Use Registered order consistency with virtual serialize/deserialize to load components from file
+
+			archive(
+				/*CEREAL_NVP(Entities),
+				CEREAL_NVP(Components)*/
+			);
+		}
 	};
 
 	template<typename T>
