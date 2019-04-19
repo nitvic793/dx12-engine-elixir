@@ -196,7 +196,7 @@
       <Filter>Source Files\Animation</Filter>
     </ClCompile>
     <ClCompile Include="ComponentFactory.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\System</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -338,11 +338,11 @@
     <ClInclude Include="AnimationComponent.h">
       <Filter>Header Files\Animation</Filter>
     </ClInclude>
-    <ClInclude Include="ComponentFactory.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Serializable.h">
       <Filter>Header Files\Serialization</Filter>
+    </ClInclude>
+    <ClInclude Include="ComponentFactory.h">
+      <Filter>Header Files\System</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

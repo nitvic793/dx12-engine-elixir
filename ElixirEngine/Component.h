@@ -11,6 +11,8 @@ namespace Elixir
 		virtual void GetEntities(std::vector<EntityID>& outEntities) = 0;
 		virtual void Serialize(cereal::JSONOutputArchive& archive) {};
 		virtual void Deserialize(cereal::JSONInputArchive& archive) {};
+		virtual size_t GetHash() = 0;
+		virtual void AddEntity(EntityID entity) = 0;
 		virtual ~IComponent() {};
 	};
 
@@ -52,6 +54,16 @@ namespace Elixir
 				CEREAL_NVP(Entities),
 				CEREAL_NVP(Components)
 			);
+		}
+
+		virtual size_t GetHash() override
+		{
+			return typeid(T).hash_code();
+		}
+
+		virtual void AddEntity(EntityID entity) override
+		{
+			AddEntity(entity, T());
 		}
 	};
 

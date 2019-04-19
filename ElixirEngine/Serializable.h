@@ -14,8 +14,9 @@ namespace Elixir
 				{
 					return (Elixir::IComponent*)new Elixir::Component<T>();
 				}
-			
 			);
+
+			ComponentFactory::RegisterComponentTypeID(StringID(name), typeid(T).hash_code());
 		};
 
 	public:

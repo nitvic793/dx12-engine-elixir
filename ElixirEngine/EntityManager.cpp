@@ -30,6 +30,28 @@ EntityID Elixir::EntityManager::CreateEntity(EntityID parentId, std::string name
 	return entityId;
 }
 
+void Elixir::EntityManager::RegisterComponent(const char* componentName)
+{
+	HashID stringHash = StringID(componentName);
+	auto typeId = ComponentFactory::GetTypeID(stringHash);
+	if (components.find(typeId) == components.end())
+	{
+		auto component = ComponentFactory::Create(stringHash);
+		components.insert(std::pair<TypeID, IComponent*>(typeId, component));
+	}
+}
+
+void Elixir::EntityManager::AddComponent(EntityID entity, const char * componentName)
+{
+	auto typeId = ComponentFactory::GetTypeID(StringID(componentName));
+	if (components.find(typeId) == components.end())
+	{
+		RegisterComponent(componentName);
+	}
+	auto component = components[typeId];
+	component->AddEntity(entity);
+}
+
 void Elixir::EntityManager::GetComponentEntities(TypeID componentId, std::vector<EntityID>& outEntities)
 {
 	components[componentId]->GetEntities(outEntities);

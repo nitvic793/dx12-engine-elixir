@@ -77,8 +77,8 @@ void Game::InitializeAssets()
 	entityManager.AddComponent(1, TestA{ 0.3f });
 	entityManager.AddComponent<TestB>(eId);
 	entityManager.AddComponent<TestB>(1);
-	entityManager.AddComponent<AnimationComponent>(8);
-	entityManager.AddComponent<AnimationBufferComponent>(8);
+	entityManager.AddComponent(8, "AnimationComponent");
+	entityManager.AddComponent(8, "AnimationBufferComponent");
 	//systemManager.RegisterSystem<Elixir::SampleSystem>();
 	systemManager.RegisterSystem<AnimationSystem>(animationManager.get());
 	OnLoadSystems();

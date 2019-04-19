@@ -42,12 +42,15 @@ namespace Elixir
 		template<typename T>
 		void			RegisterComponent();
 
+		void			RegisterComponent(const char* componentName);
+
 		template<typename T>
 		void			RegisterEntity(EntityID entity, const T& componentData = T());
 
 		template<typename T>
 		void			AddComponent(EntityID entity, const T& componentData = T());
 
+		void			AddComponent(EntityID entity, const char* componentName);
 		template<typename T>
 		void			GetComponentEntities(std::vector<EntityID> &outEntities);
 		void			GetComponentEntities(TypeID componentId, std::vector<EntityID> &outEntities);
@@ -162,7 +165,6 @@ namespace Elixir
 	template<typename T>
 	inline T * EntityManager::GetComponents(size_t & outCount)
 	{
-
 		auto typeHash = typeid(T).hash_code();
 		Component<T>* component = (Component<T>*)components[typeHash];
 		return component->Components.data();
