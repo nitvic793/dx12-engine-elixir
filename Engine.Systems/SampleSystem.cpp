@@ -2,15 +2,6 @@
 #include "SampleSystem.h"
 
 
-//SampleSystem::SampleSystem()
-//{
-//}
-//
-//
-//SampleSystem::~SampleSystem()
-//{
-//}
-
 void SampleSystem::PreUpdate()
 {
 	GetEntities(entities);
@@ -25,8 +16,8 @@ void SampleSystem::Update(float deltaTime)
 	for (auto e : entities)
 	{ 
 		auto position = entity->GetPosition(e);
-		//aData[idx]->speed = 10.f;
-		position.y = aData[idx]->speed * sin(totalTime);
+		//aData[idx]->speed = 10.f;s
+		position.z = aData[idx]->speed * sin(totalTime);
 		entity->SetPosition(e, position);
 		idx++;
 	}
@@ -38,3 +29,4 @@ void SampleSystem::PostUpdate()
 	aData.clear();
 	bData.clear();
 }
+

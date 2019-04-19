@@ -1,11 +1,4 @@
 #pragma once
 
-struct TestA
-{
-	float speed = 10.f;
-};
+#include "../Engine.Components/Components.h"
 
-struct TestB
-{
-	float yOffset = 20.f;
-};

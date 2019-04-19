@@ -1,6 +1,8 @@
 #include "stdafx.h"
 #include "AnimationSystem.h"
 #include "AnimationComponent.h"
+#include "Serializable.h"
+
 
 AnimationSystem::AnimationSystem(AnimationManager* animManager) :
 	animManager(animManager)

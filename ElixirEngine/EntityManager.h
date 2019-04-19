@@ -4,6 +4,7 @@
 #include "../Engine.Serialization/StringHash.h"
 #include "Scene.h"
 #include "SceneCommon.h"
+#include "ComponentFactory.h"
 #include "Component.h"
 
 namespace Elixir

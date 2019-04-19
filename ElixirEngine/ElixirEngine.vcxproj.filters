@@ -79,6 +79,9 @@
     <Filter Include="Source Files\System">
       <UniqueIdentifier>{34b5e8cd-91a4-4b70-b3b0-97a4dadf5f44}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\Serialization">
+      <UniqueIdentifier>{904333de-96d4-4d75-bdb9-945b646a04eb}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Core\Core.cpp">
@@ -191,6 +194,9 @@
     </ClCompile>
     <ClCompile Include="AnimationSystem.cpp">
       <Filter>Source Files\Animation</Filter>
+    </ClCompile>
+    <ClCompile Include="ComponentFactory.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -332,6 +338,12 @@
     <ClInclude Include="AnimationComponent.h">
       <Filter>Header Files\Animation</Filter>
     </ClInclude>
+    <ClInclude Include="ComponentFactory.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Serializable.h">
+      <Filter>Header Files\Serialization</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="BlurHorizontalCS.hlsl">
@@ -451,5 +463,6 @@
     <None Include="CommonVertex.hlsli">
       <Filter>Shaders\Deferred</Filter>
     </None>
+    <None Include="cpp.hint" />
   </ItemGroup>
 </Project>

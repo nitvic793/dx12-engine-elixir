@@ -5,7 +5,7 @@
 #include "AnimationSystem.h"
 #include "ModelLoader.h"
 #include "Utility.h"
-#include "../Engine.Systems/Sample.h"
+#include "../Engine.Components/Components.h"
 
 //Initializes assets. This function's scope has access to commandList which is not closed. 
 void Game::InitializeAssets()

@@ -157,8 +157,14 @@
     <ProjectReference Include="..\ElixirEngine\ElixirEngine.vcxproj">
       <Project>{c691949f-3d6c-4005-a0bb-a46257c87e20}</Project>
     </ProjectReference>
+    <ProjectReference Include="..\Engine.Components\Engine.Components.vcxproj">
+      <Project>{18402b0f-9cbe-40d6-8936-39950db22556}</Project>
+    </ProjectReference>
     <ProjectReference Include="..\Engine.Serialization\Engine.Serialization.vcxproj">
       <Project>{96114179-bf59-4a20-9056-f89607b04834}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\Engine.Systems\Engine.Systems.vcxproj">
+      <Project>{f0da9f45-7ac7-4ed5-be39-fde46c352c87}</Project>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

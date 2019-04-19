@@ -134,6 +134,7 @@
     <ClCompile Include="AnimationSystem.cpp" />
     <ClCompile Include="BlurFilter.cpp" />
     <ClCompile Include="Component.cpp" />
+    <ClCompile Include="ComponentFactory.cpp" />
     <ClCompile Include="CompositeTextures.cpp" />
     <ClCompile Include="ComputeCore.cpp" />
     <ClCompile Include="ComputeProcess.cpp" />
@@ -176,6 +177,7 @@
     <ClInclude Include="AnimationSystem.h" />
     <ClInclude Include="BlurFilter.h" />
     <ClInclude Include="Component.h" />
+    <ClInclude Include="ComponentFactory.h" />
     <ClInclude Include="CompositeTextures.h" />
     <ClInclude Include="ComputeCore.h" />
     <ClInclude Include="ComputeProcess.h" />
@@ -208,6 +210,7 @@
     <ClInclude Include="ResourceManager.h" />
     <ClInclude Include="Scene.h" />
     <ClInclude Include="SceneCommon.h" />
+    <ClInclude Include="Serializable.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="SunRaysPass.h" />
     <ClInclude Include="System.h" />
@@ -565,6 +568,7 @@
       <FileType>Document</FileType>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>
     </None>
+    <None Include="cpp.hint" />
     <None Include="Lighting.hlsli">
       <FileType>Document</FileType>
     </None>
