@@ -63,6 +63,8 @@ void ResourceManager::LoadTextures(ID3D12CommandQueue* commandQueue, DeferredRen
 
 void ResourceManager::LoadMaterial(ID3D12CommandQueue* commandQueue, DeferredRenderer* renderer, MaterialLoadData loadData)
 {
+	auto hash = StringID(loadData.MaterialID.c_str());
+	strings.insert(std::pair<HashID, std::string>(hash, loadData.MaterialID));
 	auto material = new Material(
 		renderer,
 		{
@@ -75,7 +77,7 @@ void ResourceManager::LoadMaterial(ID3D12CommandQueue* commandQueue, DeferredRen
 		commandQueue
 	);
 
-	materials.insert(std::pair<HashID, Material*>(loadData.MaterialID, material));
+	materials.insert(std::pair<HashID, Material*>(hash, material));
 }
 
 void ResourceManager::LoadMaterials(ID3D12CommandQueue * commandQueue, DeferredRenderer * renderer, std::vector<MaterialLoadData> materials)
@@ -97,17 +99,18 @@ void ResourceManager::LoadMeshes(ID3D12GraphicsCommandList* commandList, std::ve
 void ResourceManager::LoadMesh(ID3D12GraphicsCommandList * commandList, std::string filePath)
 {
 	auto filename = GetFileNameWithoutExtension(filePath);
-	auto sid = StringID(filename.c_str()).GetHash();
-	LoadMesh(commandList, sid, filePath);
+	LoadMesh(commandList, filename.c_str(), filePath);
 }
 
-void ResourceManager::LoadMesh(ID3D12GraphicsCommandList * commandList, HashID hashId, std::string filePath)
+void ResourceManager::LoadMesh(ID3D12GraphicsCommandList * commandList, const char* hashId, std::string filePath)
 {
+	auto hash = StringID(hashId);
+	strings.insert(std::pair<HashID, std::string>(hash, hashId));
 	auto mesh = ModelLoader::LoadFile(filePath, commandList);
-	meshes.insert(std::pair<HashID, Mesh*>(hashId, mesh));
+	meshes.insert(std::pair<HashID, Mesh*>(hash, mesh));
 	if (mesh->IsAnimated())
 	{
-		animManager->RegisterMeshAnimations(hashId, &mesh->Animations);
+		animManager->RegisterMeshAnimations(hash, &mesh->Animations);
 	}
 }
 
@@ -124,6 +127,11 @@ Material * ResourceManager::GetMaterial(HashID materialID)
 Texture * ResourceManager::GetTexture(HashID textureID)
 {
 	return textures[textureID];
+}
+
+const char * ResourceManager::GetString(HashID hashId)
+{
+	return strings[hashId].c_str();
 }
 
 Scene ResourceManager::LoadScene(std::string filename, std::vector<Entity*> &outEntities)
@@ -155,7 +163,7 @@ void ResourceManager::LoadResources(std::string filename, ID3D12CommandQueue* cq
 			cqueue,
 			renderer,
 			{
-				StringID(m.MaterialID),
+				m.MaterialID,
 				ToWideString(m.AlbedoPath),
 				ToWideString(m.NormalPath),
 				ToWideString(m.RoughnessPath),
@@ -166,7 +174,7 @@ void ResourceManager::LoadResources(std::string filename, ID3D12CommandQueue* cq
 
 	for (auto m : rc.Meshes)
 	{
-		LoadMesh(clist, StringID(m.MeshID), m.MeshPath);
+		LoadMesh(clist, m.MeshID.c_str(), m.MeshPath);
 	}
 
 	for (auto t : rc.Textures)

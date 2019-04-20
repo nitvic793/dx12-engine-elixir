@@ -17,7 +17,7 @@ void SampleSystem::Update(float deltaTime)
 	{ 
 		auto position = entity->GetPosition(e);
 		//aData[idx]->speed = 10.f;s
-		position.y = aData[idx]->speed * sin(totalTime);
+		position.z = aData[idx]->speed * sin(totalTime);
 		entity->SetPosition(e, position);
 		idx++;
 	}

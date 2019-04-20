@@ -2,26 +2,20 @@
 #include "Core/ConstantBuffer.h"
 #include "Serializable.h"
 
-struct AnimationComponent
-{
+GameComponent(AnimationComponent)
 	int	CurrentAnimationIndex;
-	GameComponent(AnimationComponent)
-
 	template<class Archive>
 	void serialize(Archive& archive)
 	{
 		archive(CEREAL_NVP(CurrentAnimationIndex));
 	}
-};
+EndComponent()
 
-struct AnimationBufferComponent
-{
+GameComponent(AnimationBufferComponent)
 	PerArmatureConstantBuffer ConstantBuffer;
-
-	GameComponent(AnimationBufferComponent)
 	template<class Archive>
 	void serialize(Archive& archive)
 	{
-		//archive();
+		//archive(); Don't serialize constant buffer 
 	}
-};
+EndComponent()

@@ -9,36 +9,32 @@
 using namespace DirectX;
 #include "../ElixirEngine/Serializable.h"
 
-struct Components
-{
+GameComponent(Components)
 	float a;
-	 
-	GameComponent(Components)
 	template<class Archive>
 	void serialize(Archive& archive)
 	{
 		archive(CEREAL_NVP(a));
 	}
-};
+EndComponent()
 
-struct TestA
-{
+GameComponent(TestA)
 	float speed = 10.f;
-	GameComponent(TestA)
+	
 	template<class Archive>
 	void serialize(Archive& archive)
 	{
 		archive(CEREAL_NVP(speed));
 	}
-};
+EndComponent()
 
-struct TestB
-{
+
+GameComponent(TestB)
 	float yOffset = 20.f;
-	GameComponent(TestB)
+	
 	template<class Archive>
 	void serialize(Archive& archive)
 	{
 		archive(CEREAL_NVP(yOffset));
 	}
-};
+EndComponent()

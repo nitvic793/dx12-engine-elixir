@@ -16,6 +16,7 @@
 typedef std::unordered_map<unsigned int, Mesh*> MeshMap;
 typedef std::unordered_map<unsigned int, Material*> MaterialMap;
 typedef std::unordered_map<unsigned int, Texture*> TextureMap;
+typedef std::unordered_map<unsigned int, std::string> StringMap;
 
 struct TextureLoadData
 {
@@ -32,6 +33,8 @@ private:
 
 protected:
 	ID3D12Device*			device;
+
+	StringMap				strings;
 	MeshMap					meshes;
 	MaterialMap				materials;
 	TextureMap				textures;
@@ -59,11 +62,12 @@ public:
 
 	void LoadMeshes(ID3D12GraphicsCommandList* commandList, std::vector<std::string> meshList);
 	void LoadMesh(ID3D12GraphicsCommandList* commandList, std::string filePath);
-	void LoadMesh(ID3D12GraphicsCommandList* commandList, HashID hashId, std::string filePath);
+	void LoadMesh(ID3D12GraphicsCommandList* commandList, const char* hashId, std::string filePath);
 
 	Mesh*		GetMesh(HashID hashId);
 	Material*	GetMaterial(HashID materialID);
 	Texture*	GetTexture(HashID textureID);
+	const char* GetString(HashID hashId);
 	Scene		LoadScene(std::string filename, std::vector<Entity*> &outEntities);
 	void		LoadResources(std::string filename, ID3D12CommandQueue* cqueue, ID3D12GraphicsCommandList* clist, DeferredRenderer* renderer);
 	~ResourceManager();

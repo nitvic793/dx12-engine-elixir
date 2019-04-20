@@ -15,7 +15,7 @@ enum MaterialTextureType {
 
 struct MaterialLoadData
 {
-	HashID			MaterialID;
+	std::string		MaterialID;
 	std::wstring	AlbedoFile;
 	std::wstring	NormalFile;
 	std::wstring	RoughnessFile;

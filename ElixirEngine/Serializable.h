@@ -37,11 +37,15 @@ namespace Elixir
 
 //Lets the compiler know that this struct is a in-game component
 #define GameComponent(name) \
+	struct name { \
 	static Elixir::Serializable<name> Reflectable_ ## name; \
 	static const char* GetName() \
 	{ \
-		return Reflectable_ ## name.Name; \
+		return #name ; \
     }
+
+#define EndComponent() \
+	};
 
 #define RegisterComponent(name)\
 	Elixir::Serializable<name> name ## ::Reflectable_ ## name = Elixir::Serializable<name>(#name); \
