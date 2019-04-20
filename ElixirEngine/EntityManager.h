@@ -75,6 +75,9 @@ namespace Elixir
 		void			SetScale(EntityID entity, const XMFLOAT3& scale);
 		void			SetTransform(EntityID entity, const Transform& transform);
 
+		void			SaveComponentsToFile(const char* filename);
+		void			LoadComponentsFromFile(const char* filename);
+
 		//Getters
 		const XMFLOAT3&		GetPosition(EntityID entity);
 		const XMFLOAT3&		GetRotation(EntityID entity);

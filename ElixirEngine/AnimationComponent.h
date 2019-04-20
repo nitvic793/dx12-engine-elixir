@@ -5,11 +5,23 @@
 struct AnimationComponent
 {
 	int	CurrentAnimationIndex;
-	Component(AnimationComponent)
+	GameComponent(AnimationComponent)
+
+	template<class Archive>
+	void serialize(Archive& archive)
+	{
+		archive(CEREAL_NVP(CurrentAnimationIndex));
+	}
 };
 
 struct AnimationBufferComponent
 {
 	PerArmatureConstantBuffer ConstantBuffer;
-	Component(AnimationBufferComponent)
+
+	GameComponent(AnimationBufferComponent)
+	template<class Archive>
+	void serialize(Archive& archive)
+	{
+		//archive();
+	}
 };

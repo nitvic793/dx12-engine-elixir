@@ -12,6 +12,7 @@ namespace Elixir
 	public:
 		static void RegisterComponentContainer(HashID componentId, FactoryFunction function);
 		static void RegisterComponentTypeID(HashID componentId, Elixir::TypeID typeId);
+		static std::unordered_map<HashID, Elixir::TypeID>& GetTypeMap() { return typeMap; }
 		static Elixir::IComponent* Create(HashID componentId);
 		static Elixir::TypeID GetTypeID(HashID componentId);
 	};

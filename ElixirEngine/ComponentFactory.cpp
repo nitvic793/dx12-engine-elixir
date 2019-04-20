@@ -33,6 +33,6 @@ Elixir::TypeID Elixir::ComponentFactory::GetTypeID(HashID componentId)
 	return typeMap[componentId];
 }
 
-
+#include "../Engine.Components/Components.inl"
 RegisterComponent(AnimationComponent)
 RegisterComponent(AnimationBufferComponent)

@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "EntityManager.h"
+#include "ComponentSerDe.h"
 
 using namespace Elixir;
 
@@ -120,6 +121,16 @@ void Elixir::EntityManager::SetTransform(EntityID entity, const Transform & tran
 {
 	auto node = entities[entity];
 	scene->SetTransform(node, transform);
+}
+
+void Elixir::EntityManager::SaveComponentsToFile(const char * filename)
+{
+	ComponentSerDe::Save(components, filename);
+}
+
+void Elixir::EntityManager::LoadComponentsFromFile(const char * filename)
+{
+	ComponentSerDe::Load(components, filename);
 }
 
 const XMFLOAT3 & Elixir::EntityManager::GetPosition(EntityID entity)

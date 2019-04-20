@@ -135,6 +135,7 @@
     <ClCompile Include="BlurFilter.cpp" />
     <ClCompile Include="Component.cpp" />
     <ClCompile Include="ComponentFactory.cpp" />
+    <ClCompile Include="ComponentSerDe.cpp" />
     <ClCompile Include="CompositeTextures.cpp" />
     <ClCompile Include="ComputeCore.cpp" />
     <ClCompile Include="ComputeProcess.cpp" />
@@ -178,6 +179,7 @@
     <ClInclude Include="BlurFilter.h" />
     <ClInclude Include="Component.h" />
     <ClInclude Include="ComponentFactory.h" />
+    <ClInclude Include="ComponentSerDe.h" />
     <ClInclude Include="CompositeTextures.h" />
     <ClInclude Include="ComputeCore.h" />
     <ClInclude Include="ComputeProcess.h" />

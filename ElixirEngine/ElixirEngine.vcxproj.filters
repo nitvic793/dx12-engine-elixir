@@ -82,6 +82,9 @@
     <Filter Include="Header Files\Serialization">
       <UniqueIdentifier>{904333de-96d4-4d75-bdb9-945b646a04eb}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\Serialization">
+      <UniqueIdentifier>{0fff133a-807d-4bf0-8ec6-7582bb9fb362}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Core\Core.cpp">
@@ -197,6 +200,9 @@
     </ClCompile>
     <ClCompile Include="ComponentFactory.cpp">
       <Filter>Source Files\System</Filter>
+    </ClCompile>
+    <ClCompile Include="ComponentSerDe.cpp">
+      <Filter>Source Files\Serialization</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -343,6 +349,9 @@
     </ClInclude>
     <ClInclude Include="ComponentFactory.h">
       <Filter>Header Files\System</Filter>
+    </ClInclude>
+    <ClInclude Include="ComponentSerDe.h">
+      <Filter>Header Files\Serialization</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

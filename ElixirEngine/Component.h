@@ -2,10 +2,17 @@
 #include <vector>
 #include <unordered_map>
 #include "SceneCommon.h"
+#include <cereal/types/complex.hpp>
+#include <cereal/types/common.hpp>
+#include <cereal/types/vector.hpp>
+#include <cereal/types/string.hpp>
+#include <cereal/types/unordered_map.hpp>
+#include <cereal/archives/json.hpp>
 
 namespace Elixir
 {
-	class IComponent 
+
+	class IComponent
 	{
 	public:
 		virtual void GetEntities(std::vector<EntityID>& outEntities) = 0;
@@ -13,6 +20,7 @@ namespace Elixir
 		virtual void Deserialize(cereal::JSONInputArchive& archive) {};
 		virtual size_t GetHash() = 0;
 		virtual void AddEntity(EntityID entity) = 0;
+		virtual const char* GetComponentName() = 0;
 		virtual ~IComponent() {};
 	};
 
@@ -34,13 +42,31 @@ namespace Elixir
 
 		// Inherited via IComponent
 		virtual void GetEntities(std::vector<EntityID>& outEntities) override;
-		
-		virtual void Serialize(cereal::JSONOutputArchive& archive) 
+
+		virtual void Serialize(cereal::JSONOutputArchive& archive)
 		{
+			archive(cereal::make_nvp(GetComponentName(), *this));
 		};
 
-		virtual void Deserialize(cereal::JSONInputArchive& archive) 
+		virtual void Deserialize(cereal::JSONInputArchive& archive)
 		{
+			try
+			{
+				archive(cereal::make_nvp(GetComponentName(), *this));
+				size_t compIndex = 0;
+				for (auto entity : Entities)
+				{
+					if (EntityComponentMap.find(entity) == EntityComponentMap.end())
+						EntityComponentMap.insert(std::pair<EntityID, size_t>(entity, compIndex));
+					compIndex++;
+				}
+			}
+			catch (...)
+			{
+#ifdef _DEBUG
+				printf("Skipped %s component while loading", T::GetName());
+#endif
+			}
 		};
 
 		template<class Archive>
@@ -64,6 +90,11 @@ namespace Elixir
 		virtual void AddEntity(EntityID entity) override
 		{
 			AddEntity(entity, T());
+		}
+
+		virtual const char* GetComponentName() override
+		{
+			return T::GetName();
 		}
 	};
 

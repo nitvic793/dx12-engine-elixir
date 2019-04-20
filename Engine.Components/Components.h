@@ -12,20 +12,33 @@ using namespace DirectX;
 struct Components
 {
 	float a;
-	Components();
-	~Components();
-
-	Component(Components)
+	 
+	GameComponent(Components)
+	template<class Archive>
+	void serialize(Archive& archive)
+	{
+		archive(CEREAL_NVP(a));
+	}
 };
 
 struct TestA
 {
 	float speed = 10.f;
-	Component(TestA)
+	GameComponent(TestA)
+	template<class Archive>
+	void serialize(Archive& archive)
+	{
+		archive(CEREAL_NVP(speed));
+	}
 };
 
 struct TestB
 {
 	float yOffset = 20.f;
-	Component(TestB)
+	GameComponent(TestB)
+	template<class Archive>
+	void serialize(Archive& archive)
+	{
+		archive(CEREAL_NVP(yOffset));
+	}
 };

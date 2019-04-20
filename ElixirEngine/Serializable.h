@@ -1,5 +1,11 @@
 #pragma once
 #include "ComponentFactory.h"
+#include <cereal/types/complex.hpp>
+#include <cereal/types/common.hpp>
+#include <cereal/types/vector.hpp>
+#include <cereal/types/string.hpp>
+#include <cereal/archives/json.hpp>
+#include <cereal/types/polymorphic.hpp>
 
 namespace Elixir
 {
@@ -30,7 +36,7 @@ namespace Elixir
 	};
 
 //Lets the compiler know that this struct is a in-game component
-#define Component(name) \
+#define GameComponent(name) \
 	static Elixir::Serializable<name> Reflectable_ ## name; \
 	static const char* GetName() \
 	{ \
@@ -38,7 +44,9 @@ namespace Elixir
     }
 
 #define RegisterComponent(name)\
-	Elixir::Serializable<name> name ## ::Reflectable_ ## name = Elixir::Serializable<name>(#name); 
+	Elixir::Serializable<name> name ## ::Reflectable_ ## name = Elixir::Serializable<name>(#name); \
+
+	
 
 #define Construct(type) \
 	static const char* GetName() \

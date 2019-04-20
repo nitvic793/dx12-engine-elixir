@@ -70,17 +70,12 @@ void Game::InitializeAssets()
 
 	skyTexture = rm->GetTexture(StringID("skybox"));
 
+	//TODO: Serialize Below. Allow giving parent id as 0s
 	auto eId = entityManager.CreateEntity(0, "Test", StringID("sphere"), StringID("floor"), Elixir::Transform::Create(XMFLOAT3(-1, 0, 0)));
 	auto e2 = entityManager.CreateEntity(eId, "Test", StringID("sphere"), StringID("bronze"), Elixir::Transform::Create(XMFLOAT3(-1, 0, 0)));
 
-	entityManager.AddComponent<TestA>(eId, { 1.f });
-	entityManager.AddComponent(1, TestA{ 0.3f });
-	entityManager.AddComponent<TestB>(eId);
-	entityManager.AddComponent<TestB>(1);
-	entityManager.AddComponent(8, "AnimationComponent");
-	entityManager.AddComponent(8, "AnimationBufferComponent");
-	//systemManager.RegisterSystem<Elixir::SampleSystem>();
 	systemManager.RegisterSystem<AnimationSystem>(animationManager.get());
+	entityManager.LoadComponentsFromFile("Test.json");
 	OnLoadSystems();
 	systemManager.Init();
 }
@@ -159,6 +154,12 @@ void Game::Update()
 	if (GetAsyncKeyState(VK_F6) & 0xFFFF8000 && CurrentTime > delay)
 	{
 		OnLoadSystems();
+		CurrentTime = 0.f;
+	}
+
+	if (GetAsyncKeyState(VK_F1) & 0xFFFF8000 && CurrentTime > delay)
+	{
+		entityManager.SaveComponentsToFile("Test.json");
 		CurrentTime = 0.f;
 	}
 
