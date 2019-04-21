@@ -1,6 +1,7 @@
 #pragma once
 #include "stdafx.h"
 #include "EntityManager.h"
+#include "SystemContext.h"
 
 
 namespace Elixir
@@ -8,7 +9,8 @@ namespace Elixir
 	class ISystem
 	{
 	protected:
-		EntityManager* entity;
+		EntityManager*		entity;
+		SystemContext		context;
 		std::vector<TypeID> components;
 
 		template<typename T>
@@ -21,6 +23,7 @@ namespace Elixir
 		ISystem() { entity = nullptr; };
 
 		void SetEntityManager(EntityManager* manager) { entity = manager; }
+		void SetContext(const SystemContext& context) { this->context = context; };
 		template<typename T>
 		void			RegisterComponent();
 		virtual void	Init() {};

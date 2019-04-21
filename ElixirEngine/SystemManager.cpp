@@ -2,8 +2,9 @@
 #include "SystemManager.h"
 
 
-Elixir::SystemManager::SystemManager(EntityManager * entityMgr) :
-	entityManager(entityMgr)
+Elixir::SystemManager::SystemManager(EntityManager * entityMgr, SystemContext* context) :
+	entityManager(entityMgr),
+	context(context)
 {
 }
 
@@ -21,6 +22,7 @@ void Elixir::SystemManager::RegisterSystems(std::vector<ISystem*>&& systems)
 	for (auto system : this->systems)
 	{
 		system->SetEntityManager(entityManager);
+		system->SetContext(*context);
 	}
 }
 
@@ -29,6 +31,7 @@ void Elixir::SystemManager::RegisterSystems()
 	for (auto system : systems)
 	{
 		system->SetEntityManager(entityManager);
+		system->SetContext(*context);
 		system->Init();
 	}
 }

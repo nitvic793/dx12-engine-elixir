@@ -16,6 +16,7 @@
 #include "Scene.h"
 #include "EntityManager.h"
 #include "SystemManager.h"
+#include "SystemContext.h"
 
 typedef std::function<void(std::vector<Elixir::ISystem*>&)> SystemsCallback;
 
@@ -45,6 +46,7 @@ protected:
 	Elixir::Scene						scene;
 	Elixir::EntityManager				entityManager;
 	Elixir::SystemManager				systemManager;
+	Elixir::SystemContext				context;
 	bool isBlurEnabled;
 	SystemsCallback SystemsLoadCallback;
 	SystemsCallback SystemsUnloadCallback;

@@ -1,15 +1,16 @@
 #pragma once
 #include "System.h"
-
+#include "SystemContext.h"
 namespace Elixir
 {
 	class SystemManager
 	{
-		EntityManager* entityManager;
-		std::vector<ISystem*> systems;
-		std::vector<ISystem*> internalSystems;
+		SystemContext*			context;
+		EntityManager*			entityManager;
+		std::vector<ISystem*>	systems;
+		std::vector<ISystem*>	internalSystems;
 	public:
-		SystemManager(EntityManager* entityMgr);
+		SystemManager(EntityManager* entityMgr, SystemContext* context);
 		~SystemManager();
 
 		template<typename SysType, typename ...Args>

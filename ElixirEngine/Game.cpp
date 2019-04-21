@@ -10,6 +10,12 @@
 //Initializes assets. This function's scope has access to commandList which is not closed. 
 void Game::InitializeAssets()
 {
+	context.EntityManager = &entityManager;
+	context.GameInstance = this;
+	context.ResourceManager = resourceManager;
+	context.SystemResourceManager = sysRM.get();
+	context.AnimationManager = animationManager.get();
+
 	deferredRenderer->SetAnimationManager(animationManager.get());
 	deferredRenderer->SetEntityManager(&entityManager);
 	auto rm = resourceManager;
@@ -83,7 +89,7 @@ void Game::InitializeAssets()
 Game::Game(HINSTANCE hInstance, int ShowWnd, int width, int height, bool fullscreen) :
 	Core(hInstance, ShowWnd, width, height, fullscreen),
 	entityManager(&scene),
-	systemManager(&entityManager)
+	systemManager(&entityManager, &context)
 {
 	resourceManager = ResourceManager::CreateInstance(device);
 	animationManager = std::make_unique<AnimationManager>();

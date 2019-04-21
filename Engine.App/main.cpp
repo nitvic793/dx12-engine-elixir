@@ -28,7 +28,11 @@ void UnloadGameSystemsLibrary()
 
 void BuildSystemsLibrary()
 {
+#ifdef _DEBUG
 	system("msbuild ../../ElixirEngine.sln /target:Engine_Systems");
+#else
+	system("msbuild ../../ElixirEngine.sln /p:Configuration=Release /target:Engine_Systems");
+#endif
 }
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow)
