@@ -128,6 +128,7 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
+      <AdditionalDependencies>d3d12.lib;dxgi.lib;dxguid.lib.;d3dcompiler.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -186,6 +187,7 @@
     <Import Project="..\packages\unofficial-flayan-cereal.1.2.2\build\native\unofficial-flayan-cereal.targets" Condition="Exists('..\packages\unofficial-flayan-cereal.1.2.2\build\native\unofficial-flayan-cereal.targets')" />
     <Import Project="..\packages\assimp_native.redist.4.0.1\build\native\assimp_native.redist.targets" Condition="Exists('..\packages\assimp_native.redist.4.0.1\build\native\assimp_native.redist.targets')" />
     <Import Project="..\packages\assimp_native.4.0.1\build\native\assimp_native.targets" Condition="Exists('..\packages\assimp_native.4.0.1\build\native\assimp_native.targets')" />
+    <Import Project="..\packages\directxmesh_desktop_win10.2018.11.17.4\build\native\directxmesh_desktop_win10.targets" Condition="Exists('..\packages\directxmesh_desktop_win10.2018.11.17.4\build\native\directxmesh_desktop_win10.targets')" />
   </ImportGroup>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
@@ -196,5 +198,6 @@
     <Error Condition="!Exists('..\packages\unofficial-flayan-cereal.1.2.2\build\native\unofficial-flayan-cereal.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\unofficial-flayan-cereal.1.2.2\build\native\unofficial-flayan-cereal.targets'))" />
     <Error Condition="!Exists('..\packages\assimp_native.redist.4.0.1\build\native\assimp_native.redist.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\assimp_native.redist.4.0.1\build\native\assimp_native.redist.targets'))" />
     <Error Condition="!Exists('..\packages\assimp_native.4.0.1\build\native\assimp_native.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\assimp_native.4.0.1\build\native\assimp_native.targets'))" />
+    <Error Condition="!Exists('..\packages\directxmesh_desktop_win10.2018.11.17.4\build\native\directxmesh_desktop_win10.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\directxmesh_desktop_win10.2018.11.17.4\build\native\directxmesh_desktop_win10.targets'))" />
   </Target>
 </Project>

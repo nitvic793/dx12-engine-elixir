@@ -1,0 +1,354 @@
+{
+    "Scene": [
+        {
+            "ParentID": -1,
+            "Mesh": "sphere",
+            "Material": "floor",
+            "Position": {
+                "X": 0.0,
+                "Y": 0.0,
+                "Z": 0.0
+            },
+            "Rotation": {
+                "X": 0.0,
+                "Y": 0.0,
+                "Z": 0.0
+            },
+            "Scale": {
+                "X": 1.0,
+                "Y": 1.0,
+                "Z": 1.0
+            },
+            "Components": []
+        },
+        {
+            "ParentID": -1,
+            "Mesh": "sphere",
+            "Material": "wood",
+            "Position": {
+                "X": 1.0,
+                "Y": 0.0,
+                "Z": 0.0
+            },
+            "Rotation": {
+                "X": 0.0,
+                "Y": 0.0,
+                "Z": 0.0
+            },
+            "Scale": {
+                "X": 1.0,
+                "Y": 1.0,
+                "Z": 1.0
+            },
+            "Components": [
+                {
+                    "ComponentName": "TestB",
+                    "Data": {
+                        "polymorphic_id": 2147483649,
+                        "polymorphic_name": "TestB",
+                        "ptr_wrapper": {
+                            "id": 2147483649,
+                            "data": {
+                                "yOffset": 20.0
+                            }
+                        }
+                    }
+                },
+                {
+                    "ComponentName": "TestA",
+                    "Data": {
+                        "polymorphic_id": 2147483650,
+                        "polymorphic_name": "TestA",
+                        "ptr_wrapper": {
+                            "id": 2147483650,
+                            "data": {
+                                "speed": 0.30000001192092898
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "ParentID": -1,
+            "Mesh": "sphere",
+            "Material": "scratched",
+            "Position": {
+                "X": 2.0,
+                "Y": 0.0,
+                "Z": 0.0
+            },
+            "Rotation": {
+                "X": 0.0,
+                "Y": 0.0,
+                "Z": 0.0
+            },
+            "Scale": {
+                "X": 1.0,
+                "Y": 1.0,
+                "Z": 1.0
+            },
+            "Components": []
+        },
+        {
+            "ParentID": -1,
+            "Mesh": "sphere",
+            "Material": "bronze",
+            "Position": {
+                "X": 3.0,
+                "Y": 0.0,
+                "Z": 0.0
+            },
+            "Rotation": {
+                "X": 0.0,
+                "Y": 0.0,
+                "Z": 0.0
+            },
+            "Scale": {
+                "X": 1.0,
+                "Y": 1.0,
+                "Z": 1.0
+            },
+            "Components": []
+        },
+        {
+            "ParentID": -1,
+            "Mesh": "sphere",
+            "Material": "floor",
+            "Position": {
+                "X": 4.0,
+                "Y": 0.0,
+                "Z": 0.0
+            },
+            "Rotation": {
+                "X": 0.0,
+                "Y": 0.0,
+                "Z": 0.0
+            },
+            "Scale": {
+                "X": 1.0,
+                "Y": 1.0,
+                "Z": 1.0
+            },
+            "Components": []
+        },
+        {
+            "ParentID": -1,
+            "Mesh": "sphere",
+            "Material": "wood",
+            "Position": {
+                "X": 5.0,
+                "Y": 0.0,
+                "Z": 0.0
+            },
+            "Rotation": {
+                "X": 0.0,
+                "Y": 0.0,
+                "Z": 0.0
+            },
+            "Scale": {
+                "X": 1.0,
+                "Y": 1.0,
+                "Z": 1.0
+            },
+            "Components": []
+        },
+        {
+            "ParentID": -1,
+            "Mesh": "sw",
+            "Material": "arc",
+            "Position": {
+                "X": 0.0,
+                "Y": 2.0,
+                "Z": 5.0
+            },
+            "Rotation": {
+                "X": 0.0,
+                "Y": 0.0,
+                "Z": 0.0
+            },
+            "Scale": {
+                "X": 0.009999999776482582,
+                "Y": 0.009999999776482582,
+                "Z": 0.009999999776482582
+            },
+            "Components": []
+        },
+        {
+            "ParentID": -1,
+            "Mesh": "sw",
+            "Material": "arc",
+            "Position": {
+                "X": 15.0,
+                "Y": 1.0,
+                "Z": 5.0
+            },
+            "Rotation": {
+                "X": 0.0,
+                "Y": 0.0,
+                "Z": 0.0
+            },
+            "Scale": {
+                "X": 0.009999999776482582,
+                "Y": 0.009999999776482582,
+                "Z": 0.009999999776482582
+            },
+            "Components": []
+        },
+        {
+            "ParentID": -1,
+            "Mesh": "man",
+            "Material": "hammer",
+            "Position": {
+                "X": 0.0,
+                "Y": -1.0,
+                "Z": 1.0
+            },
+            "Rotation": {
+                "X": 90.0,
+                "Y": 0.0,
+                "Z": 0.0
+            },
+            "Scale": {
+                "X": 0.009999999776482582,
+                "Y": 0.009999999776482582,
+                "Z": 0.009999999776482582
+            },
+            "Components": [
+                {
+                    "ComponentName": "AnimationComponent",
+                    "Data": {
+                        "polymorphic_id": 2147483651,
+                        "polymorphic_name": "AnimationComponent",
+                        "ptr_wrapper": {
+                            "id": 2147483651,
+                            "data": {
+                                "CurrentAnimationIndex": 0
+                            }
+                        }
+                    }
+                },
+                {
+                    "ComponentName": "AnimationBufferComponent",
+                    "Data": {
+                        "polymorphic_id": 2147483652,
+                        "polymorphic_name": "AnimationBufferComponent",
+                        "ptr_wrapper": {
+                            "id": 2147483652,
+                            "data": {}
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "ParentID": -1,
+            "Mesh": "quad",
+            "Material": "cement",
+            "Position": {
+                "X": 5.0,
+                "Y": -1.0,
+                "Z": -5.0
+            },
+            "Rotation": {
+                "X": 0.0,
+                "Y": 0.0,
+                "Z": 0.0
+            },
+            "Scale": {
+                "X": 15.0,
+                "Y": 15.0,
+                "Z": 15.0
+            },
+            "Components": []
+        },
+        {
+            "ParentID": -1,
+            "Mesh": "sphere",
+            "Material": "cement",
+            "Position": {
+                "X": -2.0,
+                "Y": 0.0,
+                "Z": 0.0
+            },
+            "Rotation": {
+                "X": 0.0,
+                "Y": 0.0,
+                "Z": 0.0
+            },
+            "Scale": {
+                "X": 1.0,
+                "Y": 1.0,
+                "Z": 1.0
+            },
+            "Components": []
+        },
+        {
+            "ParentID": 0,
+            "Mesh": "sphere",
+            "Material": "floor",
+            "Position": {
+                "X": -1.0,
+                "Y": 1.0,
+                "Z": 0.0
+            },
+            "Rotation": {
+                "X": 0.0,
+                "Y": 0.0,
+                "Z": 0.0
+            },
+            "Scale": {
+                "X": 1.0,
+                "Y": 1.0,
+                "Z": 1.0
+            },
+            "Components": [
+                {
+                    "ComponentName": "TestB",
+                    "Data": {
+                        "polymorphic_id": 1,
+                        "ptr_wrapper": {
+                            "id": 2147483653,
+                            "data": {
+                                "yOffset": 20.0
+                            }
+                        }
+                    }
+                },
+                {
+                    "ComponentName": "TestA",
+                    "Data": {
+                        "polymorphic_id": 2,
+                        "ptr_wrapper": {
+                            "id": 2147483654,
+                            "data": {
+                                "speed": 1.0
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "ParentID": 11,
+            "Mesh": "sphere",
+            "Material": "bronze",
+            "Position": {
+                "X": -1.0,
+                "Y": 0.0,
+                "Z": 0.0
+            },
+            "Rotation": {
+                "X": 0.0,
+                "Y": 0.0,
+                "Z": 0.0
+            },
+            "Scale": {
+                "X": 1.0,
+                "Y": 1.0,
+                "Z": 1.0
+            },
+            "Components": []
+        }
+    ]
+}

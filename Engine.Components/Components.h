@@ -16,7 +16,7 @@ GameComponent(Components)
 	{
 		archive(CEREAL_NVP(a));
 	}
-EndComponent()
+EndComponent(Components)
 
 GameComponent(TestA)
 	float speed = 10.f;
@@ -26,7 +26,7 @@ GameComponent(TestA)
 	{
 		archive(CEREAL_NVP(speed));
 	}
-EndComponent()
+EndComponent(TestA)
 
 
 GameComponent(TestB)
@@ -37,4 +37,4 @@ GameComponent(TestB)
 	{
 		archive(CEREAL_NVP(yOffset));
 	}
-EndComponent()
+EndComponent(TestB)

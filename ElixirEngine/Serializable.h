@@ -9,6 +9,7 @@
 
 namespace Elixir
 {
+
 	template<typename T>
 	class Serializable
 	{
@@ -35,22 +36,29 @@ namespace Elixir
 		const char* Name;
 	};
 
-//Lets the compiler know that this struct is a in-game component
+//! Lets the compiler know that this struct is a in-game component
 #define GameComponent(name) \
-	struct name { \
+	struct name : public Elixir::IComponentData { \
 	static Elixir::Serializable<name> Reflectable_ ## name; \
 	static const char* GetName() \
 	{ \
 		return #name ; \
-    }
+    } \
+	virtual IComponentData* Clone() override \
+	{ \
+		name* val = new name(); \
+		*val = *this; \
+		return val; \
+	}
 
-#define EndComponent() \
-	};
+#define EndComponent(name) \
+	}; \
+	CEREAL_REGISTER_TYPE(name) \
+	CEREAL_REGISTER_POLYMORPHIC_RELATION(Elixir::IComponentData, name)
 
 #define RegisterComponent(name)\
-	Elixir::Serializable<name> name ## ::Reflectable_ ## name = Elixir::Serializable<name>(#name); \
+	Elixir::Serializable<name> name ## ::Reflectable_ ## name = Elixir::Serializable<name>(#name); 
 
-	
 
 #define Construct(type) \
 	static const char* GetName() \

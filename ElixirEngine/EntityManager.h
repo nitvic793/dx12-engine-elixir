@@ -6,10 +6,68 @@
 #include "SceneCommon.h"
 #include "ComponentFactory.h"
 #include "Component.h"
+#include <cereal/types/polymorphic.hpp>
+#include "SystemContext.h"
+
+class ResourceManager;
 
 namespace Elixir
 {
 	class EntityManager;
+
+	struct Vector3
+	{
+		XMFLOAT3 Value;
+
+		template<typename Archive>
+		void serialize(Archive& archive)
+		{
+			archive(
+				cereal::make_nvp("X", Value.x),
+				cereal::make_nvp("Y", Value.y),
+				cereal::make_nvp("Z", Value.z)
+			);
+		}
+	};
+
+	struct ComponentContainer
+	{
+		std::string ComponentName;
+		std::shared_ptr<IComponentData> Data;
+		template<class Archive>
+		void serialize(Archive& archive)
+		{
+			archive(
+				CEREAL_NVP(ComponentName),
+				CEREAL_NVP(Data)
+			);
+		}
+	};
+
+	struct EntityInterface
+	{
+		EntityID	ParentID;
+		std::string Mesh;
+		std::string Material;
+		Vector3		Position;
+		Vector3		Rotation;
+		Vector3		Scale;
+		std::vector<ComponentContainer> Components;
+
+		template<class Archive>
+		void serialize(Archive& archive)
+		{
+			archive(
+				CEREAL_NVP(ParentID),
+				CEREAL_NVP(Mesh),
+				CEREAL_NVP(Material),
+				CEREAL_NVP(Position),
+				CEREAL_NVP(Rotation),
+				CEREAL_NVP(Scale),
+				CEREAL_NVP(Components)
+			);
+		}
+	};
 
 	struct Entity
 	{
@@ -26,11 +84,13 @@ namespace Elixir
 		std::unordered_map<std::string, EntityID> entityNameIndexMap;
 		std::unordered_map<TypeID, IComponent*> components;
 
-		std::vector<NodeID> entities; // Entity List. Index of this vector will act as EntityID
-		std::vector<HashID> meshes; 
-		std::vector<HashID> materials;
+		std::vector<NodeID>		entities; // Entity List. Index of this vector will act as EntityID
+		std::vector<HashID>		meshes;
+		std::vector<HashID>		materials;
+		std::vector<EntityID>	parents;
+		std::vector<EntityID>	removeList; //Entities to be removed
 
-		std::vector<EntityID> removeList; //Entities to be removed
+		//EntityInterface MakeEntityInterface(EntityID entity);
 	public:
 		EntityManager(Scene* scene);
 		EntityID		CreateEntity(std::string name, const Transform& transform = DefaultTransform);
@@ -50,7 +110,8 @@ namespace Elixir
 		template<typename T>
 		void			AddComponent(EntityID entity, const T& componentData = T());
 
-		void			AddComponent(EntityID entity, const char* componentName);
+		void			AddComponent(EntityID entity, const char* componentName, IComponentData* data = nullptr);
+
 		template<typename T>
 		void			GetComponentEntities(std::vector<EntityID> &outEntities);
 		void			GetComponentEntities(TypeID componentId, std::vector<EntityID> &outEntities);
@@ -63,6 +124,8 @@ namespace Elixir
 
 		template<typename T>
 		T&				GetComponent(EntityID entity);
+
+		IComponentData* GetComponent(const char* componentName, EntityID entity);
 
 		template<typename T>
 		T*				GetComponents(size_t& outCount);
@@ -77,10 +140,13 @@ namespace Elixir
 
 		void			SaveComponentsToFile(const char* filename);
 		void			LoadComponentsFromFile(const char* filename);
+		void			SaveToFile(const char* filename, ResourceManager* rm);
+		void			LoadFromFile(const char* filename, SystemContext context);
 
 		//Getters
 		const XMFLOAT3&		GetPosition(EntityID entity);
 		const XMFLOAT3&		GetRotation(EntityID entity);
+		XMFLOAT3			GetRotationInDegrees(EntityID entity);
 		const XMFLOAT3&		GetScale(EntityID entity);
 		const XMFLOAT4X4&	GetTransformMatrix(EntityID entity);
 		EntityID			GetEntityID(std::string entityName);
@@ -115,6 +181,7 @@ namespace Elixir
 	template<typename T>
 	inline void EntityManager::AddComponent(EntityID entity, const T & componentData)
 	{
+		std::shared_ptr<T> ptr = std::shared_ptr<T>(&componentData);
 		auto typeHash = typeid(T).hash_code();
 		if (components.find(typeHash) == components.end())
 		{
@@ -148,7 +215,7 @@ namespace Elixir
 			std::sort(inEntities.begin(), inEntities.end());
 			if (outEntities.size() == 0)
 				outEntities = inEntities;
-			else 
+			else
 				std::set_intersection(outEntities.begin(), outEntities.end(), inEntities.begin(), inEntities.end(), outEntities.begin());
 		};
 

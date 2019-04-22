@@ -5,8 +5,8 @@
 void SampleSystem::PreUpdate()
 {
 	GetEntities(entities);
-	GetComponents(aData, entities); 
-	GetComponents(bData, entities); 
+	GetComponents(aData, entities);
+	GetComponents(bData, entities);
 }
 
 void SampleSystem::Update(float deltaTime)
@@ -14,10 +14,10 @@ void SampleSystem::Update(float deltaTime)
 	totalTime += deltaTime;
 	auto idx = 0;
 	for (auto e : entities)
-	{ 
+	{
 		auto position = entity->GetPosition(e);
-		//aData[idx]->speed = 10.f;s
-		position.z = aData[idx]->speed * sin(totalTime);
+		//aData[idx]->speed = 10.f;ss
+		position.y = aData[idx]->speed * sin(totalTime * 5);
 		entity->SetPosition(e, position);
 		idx++;
 	}

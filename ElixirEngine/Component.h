@@ -11,15 +11,21 @@
 
 namespace Elixir
 {
+	struct IComponentData
+	{
+		virtual IComponentData* Clone() = 0;
+		virtual ~IComponentData() {}
+	};
 
 	class IComponent
 	{
 	public:
+		virtual IComponentData* GetComponentData(EntityID entity) = 0;
 		virtual void GetEntities(std::vector<EntityID>& outEntities) = 0;
 		virtual void Serialize(cereal::JSONOutputArchive& archive) {};
 		virtual void Deserialize(cereal::JSONInputArchive& archive) {};
 		virtual size_t GetHash() = 0;
-		virtual void AddEntity(EntityID entity) = 0;
+		virtual void AddEntity(EntityID entity, IComponentData* data = nullptr) = 0;
 		virtual const char* GetComponentName() = 0;
 		virtual ~IComponent() {};
 	};
@@ -87,14 +93,32 @@ namespace Elixir
 			return typeid(T).hash_code();
 		}
 
-		virtual void AddEntity(EntityID entity) override
+		virtual void AddEntity(EntityID entity, IComponentData* data = nullptr) override
 		{
-			AddEntity(entity, T());
+			if (data == nullptr)
+				AddEntity(entity, T());
+			else
+			{
+				T component = *(T*)data;
+				AddEntity(entity, component);
+			}
 		}
 
 		virtual const char* GetComponentName() override
 		{
 			return T::GetName();
+		}
+
+		virtual IComponentData* GetComponentData(EntityID entity) override
+		{
+			if (EntityComponentMap.find(entity) == EntityComponentMap.end())
+			{
+				return nullptr;
+			}
+
+			auto cId = EntityComponentMap[entity];
+			auto component = (IComponentData*)&Components[cId];
+			return component;
 		}
 	};
 

@@ -18,10 +18,12 @@ void Game::InitializeAssets()
 
 	deferredRenderer->SetAnimationManager(animationManager.get());
 	deferredRenderer->SetEntityManager(&entityManager);
+
 	auto rm = resourceManager;
 	rm->Initialize(animationManager.get(), &entityManager);
 	rm->LoadResources("../../SceneData/resources.json", commandQueue, commandList, deferredRenderer);
-	rm->LoadScene("../../SceneData/scene.json", entities);
+	entityManager.LoadFromFile("../../SceneData/testScene.json", context);
+	//rm->LoadScene("../../SceneData/scene.json", entities);
 
 	instanced = new MeshInstanceGroupEntity(
 		{ StringID("sphere") }, { StringID("scratched") },
@@ -77,11 +79,11 @@ void Game::InitializeAssets()
 	skyTexture = rm->GetTexture(StringID("skybox"));
 
 	//TODO: Serialize Below. Allow giving parent id as 0s
-	auto eId = entityManager.CreateEntity(0, "Test", StringID("sphere"), StringID("floor"), Elixir::Transform::Create(XMFLOAT3(-1, 0, 0)));
-	auto e2 = entityManager.CreateEntity(eId, "Test", StringID("sphere"), StringID("bronze"), Elixir::Transform::Create(XMFLOAT3(-1, 0, 0)));
+	/*auto eId = entityManager.CreateEntity(0, "Test", StringID("sphere"), StringID("floor"), Elixir::Transform::Create(XMFLOAT3(-1, 0, 0)));
+	auto e2 = entityManager.CreateEntity(eId, "Test", StringID("sphere"), StringID("bronze"), Elixir::Transform::Create(XMFLOAT3(-1, 0, 0)));*/
 
 	systemManager.RegisterSystem<AnimationSystem>(animationManager.get());
-	entityManager.LoadComponentsFromFile("Test.json");
+	//entityManager.LoadComponentsFromFile("Test.json");
 	OnLoadSystems();
 	systemManager.Init();
 }
@@ -116,7 +118,7 @@ void Game::Update()
 	camera->Update(deltaTime);
 	entity.SetRotation(0, XMFLOAT3(0, sin(totalTime), 0));
 	entity.SetPosition(0, XMFLOAT3(2 * sin(totalTime) + 2, 1.f, cos(totalTime)));
-	entity.SetRotation(8, XMFLOAT3(XM_PIDIV2, 0, 0));
+	//entity.SetRotation(8, XMFLOAT3(XM_PIDIV2, 0, 0));
 
 	pixelCb.pointLight[1].Position = XMFLOAT3(2 * sin(totalTime * 2) + 1, 0, -1);
 	pixelCb.pointLight[0].Position = XMFLOAT3(2 * sin(totalTime * 2) + 5, 1.0f, -2 + -2 * cos(totalTime));
@@ -165,7 +167,8 @@ void Game::Update()
 
 	if (GetAsyncKeyState(VK_F1) & 0xFFFF8000 && CurrentTime > delay)
 	{
-		entityManager.SaveComponentsToFile("Test.json");
+		entityManager.SaveToFile("testScene.json", resourceManager);
+		//entityManager.SaveComponentsToFile("Test.json");
 		CurrentTime = 0.f;
 	}
 

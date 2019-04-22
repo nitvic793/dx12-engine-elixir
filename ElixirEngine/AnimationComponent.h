@@ -9,7 +9,7 @@ GameComponent(AnimationComponent)
 	{
 		archive(CEREAL_NVP(CurrentAnimationIndex));
 	}
-EndComponent()
+EndComponent(AnimationComponent)
 
 GameComponent(AnimationBufferComponent)
 	PerArmatureConstantBuffer ConstantBuffer;
@@ -18,4 +18,4 @@ GameComponent(AnimationBufferComponent)
 	{
 		//archive(); Don't serialize constant buffer 
 	}
-EndComponent()
+EndComponent(AnimationBufferComponent)

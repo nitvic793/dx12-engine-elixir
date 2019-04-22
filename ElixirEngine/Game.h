@@ -9,12 +9,12 @@
 #include "TexturePool.h"
 #include "EdgeFilter.h"
 #include "CompositeTextures.h"
+#include "EntityManager.h"
 #include "ResourceManager.h"
 #include "DownScaleTexture.h"
 #include "MeshInstanceGroupEntity.h"
 #include "AnimationManager.h"
 #include "Scene.h"
-#include "EntityManager.h"
 #include "SystemManager.h"
 #include "SystemContext.h"
 
