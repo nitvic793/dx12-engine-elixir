@@ -32,6 +32,7 @@ EntityID Elixir::EntityManager::CreateEntity(EntityID parentId, std::string name
 	meshes.push_back(mesh);
 	materials.push_back(material);
 	parents.push_back(parentId);
+	active.push_back(true);
 	return entityId;
 }
 
@@ -59,7 +60,15 @@ void Elixir::EntityManager::AddComponent(EntityID entity, const char * component
 
 void Elixir::EntityManager::GetComponentEntities(TypeID componentId, std::vector<EntityID>& outEntities)
 {
-	components[componentId]->GetEntities(outEntities);
+	std::vector<EntityID> compEntities;
+	components[componentId]->GetEntities(compEntities);
+	for (auto e : compEntities)
+	{
+		if (active[e])
+		{
+			outEntities.push_back(e);
+		}
+	}
 }
 
 
@@ -74,8 +83,11 @@ void Elixir::EntityManager::GetEntities(std::vector<Entity>& outEntityList)
 	outEntityList.clear();
 	for (EntityID i = 0; i < (EntityID)entities.size(); ++i)
 	{
-		auto entity = GetEntity(i);
-		outEntityList.push_back(entity);
+		if (active[i])
+		{
+			auto entity = GetEntity(i);
+			outEntityList.push_back(entity);
+		}
 	}
 }
 
@@ -132,6 +144,11 @@ void Elixir::EntityManager::SetTransform(EntityID entity, const Transform & tran
 {
 	auto node = entities[entity];
 	scene->SetTransform(node, transform);
+}
+
+void Elixir::EntityManager::SetActive(EntityID entity, bool enable)
+{
+	active[entity] = (byte)enable;
 }
 
 void Elixir::EntityManager::SaveComponentsToFile(const char * filename)
@@ -257,6 +274,11 @@ const XMFLOAT4X4 & Elixir::EntityManager::GetTransformMatrix(EntityID entity)
 EntityID Elixir::EntityManager::GetEntityID(std::string entityName)
 {
 	return entityNameIndexMap[entityName];
+}
+
+const bool Elixir::EntityManager::IsActive(EntityID entity)
+{
+	return active[entity];
 }
 
 //inline void Elixir::Entity::Update()

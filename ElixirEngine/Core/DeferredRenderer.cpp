@@ -594,6 +594,7 @@ void DeferredRenderer::PrepareGPUHeap(std::vector<Elixir::Entity> entities, Pixe
 	//Create Entity Constant Buffers and copy to CBVs
 	for (auto e : entities)
 	{
+		//TODO: Store index-EntityID map to use in Draw Calls. IsActive and SetActive entity manager depends on it.
 		auto uvScale = XMFLOAT2(1.f,1.f);
 		auto cb = ConstantBuffer
 		{

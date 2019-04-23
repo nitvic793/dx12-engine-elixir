@@ -89,8 +89,8 @@ namespace Elixir
 		std::vector<HashID>		materials;
 		std::vector<EntityID>	parents;
 		std::vector<EntityID>	removeList; //Entities to be removed
+		std::vector<byte>		active;
 
-		//EntityInterface MakeEntityInterface(EntityID entity);
 	public:
 		EntityManager(Scene* scene);
 		EntityID		CreateEntity(std::string name, const Transform& transform = DefaultTransform);
@@ -137,7 +137,7 @@ namespace Elixir
 		void			SetRotation(EntityID entity, const XMFLOAT3& rotation);
 		void			SetScale(EntityID entity, const XMFLOAT3& scale);
 		void			SetTransform(EntityID entity, const Transform& transform);
-
+		void			SetActive(EntityID entity, bool enable);
 		void			SaveComponentsToFile(const char* filename);
 		void			LoadComponentsFromFile(const char* filename);
 		void			SaveToFile(const char* filename, ResourceManager* rm);
@@ -150,6 +150,7 @@ namespace Elixir
 		const XMFLOAT3&		GetScale(EntityID entity);
 		const XMFLOAT4X4&	GetTransformMatrix(EntityID entity);
 		EntityID			GetEntityID(std::string entityName);
+		const bool			IsActive(EntityID entity);
 
 		Entity				GetEntity(EntityID entity);
 		void				GetEntities(std::vector<Entity>& outEntityList);
@@ -195,7 +196,11 @@ namespace Elixir
 	{
 		auto typeHash = typeid(T).hash_code();
 		Component<T>* component = (Component<T>*)components[typeHash];
-		outEntities = component->Entities;
+		for (auto e : component->Entities)
+		{
+			if (active[e])
+				outEntities.push_back(e);
+		}
 	}
 
 	template<typename T, typename FuncType>
