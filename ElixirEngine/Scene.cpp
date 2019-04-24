@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "Scene.h"
+#include <queue>
 
 using namespace Elixir;
 static const size_t MaxNodeCount = 1024u;
@@ -75,6 +76,29 @@ void Elixir::Scene::SetScale(NodeID nodeId, const XMFLOAT3 & scaleV)
 void Elixir::Scene::SetActive(NodeID nodeId, bool enabled)
 {
 	isActive[nodeId] = enabled;
+}
+
+void Elixir::Scene::GetChildren(NodeID nodeId, std::vector<NodeID>& children)
+{
+	std::queue<NodeID> nodeQueue;
+	std::vector<NodeID> outNodes;
+	for (auto child : nodeList[nodeId].children)
+	{
+		nodeQueue.push(child);
+	}
+
+	while (!nodeQueue.empty())
+	{
+		auto node = nodeQueue.front();
+		outNodes.push_back(node);
+		nodeQueue.pop();
+		for (auto child : nodeList[node].children)
+		{
+			nodeQueue.push(child);
+		}
+	}
+
+	children = outNodes;
 }
 
 const bool Elixir::Scene::IsActive(NodeID nodeId)

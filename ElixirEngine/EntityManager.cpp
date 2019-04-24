@@ -29,6 +29,7 @@ EntityID Elixir::EntityManager::CreateEntity(EntityID parentId, std::string name
 	EntityID entityId = (EntityID)entities.size();
 	entityNameIndexMap.insert(std::pair<std::string, EntityID>(name, entityId));
 	entities.push_back(nodeId);
+	nodeMap.insert_or_assign(nodeId, entityId);
 	meshes.push_back(mesh);
 	materials.push_back(material);
 	parents.push_back(parentId);
@@ -149,6 +150,14 @@ void Elixir::EntityManager::SetTransform(EntityID entity, const Transform & tran
 void Elixir::EntityManager::SetActive(EntityID entity, bool enable)
 {
 	active[entity] = (byte)enable;
+	auto node = entities[entity];
+	std::vector<NodeID> children;
+	scene->GetChildren(node, children);
+	for (auto child : children)
+	{
+		auto entity = nodeMap[child];
+		active[entity] = (byte)enable;
+	}
 }
 
 void Elixir::EntityManager::SaveComponentsToFile(const char * filename)

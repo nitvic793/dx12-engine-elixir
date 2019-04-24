@@ -8,6 +8,7 @@
 #include "Component.h"
 #include <cereal/types/polymorphic.hpp>
 #include "SystemContext.h"
+#include <parallel_hashmap/phmap.h>
 
 class ResourceManager;
 
@@ -81,6 +82,7 @@ namespace Elixir
 	class EntityManager
 	{
 		Scene* scene;
+		phmap::flat_hash_map<NodeID, EntityID> nodeMap;
 		std::unordered_map<std::string, EntityID> entityNameIndexMap;
 		std::unordered_map<TypeID, IComponent*> components;
 

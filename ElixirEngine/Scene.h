@@ -29,6 +29,7 @@ namespace Elixir
 		void					SetScale(NodeID nodeId, const XMFLOAT3& scaleV);
 		void					SetActive(NodeID nodeId, bool enabled);
 
+		void					GetChildren(NodeID nodeId, std::vector<NodeID>& children);
 		const bool				IsActive(NodeID nodeId);
 		const XMFLOAT3&			GetTranslation(NodeID nodeId);
 		const XMFLOAT3&			GetRotation(NodeID nodeId);
