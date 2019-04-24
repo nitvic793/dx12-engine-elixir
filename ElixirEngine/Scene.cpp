@@ -31,6 +31,7 @@ Scene::Scene() :
 	node.worldTransform = node.localTransform;
 	nodeList.push_back(node);
 	InsertTransform(DefaultTransform);
+	isActive.push_back(true);
 }
 
 NodeID Elixir::Scene::CreateNode(NodeID parent, Transform transform)
@@ -43,6 +44,7 @@ NodeID Elixir::Scene::CreateNode(NodeID parent, Transform transform)
 	XMStoreFloat4x4(&node.worldTransform, worldTransform);
 	nodeList.push_back(node);
 	nodeList[parent].children.push_back(nodeId);
+	isActive.push_back(true);
 	InsertTransform(transform);
 	return nodeId;
 }
@@ -68,6 +70,16 @@ void Elixir::Scene::SetRotation(NodeID nodeId, const XMFLOAT3 & rotationV)
 void Elixir::Scene::SetScale(NodeID nodeId, const XMFLOAT3 & scaleV)
 {
 	scale[nodeId] = scaleV;
+}
+
+void Elixir::Scene::SetActive(NodeID nodeId, bool enabled)
+{
+	isActive[nodeId] = enabled;
+}
+
+const bool Elixir::Scene::IsActive(NodeID nodeId)
+{
+	return false;
 }
 
 const XMFLOAT3 & Elixir::Scene::GetTranslation(NodeID nodeId)

@@ -119,7 +119,7 @@ void Game::Update()
 	entity.SetRotation(0, XMFLOAT3(0, sin(totalTime), 0));
 	entity.SetPosition(0, XMFLOAT3(2 * sin(totalTime) + 2, 1.f, cos(totalTime)));
 	//entity.SetRotation(8, XMFLOAT3(XM_PIDIV2, 0, 0));
-
+	entity.SetActive(8, false);
 	pixelCb.pointLight[1].Position = XMFLOAT3(2 * sin(totalTime * 2) + 1, 0, -1);
 	pixelCb.pointLight[0].Position = XMFLOAT3(2 * sin(totalTime * 2) + 5, 1.0f, -2 + -2 * cos(totalTime));
 	if (GetAsyncKeyState('Q'))

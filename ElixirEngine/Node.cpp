@@ -36,7 +36,7 @@ void Elixir::UpdateRootNode(Node & node, const XMFLOAT3 & position, const XMFLOA
 	node.worldTransform = node.localTransform;
 }
 
-void Elixir::UpdateNodes(Node* nodes, size_t count, XMFLOAT3 * positions, XMFLOAT3 * scales, XMFLOAT3 * rotations)
+void Elixir::UpdateNodes(Node* nodes, size_t count, XMFLOAT3 * positions, XMFLOAT3 * scales, XMFLOAT3 * rotations, byte* isActive)
 {
 	UpdateRootNode(nodes[0], positions[0], scales[0], rotations[0]);
 	std::queue<NodeID> nodeQueue;
@@ -51,10 +51,13 @@ void Elixir::UpdateNodes(Node* nodes, size_t count, XMFLOAT3 * positions, XMFLOA
 		nodeQueue.pop();
 		auto &node = nodes[nodeId];
 		auto parent = nodes[node.parent];
-		UpdateNode(node, parent, positions[nodeId], scales[nodeId], rotations[nodeId]);
-		for (auto child : node.children) //Skip root node
+		if (isActive[nodeId])
 		{
-			nodeQueue.push(child);
+			UpdateNode(node, parent, positions[nodeId], scales[nodeId], rotations[nodeId]);
+			for (auto child : node.children) //Skip root node
+			{
+				nodeQueue.push(child);
+			}
 		}
 	}
 }

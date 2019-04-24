@@ -412,7 +412,7 @@ void DeferredRenderer::Draw(ID3D12GraphicsCommandList* commandList, std::vector<
 		auto material = resourceManager->GetMaterial(e.Material);
 		if (mesh->IsAnimated())continue;
 		commandList->SetGraphicsRootDescriptorTable(RootSigSRVPixel1, frame->GetGPUHandle(frameHeapParams.Textures, material->GetStartIndex())); //Set start of material texture in root descriptor
-		commandList->SetGraphicsRootDescriptorTable(RootSigCBVertex0, frame->GetGPUHandle(frameHeapParams.Entities, e.EntityID));
+		commandList->SetGraphicsRootDescriptorTable(RootSigCBVertex0, frame->GetGPUHandle(frameHeapParams.Entities, entityCBMap[e.EntityID]));
 		Draw(mesh, commandList);
 	}
 }
@@ -428,7 +428,7 @@ void DeferredRenderer::DrawAnimated(ID3D12GraphicsCommandList * clist, std::vect
 		auto material = resourceManager->GetMaterial(e.Material);
 		if (!mesh->IsAnimated())continue;
 		clist->SetGraphicsRootDescriptorTable(RootSigSRVPixel1, frame->GetGPUHandle(frameHeapParams.Textures, material->GetStartIndex())); //Set start of material texture in root descriptor
-		clist->SetGraphicsRootDescriptorTable(RootSigCBVertex0, frame->GetGPUHandle(frameHeapParams.Entities, e.EntityID));
+		clist->SetGraphicsRootDescriptorTable(RootSigCBVertex0, frame->GetGPUHandle(frameHeapParams.Entities, entityCBMap[e.EntityID]));
 		clist->SetGraphicsRootDescriptorTable(RootSigCBAll2, frame->GetGPUHandle(frameHeapParams.BoneCB, boneCBIndex));
 		DrawAnimated(mesh, clist);
 		boneCBIndex++;
@@ -590,11 +590,12 @@ void DeferredRenderer::PrepareGPUHeap(std::vector<Elixir::Entity> entities, Pixe
 
 	auto camProj = camera->GetProjectionMatrix();
 	auto camView = camera->GetViewMatrix();
-
+	entityCBMap.clear();
 	//Create Entity Constant Buffers and copy to CBVs
 	for (auto e : entities)
 	{
 		//TODO: Store index-EntityID map to use in Draw Calls. IsActive and SetActive entity manager depends on it.
+		entityCBMap.insert(std::pair<Elixir::EntityID, int>(e.EntityID, index));
 		auto uvScale = XMFLOAT2(1.f,1.f);
 		auto cb = ConstantBuffer
 		{
@@ -659,6 +660,7 @@ void DeferredRenderer::PrepareGPUHeap(std::vector<Elixir::Entity> entities, Pixe
 	auto lightPassCBHeapIndex = frame->CopyAllocate(pixelCb.pointLightCount, cbHeap, constBufferIndex);
 	constBufferIndex = index;
 
+	entityShadowCBMap.clear();
 	DirShadowBuffer cb;
 	cb.shadowView = shadowViewTransposed;
 	cb.shadowProjection = shadowProjTransposed;
@@ -667,6 +669,7 @@ void DeferredRenderer::PrepareGPUHeap(std::vector<Elixir::Entity> entities, Pixe
 	{
 		//if (!e->CastsShadow()) continue;
 		if (false) continue;
+		entityShadowCBMap.insert(std::pair<Elixir::EntityID, int>(e.EntityID, count)); //count = current CB index
 		cb.world = Elixir::Transpose(e.WorldTransform);
 		shadowCBWrapper.CopyData(&cb, sizeof(DirShadowBuffer), count); //0th position taken by Point Shadow Buffer
 		count++;

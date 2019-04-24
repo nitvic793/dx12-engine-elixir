@@ -10,6 +10,7 @@
 #include "../SystemResourceManager.h"
 #include "../MeshInstanceGroupEntity.h"
 #include "../ResourceManager.h"
+#include <parallel_hashmap/phmap.h>
 
 enum GBufferRenderTargetOrder
 {
@@ -52,6 +53,8 @@ class DeferredRenderer
 	FrameHeapParameters				frameHeapParams;
 	AnimationManager*				animationManager;
 	Elixir::EntityManager*			entityManager;
+	phmap::flat_hash_map<Elixir::EntityID, int> entityCBMap;
+	phmap::flat_hash_map<Elixir::EntityID, int> entityShadowCBMap;
 
 	ID3D12Resource* gBufferTextures[numRTV];
 	ID3D12Resource* depthStencilTexture;

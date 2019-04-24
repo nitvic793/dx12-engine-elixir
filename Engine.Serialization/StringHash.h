@@ -15,14 +15,14 @@ std::wstring ToWideString(const std::string& s);
 #ifndef HASHF
 
 #define HASHF
-#define H1(s,i,x)   (x*65599u+(uint8_t)s[(i)<strlen(s)?strlen(s)-1-(i):strlen(s)])
-#define H4(s,i,x)   H1(s,i,H1(s,i+1,H1(s,i+2,H1(s,i+3,x))))
-#define H16(s,i,x)  H4(s,i,H4(s,i+4,H4(s,i+8,H4(s,i+12,x))))
-#define H64(s,i,x)  H16(s,i,H16(s,i+16,H16(s,i+32,H16(s,i+48,x))))
-#define H256(s,i,x) H64(s,i,H64(s,i+64,H64(s,i+128,H64(s,i+192,x))))
+#define Hash1(s,i,x)   (x*65599u+(uint8_t)s[(i)<strlen(s)?strlen(s)-1-(i):strlen(s)])
+#define Hash4(s,i,x)   Hash1(s,i,Hash1(s,i+1,Hash1(s,i+2,Hash1(s,i+3,x))))
+#define Hash16(s,i,x)  Hash4(s,i,Hash4(s,i+4,Hash4(s,i+8,Hash4(s,i+12,x))))
+#define Hash64(s,i,x)  Hash16(s,i,Hash16(s,i+16,Hash16(s,i+32,Hash16(s,i+48,x))))
+#define Hash256(s,i,x) Hash64(s,i,Hash64(s,i+64,Hash64(s,i+128,Hash64(s,i+192,x))))
 
 //Generates hash for given string
-#define SID(s)    ((uint32_t)(H256(s,0,0)^(H256(s,0,0)>>16)))
+#define SID(s)    ((uint32_t)(Hash256(s,0,0)^(Hash256(s,0,0)>>16)))
 
 #endif // HASHF
 
