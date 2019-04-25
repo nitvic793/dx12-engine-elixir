@@ -78,6 +78,23 @@ void Elixir::Scene::SetActive(NodeID nodeId, bool enabled)
 	isActive[nodeId] = enabled;
 }
 
+void Elixir::Scene::RemoveNode(NodeID nodeId, std::vector<NodeID>& outRemovedChildren)
+{
+	std::vector<NodeID> removed;
+	GetChildren(nodeId, removed);
+	isActive[nodeId] = false; //Current node is not enabled in scene;
+	SetTransform(nodeId, DefaultTransform);
+	freeNodes.push_back(nodeId);
+	for (auto node : removed)
+	{
+		isActive[node] = false; //Current node is not enabled in scene;
+		SetTransform(node, DefaultTransform);
+		freeNodes.push_back(node);
+	}
+
+	outRemovedChildren = removed;
+}
+
 void Elixir::Scene::GetChildren(NodeID nodeId, std::vector<NodeID>& children)
 {
 	std::queue<NodeID> nodeQueue;

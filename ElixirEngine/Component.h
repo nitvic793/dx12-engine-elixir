@@ -26,6 +26,7 @@ namespace Elixir
 		virtual void Deserialize(cereal::JSONInputArchive& archive) {};
 		virtual size_t GetHash() = 0;
 		virtual void AddEntity(EntityID entity, IComponentData* data = nullptr) = 0;
+		virtual void RemoveEntity(EntityID entity) = 0;
 		virtual const char* GetComponentName() = 0;
 		virtual ~IComponent() {};
 	};
@@ -39,7 +40,7 @@ namespace Elixir
 		void AddEntity(EntityID id, const T& componentData);
 		void GetData(EntityID* entities, size_t count, T*& outComponentData);
 		T&	 GetData(EntityID id);
-		void RemoveEntity(EntityID id);
+
 		~Component();
 
 		std::vector<T> Components;
@@ -120,6 +121,15 @@ namespace Elixir
 			auto component = (IComponentData*)&Components[cId];
 			return component;
 		}
+
+		// Inherited via IComponent
+		virtual void RemoveEntity(EntityID entity) override
+		{
+			auto index = EntityComponentMap[entity];
+			Components.erase(Components.begin() + index);
+			Entities.erase(Entities.begin() + index);
+			EntityComponentMap.erase(entity);
+		}
 	};
 
 	template<typename T>
@@ -144,12 +154,14 @@ namespace Elixir
 		return Components[cId];
 	}
 
-	template<typename T>
-	inline void Component<T>::RemoveEntity(EntityID id)
-	{
-		//Swap last element and with current entity and remove from back. Swap-and-pop
-		//Ensure to remove from Component vector and EntityComponentMap
-	}
+	//template<typename T>
+	//void Component<T>::RemoveEntity(EntityID id)
+	//{
+	//	auto index = EntityComponentMap[id];
+	//	Components.erase(Components.begin() + index);
+	//	Entities.erase(Entities.begin() + index);
+	//	EntityComponentMap.erase(id);
+	//}
 
 	template<typename T>
 	Component<T>::Component()

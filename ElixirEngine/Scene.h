@@ -4,6 +4,8 @@
 
 namespace Elixir
 {
+	const NodeID RootNodeID = 0;
+
 	class Scene
 	{
 	protected:
@@ -15,6 +17,7 @@ namespace Elixir
 		std::vector<XMFLOAT3>	rotation;
 		std::vector<XMFLOAT3>	scale;
 		std::vector<byte>		isActive;
+		std::vector<NodeID>		freeNodes;
 
 		const Node				CreateNode(Transform transform);
 		void					InsertTransform(Transform transform);
@@ -28,6 +31,7 @@ namespace Elixir
 		void					SetRotation(NodeID nodeId, const XMFLOAT3& rotationV);
 		void					SetScale(NodeID nodeId, const XMFLOAT3& scaleV);
 		void					SetActive(NodeID nodeId, bool enabled);
+		void					RemoveNode(NodeID nodeId, std::vector<NodeID>& outRemovedChildren);
 
 		void					GetChildren(NodeID nodeId, std::vector<NodeID>& children);
 		const bool				IsActive(NodeID nodeId);

@@ -2,4 +2,3 @@
 #include "Component.h"
 
 using namespace Elixir;
-

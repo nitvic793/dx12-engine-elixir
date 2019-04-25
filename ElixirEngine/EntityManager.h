@@ -90,15 +90,15 @@ namespace Elixir
 		std::vector<HashID>		meshes;
 		std::vector<HashID>		materials;
 		std::vector<EntityID>	parents;
-		std::vector<EntityID>	removeList; //Entities to be removed
 		std::vector<byte>		active;
+		std::vector<EntityID>	freeEntityIds;
 
 	public:
 		EntityManager(Scene* scene);
 		EntityID		CreateEntity(std::string name, const Transform& transform = DefaultTransform);
 		EntityID		CreateEntity(std::string name, HashID mesh = 0u, HashID material = 0u, const Transform& transform = DefaultTransform);
 		EntityID		CreateEntity(EntityID parentId, std::string name, HashID mesh = 0u, HashID material = 0u, const Transform& transform = DefaultTransform);
-		//void			Remove(EntityID entity); //Remove given entity. TODO: Swap-and-pop, remove from all components too
+		void			Remove(EntityID entity);
 		//void			ExecutePurge(); //Perform all remove operations at once.
 
 		template<typename T>

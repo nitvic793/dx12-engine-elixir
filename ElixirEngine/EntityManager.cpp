@@ -37,6 +37,35 @@ EntityID Elixir::EntityManager::CreateEntity(EntityID parentId, std::string name
 	return entityId;
 }
 
+void Elixir::EntityManager::Remove(EntityID entity)
+{
+	freeEntityIds.push_back(entity);
+	auto node = entities[entity];
+	std::vector<NodeID> removedChildNodes;
+	std::vector<EntityID> removedEntities;
+
+	removedEntities.push_back(entity);
+	scene->RemoveNode(node, removedChildNodes);
+
+	for (auto node : removedChildNodes)
+	{
+		auto childEntity = nodeMap[node];
+		freeEntityIds.push_back(childEntity);
+		removedEntities.push_back(childEntity);
+	}
+
+	for (auto removed : removedEntities)
+	{
+		parents[removed] = RootNodeID;
+		active[removed] = false;
+		for (auto comp : components)
+		{
+			comp.second->RemoveEntity(removed);
+		}
+		//entityNameIndexMap.erase() remove from name index map
+	}
+}
+
 void Elixir::EntityManager::RegisterComponent(const char* componentName)
 {
 	HashID stringHash = StringID(componentName);
@@ -290,7 +319,3 @@ const bool Elixir::EntityManager::IsActive(EntityID entity)
 	return active[entity];
 }
 
-//inline void Elixir::Entity::Update()
-//{
-//	Manager->UpdateEntity(*this);
-//}
