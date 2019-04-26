@@ -24,16 +24,32 @@ EntityID Elixir::EntityManager::CreateEntity(std::string name, HashID mesh, Hash
 
 EntityID Elixir::EntityManager::CreateEntity(EntityID parentId, std::string name, HashID mesh, HashID material, const Transform & transform)
 {
-	auto parentNode = parentId == -1 ? 0 : entities[parentId]; //If parent is root, return 0
+	auto parentNode = parentId == -1 ? RootNodeID : entities[parentId]; //If parent is root, return 0
 	auto nodeId = scene->CreateNode(parentNode, transform);
-	EntityID entityId = (EntityID)entities.size();
-	entityNameIndexMap.insert(std::pair<std::string, EntityID>(name, entityId));
-	entities.push_back(nodeId);
-	nodeMap.insert_or_assign(nodeId, entityId);
-	meshes.push_back(mesh);
-	materials.push_back(material);
-	parents.push_back(parentId);
-	active.push_back(true);
+	EntityID entityId;
+	if (freeEntityIds.size() > 0)
+	{
+		entityId = freeEntityIds.back();
+		freeEntityIds.pop_back();
+		entities[entityId] = nodeId;
+		nodeMap[nodeId] = entityId;
+		meshes[entityId] = mesh;
+		materials[entityId] = material;
+		parents[entityId] = parentId;
+		active[entityId] = true;
+	}
+	else
+	{
+		entityId = (EntityID)entities.size();
+		entityNameIndexMap.insert(std::pair<std::string, EntityID>(name, entityId));
+		entities.push_back(nodeId);
+		nodeMap.insert_or_assign(nodeId, entityId);
+		meshes.push_back(mesh);
+		materials.push_back(material);
+		parents.push_back(parentId);
+		active.push_back(true);
+	}
+	
 	return entityId;
 }
 

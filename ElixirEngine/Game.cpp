@@ -81,7 +81,8 @@ void Game::InitializeAssets()
 	systemManager.RegisterSystem<AnimationSystem>(animationManager.get());
 	OnLoadSystems();
 	systemManager.Init();
-	//entityManager.Remove(0);
+	entityManager.Remove(0);
+	entityManager.CreateEntity("test", StringID("cube"), StringID("wood"),Elixir::Transform::Create(XMFLOAT3(5, 5, 20)));
 }
 
 Game::Game(HINSTANCE hInstance, int ShowWnd, int width, int height, bool fullscreen) :
