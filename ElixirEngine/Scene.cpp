@@ -37,16 +37,29 @@ Scene::Scene() :
 
 NodeID Elixir::Scene::CreateNode(NodeID parent, Transform transform)
 {
-	XMMATRIX parentTransform = XMLoadFloat4x4(&nodeList[parent].worldTransform);
-	NodeID nodeId = (NodeID)nodeList.size();
 	auto node = CreateNode(transform);
 	node.parent = parent;
+	XMMATRIX parentTransform = XMLoadFloat4x4(&nodeList[parent].worldTransform);
 	XMMATRIX worldTransform = parentTransform * XMLoadFloat4x4(&node.localTransform);
 	XMStoreFloat4x4(&node.worldTransform, worldTransform);
-	nodeList.push_back(node);
+	
+	NodeID nodeId = (NodeID)nodeList.size();
+	if (freeNodes.size() > 0)
+	{
+		nodeId = freeNodes.back();
+		freeNodes.pop_back();
+		nodeList[nodeId] = node;
+		isActive[nodeId] = true;
+		SetTransform(nodeId, transform);
+	}
+	else
+	{
+		nodeList.push_back(node);
+		isActive.push_back(true);
+		InsertTransform(transform);
+	}
+
 	nodeList[parent].children.push_back(nodeId);
-	isActive.push_back(true);
-	InsertTransform(transform);
 	return nodeId;
 }
 
@@ -87,6 +100,8 @@ void Elixir::Scene::RemoveNode(NodeID nodeId, std::vector<NodeID>& outRemovedChi
 	freeNodes.push_back(nodeId);
 	for (auto node : removed)
 	{
+		nodeList[node].parent = RootNodeID;
+		nodeList[node].children.clear();
 		isActive[node] = false; //Current node is not enabled in scene;
 		SetTransform(node, DefaultTransform);
 		freeNodes.push_back(node);

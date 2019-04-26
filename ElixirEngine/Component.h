@@ -125,10 +125,19 @@ namespace Elixir
 		// Inherited via IComponent
 		virtual void RemoveEntity(EntityID entity) override
 		{
+			if (EntityComponentMap.find(entity) == EntityComponentMap.end())
+				return;
 			auto index = EntityComponentMap[entity];
 			Components.erase(Components.begin() + index);
 			Entities.erase(Entities.begin() + index);
 			EntityComponentMap.erase(entity);
+
+			index = 0;
+			for (auto e : Entities)// Need to update the entity component map.
+			{
+				EntityComponentMap[e] = index;
+				index++;
+			}
 		}
 	};
 

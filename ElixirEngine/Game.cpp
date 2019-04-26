@@ -81,6 +81,7 @@ void Game::InitializeAssets()
 	systemManager.RegisterSystem<AnimationSystem>(animationManager.get());
 	OnLoadSystems();
 	systemManager.Init();
+	//entityManager.Remove(0);
 }
 
 Game::Game(HINSTANCE hInstance, int ShowWnd, int width, int height, bool fullscreen) :
