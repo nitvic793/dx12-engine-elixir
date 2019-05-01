@@ -31,8 +31,3 @@ public:
 	~AnimationManager();
 };
 
-
-//Immediate TODO:
-// Finish above class
-// Create POD for entities
-

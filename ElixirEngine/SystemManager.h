@@ -34,6 +34,7 @@ namespace Elixir
 
 		ISystem* system = (ISystem*)new SysType(args...);
 		system->SetEntityManager(entityManager);
+		system->SetContext(*context);
 		internalSystems.push_back(system);
 	}
 }

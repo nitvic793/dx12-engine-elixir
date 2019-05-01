@@ -324,7 +324,7 @@ void Mesh::BoneTransform(UINT meshIndex, float totalTime, UINT animationIndex)
 	{
 		XMFLOAT4X4 finalTransform;
 		XMStoreFloat4x4(&finalTransform, XMMatrixTranspose(XMLoadFloat4x4(&boneDescriptors[meshIndex].boneInfoList[i].FinalTransform)));
-		//boneCBs[meshIndex].bones[i] = finalTransform;
+		boneCBs[meshIndex].bones[i] = finalTransform;
 	}
 }
 
@@ -351,7 +351,7 @@ void Mesh::ReadNodeHeirarchy(float AnimationTime, UINT animationIndex)
 		nodeQueue.pop();
 		transformationQueue.pop();
 
-		/*auto anim = Animations.GetChannel(animationIndex, node);
+		auto anim = Animations.GetChannel(animationIndex, node);
 		if (anim != nullptr)
 		{
 			auto s = InterpolateScaling(AnimationTime, anim);
@@ -364,22 +364,22 @@ void Mesh::ReadNodeHeirarchy(float AnimationTime, UINT animationIndex)
 			auto translation = XMMatrixTranslation(t.x, t.y, t.z);
 
 			nodeTransformation += scaling * rotation * translation;
-		}*/
+		}
 
 		auto globalTransformation = nodeTransformation * parentTransformation;
-		//if (boneDescriptors[0].boneMapping.find(node) != boneDescriptors[0].boneMapping.end())
-		//{
-		//	uint32_t BoneIndex = boneDescriptors[0].boneMapping[node];
-		//	auto finalTransform = XMMatrixTranspose(OGLtoXM(boneDescriptors[0].boneInfoList[BoneIndex].Offset)) * globalTransformation * globalInverse;
-		//	XMStoreFloat4x4(&boneDescriptors[0].boneInfoList[BoneIndex].FinalTransform, finalTransform);
-		//}
+		if (boneDescriptors[0].boneMapping.find(node) != boneDescriptors[0].boneMapping.end())
+		{
+			uint32_t BoneIndex = boneDescriptors[0].boneMapping[node];
+			auto finalTransform = XMMatrixTranspose(OGLtoXM(boneDescriptors[0].boneInfoList[BoneIndex].Offset)) * globalTransformation * globalInverse;
+			XMStoreFloat4x4(&boneDescriptors[0].boneInfoList[BoneIndex].FinalTransform, finalTransform);
+		}
 
 		auto children = Animations.NodeHeirarchy[node];
 		for (int i = (int)children.size() - 1; i >= 0; --i)
 		{
 			XMStoreFloat4x4(&globalFloat4x4, globalTransformation);
-		/*	nodeQueue.push(children[i]);
-			transformationQueue.push(globalFloat4x4);*/
+			nodeQueue.push(children[i]);
+			transformationQueue.push(globalFloat4x4);
 		}
 	}
 }
