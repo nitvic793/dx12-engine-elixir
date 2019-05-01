@@ -152,6 +152,7 @@
     <ClCompile Include="FileUtility.cpp" />
     <ClCompile Include="FrameManager.cpp" />
     <ClCompile Include="Game.cpp" />
+    <ClCompile Include="Input.cpp" />
     <ClCompile Include="Material.cpp" />
     <ClCompile Include="MathHelper.cpp" />
     <ClCompile Include="MeshInstanceGroupEntity.cpp" />
@@ -202,6 +203,7 @@
     <ClInclude Include="FileUtility.h" />
     <ClInclude Include="FrameManager.h" />
     <ClInclude Include="Game.h" />
+    <ClInclude Include="Input.h" />
     <ClInclude Include="InputLayout.h" />
     <ClInclude Include="Material.h" />
     <ClInclude Include="MathHelper.h" />

@@ -85,6 +85,12 @@
     <Filter Include="Source Files\Serialization">
       <UniqueIdentifier>{0fff133a-807d-4bf0-8ec6-7582bb9fb362}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\Input">
+      <UniqueIdentifier>{d4f3602c-0680-4f75-a04f-bbb005fe9bca}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Input">
+      <UniqueIdentifier>{bc7e21e4-5201-4422-9f2f-2d8ae277bf19}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Core\Core.cpp">
@@ -203,6 +209,9 @@
     </ClCompile>
     <ClCompile Include="ComponentSerDe.cpp">
       <Filter>Source Files\Serialization</Filter>
+    </ClCompile>
+    <ClCompile Include="Input.cpp">
+      <Filter>Source Files\Input</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -355,6 +364,9 @@
     </ClInclude>
     <ClInclude Include="SystemContext.h">
       <Filter>Header Files\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="Input.h">
+      <Filter>Header Files\Input</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

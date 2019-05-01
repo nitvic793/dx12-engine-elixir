@@ -17,6 +17,7 @@
 #include "Scene.h"
 #include "SystemManager.h"
 #include "SystemContext.h"
+#include "Input.h"
 
 typedef std::function<void(std::vector<Elixir::ISystem*>&)> SystemsCallback;
 
@@ -43,10 +44,13 @@ protected:
 	std::unique_ptr<EdgeFilter>			edgeFilter;
 	std::unique_ptr<CompositeTextures>	compositeTextures;
 	std::unique_ptr<DownScaleTexture>	downScaler;
+
 	Elixir::Scene						scene;
 	Elixir::EntityManager				entityManager;
 	Elixir::SystemManager				systemManager;
 	Elixir::SystemContext				context;
+	Elixir::InputManager*				inputManager;
+
 	bool isBlurEnabled;
 	SystemsCallback SystemsLoadCallback;
 	SystemsCallback SystemsUnloadCallback;

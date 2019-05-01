@@ -8,6 +8,8 @@
 #include "Light.h"
 #include "DeferredRenderer.h"
 #include "../SystemResourceManager.h"
+#include <Keyboard.h>
+#include <Mouse.h>
 
 class Core
 {
@@ -31,9 +33,10 @@ protected:
 	int64_t FrameCounter;
 
 	//Direct3D 
-
+	
 	const int frameBufferCount = FRAMEBUFFERCOUNT; 
-
+	std::unique_ptr<DirectX::Keyboard> mKeyboard;
+	std::unique_ptr<DirectX::Mouse> mMouse;
 	std::unique_ptr<SystemResourceManager> sysRM;
 	ID3D12Device* device; 
 	IDXGISwapChain3* swapChain; 

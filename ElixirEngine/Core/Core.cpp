@@ -177,6 +177,9 @@ bool Core::InitializeDirectX()
 	}
 
 	sysRM = std::unique_ptr<SystemResourceManager>(SystemResourceManager::CreateInstance(device));
+	mKeyboard = std::make_unique<Keyboard>();
+	mMouse = std::make_unique<Mouse>();
+	mMouse->SetWindow(hwnd);
 	return true;
 }
 
@@ -660,15 +663,16 @@ LRESULT Core::HandleWindowsCallback(HWND hWnd, UINT msg, WPARAM wParam, LPARAM l
 {
 	switch (msg)
 	{
-
+	case WM_ACTIVATEAPP:
+		Keyboard::ProcessMessage(msg, wParam, lParam);
+		Mouse::ProcessMessage(msg, wParam, lParam);
+		break;
 	case WM_KEYDOWN:
-		if (wParam == VK_ESCAPE) {
-			if (MessageBox(0, "Are you sure you want to exit?",
-				"Really?", MB_YESNO | MB_ICONQUESTION) == IDYES)
-				DestroyWindow(hwnd);
-		}
-		return 0;
-
+	case WM_SYSKEYDOWN:
+	case WM_KEYUP:
+	case WM_SYSKEYUP:
+		Keyboard::ProcessMessage(msg, wParam, lParam);
+		break;
 	case WM_DESTROY:
 		PostQuitMessage(0);
 		return 0;
@@ -676,6 +680,7 @@ LRESULT Core::HandleWindowsCallback(HWND hWnd, UINT msg, WPARAM wParam, LPARAM l
 	case WM_MBUTTONDOWN:
 	case WM_RBUTTONDOWN:
 		OnMouseDown(wParam, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+		Mouse::ProcessMessage(msg, wParam, lParam);
 		return 0;
 
 		// Mouse button being released (while the cursor is currently over our window)
@@ -683,17 +688,26 @@ LRESULT Core::HandleWindowsCallback(HWND hWnd, UINT msg, WPARAM wParam, LPARAM l
 	case WM_MBUTTONUP:
 	case WM_RBUTTONUP:
 		OnMouseUp(wParam, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+		Mouse::ProcessMessage(msg, wParam, lParam);
 		return 0;
 
 		// Cursor moves over the window (or outside, while we're currently capturing it)
 	case WM_MOUSEMOVE:
 		OnMouseMove(wParam, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+		Mouse::ProcessMessage(msg, wParam, lParam);
 		return 0;
 
 		// Mouse wheel is scrolled
 	case WM_MOUSEWHEEL:
 		OnMouseWheel(GET_WHEEL_DELTA_WPARAM(wParam) / (float)WHEEL_DELTA, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+		Mouse::ProcessMessage(msg, wParam, lParam);
 		return 0;
+	case WM_INPUT:
+	case WM_XBUTTONDOWN:
+	case WM_XBUTTONUP:
+	case WM_MOUSEHOVER:
+		Mouse::ProcessMessage(msg, wParam, lParam);
+		break;
 	}
 
 	return DefWindowProc(hWnd, msg, wParam, lParam);

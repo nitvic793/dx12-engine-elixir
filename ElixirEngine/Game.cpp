@@ -10,15 +10,21 @@
 //Initializes assets. This function's scope has access to commandList which is not closed. 
 void Game::InitializeAssets()
 {
+	Elixir::InputManager::SetContext({ mKeyboard.get(), mMouse.get() });
+	inputManager = &Elixir::InputManager::GetInstance();
+
 	context.EntityManager = &entityManager;
 	context.GameInstance = this;
 	context.ResourceManager = resourceManager;
 	context.SystemResourceManager = sysRM.get();
 	context.AnimationManager = animationManager.get();
+	context.MainCamera = camera;
+	context.Input = inputManager;
 
 	deferredRenderer->SetAnimationManager(animationManager.get());
 	deferredRenderer->SetEntityManager(&entityManager);
 
+	
 	auto rm = resourceManager;
 	rm->Initialize(animationManager.get(), &entityManager);
 	rm->LoadResources("../../SceneData/resources.json", commandQueue, commandList, deferredRenderer);
@@ -109,6 +115,7 @@ int gBufferIndex = RTV_ORDER_ALBEDO;
 
 void Game::Update()
 {
+	inputManager->Update();
 	systemManager.Update(deltaTime);
 	auto& entity = entityManager;
 	CurrentTime += deltaTime;
@@ -116,7 +123,7 @@ void Game::Update()
 
 	pixelCb.pointLight[1].Position = XMFLOAT3(2 * sin(totalTime * 2) + 1, 0, -1);
 	pixelCb.pointLight[0].Position = XMFLOAT3(2 * sin(totalTime * 2) + 5, 1.0f, -2 + -2 * cos(totalTime));
-	if (GetAsyncKeyState('Q'))
+	if (Elixir::Input::IsKeyDown(Keyboard::Q))
 	{
 		isBlurEnabled = true;
 	}
@@ -141,7 +148,8 @@ void Game::Update()
 		entityManager.GetComponent<AnimationComponent>(8).CurrentAnimationIndex = animIndex;
 	}
 
-	if (GetAsyncKeyState(192) & 0xFFFF8000 && CurrentTime > delay)
+	//if (GetAsyncKeyState(192) & 0xFFFF8000 && CurrentTime > delay)
+	if (Elixir::Input::IsKeyDown(Keyboard::OemTilde) && CurrentTime > delay)
 	{
 		debugMode = !debugMode;
 		CurrentTime = 0.f;
