@@ -113,9 +113,7 @@ void Game::Update()
 	auto& entity = entityManager;
 	CurrentTime += deltaTime;
 	camera->Update(deltaTime);
-	entity.SetRotation(0, XMFLOAT3(0, sin(totalTime), 0));
-	entity.SetPosition(0, XMFLOAT3(2 * sin(totalTime) + 2, 1.f, cos(totalTime)));
-	
+
 	pixelCb.pointLight[1].Position = XMFLOAT3(2 * sin(totalTime * 2) + 1, 0, -1);
 	pixelCb.pointLight[0].Position = XMFLOAT3(2 * sin(totalTime * 2) + 5, 1.0f, -2 + -2 * cos(totalTime));
 	if (GetAsyncKeyState('Q'))

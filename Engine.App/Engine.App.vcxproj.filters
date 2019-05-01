@@ -23,6 +23,7 @@
     <None Include="packages.config" />
     <None Include="..\SceneData\resources.json" />
     <None Include="..\SceneData\scene.json" />
+    <None Include="..\SceneData\testScene.json" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Elixir.h">

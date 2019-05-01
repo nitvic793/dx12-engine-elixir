@@ -172,6 +172,7 @@
   <ItemGroup>
     <None Include="..\SceneData\resources.json" />
     <None Include="..\SceneData\scene.json" />
+    <None Include="..\SceneData\testScene.json" />
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>

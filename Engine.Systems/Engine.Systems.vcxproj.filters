@@ -36,6 +36,9 @@
     <ClInclude Include="Sample.h">
       <Filter>Components</Filter>
     </ClInclude>
+    <ClInclude Include="RotatorSystem.h">
+      <Filter>Systems</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -51,6 +54,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="SampleSystem.cpp">
+      <Filter>Systems</Filter>
+    </ClCompile>
+    <ClCompile Include="RotatorSystem.cpp">
       <Filter>Systems</Filter>
     </ClCompile>
   </ItemGroup>

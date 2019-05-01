@@ -153,6 +153,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="RotatorSystem.h" />
     <ClInclude Include="Sample.h" />
     <ClInclude Include="SampleSystem.h" />
     <ClInclude Include="stdafx.h" />
@@ -162,6 +163,7 @@
   <ItemGroup>
     <ClCompile Include="dllmain.cpp" />
     <ClCompile Include="Engine.Systems.cpp" />
+    <ClCompile Include="RotatorSystem.cpp" />
     <ClCompile Include="SampleSystem.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
