@@ -31,45 +31,6 @@ namespace Elixir
 		}
 	};
 
-	struct ComponentContainer
-	{
-		std::string ComponentName;
-		std::shared_ptr<IComponentData> Data;
-		template<class Archive>
-		void serialize(Archive& archive)
-		{
-			archive(
-				CEREAL_NVP(ComponentName),
-				CEREAL_NVP(Data)
-			);
-		}
-	};
-
-	struct EntityInterface
-	{
-		EntityID	ParentID;
-		std::string Mesh;
-		std::string Material;
-		Vector3		Position;
-		Vector3		Rotation;
-		Vector3		Scale;
-		std::vector<ComponentContainer> Components;
-
-		template<class Archive>
-		void serialize(Archive& archive)
-		{
-			archive(
-				CEREAL_NVP(ParentID),
-				CEREAL_NVP(Mesh),
-				CEREAL_NVP(Material),
-				CEREAL_NVP(Position),
-				CEREAL_NVP(Rotation),
-				CEREAL_NVP(Scale),
-				CEREAL_NVP(Components)
-			);
-		}
-	};
-
 	struct Entity
 	{
 		const EntityID	EntityID;
@@ -81,6 +42,8 @@ namespace Elixir
 
 	class EntityManager
 	{
+		static EntityManager* Instance;
+
 		Scene* scene;
 		phmap::flat_hash_map<NodeID, EntityID> nodeMap;
 		std::unordered_map<std::string, EntityID> entityNameIndexMap;
@@ -95,10 +58,11 @@ namespace Elixir
 
 	public:
 		EntityManager(Scene* scene);
-		EntityID		CreateEntity(std::string name, const Transform& transform = DefaultTransform);
-		EntityID		CreateEntity(std::string name, HashID mesh = 0u, HashID material = 0u, const Transform& transform = DefaultTransform);
-		EntityID		CreateEntity(EntityID parentId, std::string name, HashID mesh = 0u, HashID material = 0u, const Transform& transform = DefaultTransform);
-		void			Remove(EntityID entity);
+		static EntityManager*	GetInstance() { return Instance; }
+		EntityID				CreateEntity(std::string name, const Transform& transform = DefaultTransform);
+		EntityID				CreateEntity(std::string name, HashID mesh = 0u, HashID material = 0u, const Transform& transform = DefaultTransform);
+		EntityID				CreateEntity(EntityID parentId, std::string name, HashID mesh = 0u, HashID material = 0u, const Transform& transform = DefaultTransform);
+		void					Remove(EntityID entity);
 		//void			ExecutePurge(); //Perform all remove operations at once.
 
 		template<typename T>
@@ -129,6 +93,8 @@ namespace Elixir
 
 		IComponentData* GetComponent(const char* componentName, EntityID entity);
 
+		IComponent*		GetComponentContainer(const char* componentName);
+
 		template<typename T>
 		T*				GetComponents(size_t& outCount);
 
@@ -140,10 +106,8 @@ namespace Elixir
 		void			SetScale(EntityID entity, const XMFLOAT3& scale);
 		void			SetTransform(EntityID entity, const Transform& transform);
 		void			SetActive(EntityID entity, bool enable);
-		void			SaveComponentsToFile(const char* filename);
-		void			LoadComponentsFromFile(const char* filename);
 		void			SaveToFile(const char* filename, ResourceManager* rm);
-		void			LoadFromFile(const char* filename, SystemContext context);
+		void			Load(const char* filename, SystemContext context);
 
 		//Getters
 		const XMFLOAT3&		GetPosition(EntityID entity);

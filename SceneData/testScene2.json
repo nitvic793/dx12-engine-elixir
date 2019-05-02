@@ -1,0 +1,315 @@
+{
+    "Scene": [
+        {
+            "EntityID": 0,
+            "ParentID": -1,
+            "Mesh": "sphere",
+            "Material": "floor",
+            "Position": {
+                "X": 0.0123671293258667,
+                "Y": 1.0,
+                "Z": -0.11103573441505432
+            },
+            "Rotation": {
+                "X": 0.0,
+                "Y": -56.94148254394531,
+                "Z": 0.0
+            },
+            "Scale": {
+                "X": 1.0,
+                "Y": 1.0,
+                "Z": 1.0
+            },
+            "AttachedComponents": []
+        },
+        {
+            "EntityID": 1,
+            "ParentID": -1,
+            "Mesh": "sphere",
+            "Material": "wood",
+            "Position": {
+                "X": 1.0,
+                "Y": 0.05718086659908295,
+                "Z": 0.0
+            },
+            "Rotation": {
+                "X": 0.0,
+                "Y": 0.0,
+                "Z": 0.0
+            },
+            "Scale": {
+                "X": 1.0,
+                "Y": 1.0,
+                "Z": 1.0
+            },
+            "AttachedComponents": [
+                "TestA",
+                "TestB"
+            ],
+            "TestA": {
+                "speed": 0.30000001192092898
+            },
+            "TestB": {
+                "yOffset": 20.0
+            }
+        },
+        {
+            "EntityID": 2,
+            "ParentID": -1,
+            "Mesh": "sphere",
+            "Material": "scratched",
+            "Position": {
+                "X": 2.0,
+                "Y": 0.0,
+                "Z": 0.0
+            },
+            "Rotation": {
+                "X": 0.0,
+                "Y": 0.0,
+                "Z": 0.0
+            },
+            "Scale": {
+                "X": 1.0,
+                "Y": 1.0,
+                "Z": 1.0
+            },
+            "AttachedComponents": []
+        },
+        {
+            "EntityID": 3,
+            "ParentID": -1,
+            "Mesh": "sphere",
+            "Material": "bronze",
+            "Position": {
+                "X": 3.0,
+                "Y": 0.0,
+                "Z": 0.0
+            },
+            "Rotation": {
+                "X": 0.0,
+                "Y": 0.0,
+                "Z": 0.0
+            },
+            "Scale": {
+                "X": 1.0,
+                "Y": 1.0,
+                "Z": 1.0
+            },
+            "AttachedComponents": []
+        },
+        {
+            "EntityID": 4,
+            "ParentID": -1,
+            "Mesh": "sphere",
+            "Material": "floor",
+            "Position": {
+                "X": 4.0,
+                "Y": 0.0,
+                "Z": 0.0
+            },
+            "Rotation": {
+                "X": 0.0,
+                "Y": 0.0,
+                "Z": 0.0
+            },
+            "Scale": {
+                "X": 1.0,
+                "Y": 1.0,
+                "Z": 1.0
+            },
+            "AttachedComponents": []
+        },
+        {
+            "EntityID": 5,
+            "ParentID": -1,
+            "Mesh": "sphere",
+            "Material": "wood",
+            "Position": {
+                "X": 5.0,
+                "Y": 0.0,
+                "Z": 0.0
+            },
+            "Rotation": {
+                "X": 0.0,
+                "Y": 0.0,
+                "Z": 0.0
+            },
+            "Scale": {
+                "X": 1.0,
+                "Y": 1.0,
+                "Z": 1.0
+            },
+            "AttachedComponents": []
+        },
+        {
+            "EntityID": 6,
+            "ParentID": -1,
+            "Mesh": "sw",
+            "Material": "arc",
+            "Position": {
+                "X": 0.0,
+                "Y": 2.0,
+                "Z": 5.0
+            },
+            "Rotation": {
+                "X": 0.0,
+                "Y": 0.0,
+                "Z": 0.0
+            },
+            "Scale": {
+                "X": 0.009999999776482582,
+                "Y": 0.009999999776482582,
+                "Z": 0.009999999776482582
+            },
+            "AttachedComponents": []
+        },
+        {
+            "EntityID": 7,
+            "ParentID": -1,
+            "Mesh": "sw",
+            "Material": "arc",
+            "Position": {
+                "X": 15.0,
+                "Y": 1.0,
+                "Z": 5.0
+            },
+            "Rotation": {
+                "X": 0.0,
+                "Y": 0.0,
+                "Z": 0.0
+            },
+            "Scale": {
+                "X": 0.009999999776482582,
+                "Y": 0.009999999776482582,
+                "Z": 0.009999999776482582
+            },
+            "AttachedComponents": []
+        },
+        {
+            "EntityID": 8,
+            "ParentID": -1,
+            "Mesh": "man",
+            "Material": "hammer",
+            "Position": {
+                "X": 0.0,
+                "Y": -1.0,
+                "Z": 1.0
+            },
+            "Rotation": {
+                "X": 90.0,
+                "Y": 0.0,
+                "Z": 0.0
+            },
+            "Scale": {
+                "X": 0.009999999776482582,
+                "Y": 0.009999999776482582,
+                "Z": 0.009999999776482582
+            },
+            "AttachedComponents": [
+                "AnimationComponent",
+                "AnimationBufferComponent"
+            ],
+            "AnimationComponent": {
+                "CurrentAnimationIndex": 0
+            },
+            "AnimationBufferComponent": {}
+        },
+        {
+            "EntityID": 9,
+            "ParentID": -1,
+            "Mesh": "quad",
+            "Material": "cement",
+            "Position": {
+                "X": 5.0,
+                "Y": -1.0,
+                "Z": -5.0
+            },
+            "Rotation": {
+                "X": 0.0,
+                "Y": 0.0,
+                "Z": 0.0
+            },
+            "Scale": {
+                "X": 15.0,
+                "Y": 15.0,
+                "Z": 15.0
+            },
+            "AttachedComponents": []
+        },
+        {
+            "EntityID": 10,
+            "ParentID": -1,
+            "Mesh": "sphere",
+            "Material": "cement",
+            "Position": {
+                "X": -2.0,
+                "Y": 0.0,
+                "Z": 0.0
+            },
+            "Rotation": {
+                "X": 0.0,
+                "Y": 0.0,
+                "Z": 0.0
+            },
+            "Scale": {
+                "X": 1.0,
+                "Y": 1.0,
+                "Z": 1.0
+            },
+            "AttachedComponents": []
+        },
+        {
+            "EntityID": 11,
+            "ParentID": 0,
+            "Mesh": "sphere",
+            "Material": "floor",
+            "Position": {
+                "X": -1.0,
+                "Y": 0.1906028836965561,
+                "Z": 0.0
+            },
+            "Rotation": {
+                "X": 0.0,
+                "Y": 0.0,
+                "Z": 0.0
+            },
+            "Scale": {
+                "X": 1.0,
+                "Y": 1.0,
+                "Z": 1.0
+            },
+            "AttachedComponents": [
+                "TestA",
+                "TestB"
+            ],
+            "TestA": {
+                "speed": 1.0
+            },
+            "TestB": {
+                "yOffset": 20.0
+            }
+        },
+        {
+            "EntityID": 12,
+            "ParentID": 11,
+            "Mesh": "sphere",
+            "Material": "bronze",
+            "Position": {
+                "X": -1.0,
+                "Y": 0.0,
+                "Z": 0.0
+            },
+            "Rotation": {
+                "X": 0.0,
+                "Y": 0.0,
+                "Z": 0.0
+            },
+            "Scale": {
+                "X": 1.0,
+                "Y": 1.0,
+                "Z": 1.0
+            },
+            "AttachedComponents": []
+        }
+    ]
+}

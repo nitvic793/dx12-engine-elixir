@@ -53,8 +53,7 @@ namespace Elixir
 
 #define EndComponent(name) \
 	}; \
-	CEREAL_REGISTER_TYPE(name) \
-	CEREAL_REGISTER_POLYMORPHIC_RELATION(Elixir::IComponentData, name)
+
 
 #define RegisterComponent(name)\
 	Elixir::Serializable<name> name ## ::Reflectable_ ## name = Elixir::Serializable<name>(#name); 

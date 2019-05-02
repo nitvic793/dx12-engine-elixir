@@ -28,8 +28,7 @@ void Game::InitializeAssets()
 	auto rm = resourceManager;
 	rm->Initialize(animationManager.get(), &entityManager);
 	rm->LoadResources("../../SceneData/resources.json", commandQueue, commandList, deferredRenderer);
-	entityManager.LoadFromFile("../../SceneData/testScene.json", context);
-	//rm->LoadScene("../../SceneData/scene.json", entities);
+	entityManager.Load("../../SceneData/testScene2.json", context);
 
 	instanced = new MeshInstanceGroupEntity(
 		{ StringID("sphere") }, { StringID("scratched") },

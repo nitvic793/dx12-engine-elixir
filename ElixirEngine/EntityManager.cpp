@@ -7,9 +7,76 @@
 
 using namespace Elixir;
 
+EntityManager* EntityManager::Instance = nullptr;
+
+struct EntitySerialInterface
+{
+	Elixir::EntityID	EntityID;
+	Elixir::EntityID	ParentID;
+	std::string			Mesh;
+	std::string			Material;
+	Elixir::Vector3		Position;
+	Elixir::Vector3		Rotation;
+	Elixir::Vector3		Scale;
+	std::vector<std::string> AttachedComponents;
+
+	template<class Archive>
+	void save(Archive& archive) const
+	{
+		archive(
+			CEREAL_NVP(EntityID),
+			CEREAL_NVP(ParentID),
+			CEREAL_NVP(Mesh),
+			CEREAL_NVP(Material),
+			CEREAL_NVP(Position),
+			CEREAL_NVP(Rotation),
+			CEREAL_NVP(Scale),
+			CEREAL_NVP(AttachedComponents)
+		);
+
+		auto em = EntityManager::GetInstance();
+		for (auto comp : AttachedComponents)
+		{
+			auto typeId = ComponentFactory::GetTypeID(StringID(comp));
+			auto c = em->GetComponentContainer(comp.c_str());
+			c->Serialize(archive, EntityID);
+		}
+	}
+
+	template<class Archive>
+	void load(Archive& archive)
+	{
+		archive(
+			CEREAL_NVP(EntityID),
+			CEREAL_NVP(ParentID),
+			CEREAL_NVP(Mesh),
+			CEREAL_NVP(Material),
+			CEREAL_NVP(Position),
+			CEREAL_NVP(Rotation),
+			CEREAL_NVP(Scale),
+			CEREAL_NVP(AttachedComponents)
+		);
+
+		auto em = EntityManager::GetInstance();
+		for (auto comp : AttachedComponents)
+		{
+			auto typeId = ComponentFactory::GetTypeID(StringID(comp));
+			auto c = em->GetComponentContainer(comp.c_str());
+			if (c == nullptr)
+			{
+				em->RegisterComponent(comp.c_str());
+				c = em->GetComponentContainer(comp.c_str());
+			}
+			c->Deserialize(archive, EntityID);
+		}
+	}
+};
+
+
 EntityManager::EntityManager(Elixir::Scene* scene) :
 	scene(scene)
 {
+	Instance = this;
 }
 
 EntityID Elixir::EntityManager::CreateEntity(std::string name, const Transform & transform)
@@ -49,7 +116,7 @@ EntityID Elixir::EntityManager::CreateEntity(EntityID parentId, std::string name
 		parents.push_back(parentId);
 		active.push_back(true);
 	}
-	
+
 	return entityId;
 }
 
@@ -90,6 +157,10 @@ void Elixir::EntityManager::RegisterComponent(const char* componentName)
 	{
 		auto component = ComponentFactory::Create(stringHash);
 		components.insert(std::pair<TypeID, IComponent*>(typeId, component));
+	}
+	else if (components[typeId] == nullptr)
+	{
+		components[typeId] = ComponentFactory::Create(stringHash);
 	}
 }
 
@@ -158,6 +229,12 @@ Elixir::IComponentData * Elixir::EntityManager::GetComponent(const char * compon
 	return data;
 }
 
+IComponent * Elixir::EntityManager::GetComponentContainer(const char * componentName)
+{
+	auto type = ComponentFactory::GetTypeID(StringID(componentName));
+	return components[type];
+}
+
 void Elixir::EntityManager::SetMesh(EntityID entity, HashID mesh)
 {
 	meshes[entity] = mesh;
@@ -205,42 +282,31 @@ void Elixir::EntityManager::SetActive(EntityID entity, bool enable)
 	}
 }
 
-void Elixir::EntityManager::SaveComponentsToFile(const char * filename)
-{
-	ComponentSerDe::Save(components, filename);
-}
-
-void Elixir::EntityManager::LoadComponentsFromFile(const char * filename)
-{
-	ComponentSerDe::Load(components, filename);
-}
-
 void Elixir::EntityManager::SaveToFile(const char * filename, ResourceManager* rm)
 {
-	std::vector<EntityInterface> outEntities;
+	std::vector<EntitySerialInterface> outEntities;
+	std::vector<IComponentData*> comps;
 	EntityID id = 0;
 	for (NodeID entityNode : entities)
 	{
-		EntityInterface e;
+		EntitySerialInterface e;
+		e.EntityID = id;
 		e.ParentID = parents[id];
 		e.Mesh = rm->GetString(meshes[id]);
 		e.Material = rm->GetString(materials[id]);
 		e.Position.Value = GetPosition(id);
 		e.Scale.Value = GetScale(id);
 		e.Rotation.Value = GetRotationInDegrees(id);
+
 		for (auto comp : components)
 		{
 			auto data = comp.second->GetComponentData(id);
 			if (data != nullptr)
 			{
-				auto compRef = data->Clone();
-				auto container = ComponentContainer{
-					comp.second->GetComponentName(),
-					std::shared_ptr<IComponentData>(compRef)
-				};
-				e.Components.push_back(container);
+				e.AttachedComponents.push_back(comp.second->GetComponentName());
 			}
 		}
+		
 		outEntities.push_back(e);
 		id++;
 	}
@@ -259,11 +325,11 @@ void ConvertDegreesToRadians(XMFLOAT3& rot)
 	rot.z = XMConvertToRadians(rot.z);
 }
 
-void Elixir::EntityManager::LoadFromFile(const char * filename, SystemContext context)
+void Elixir::EntityManager::Load(const char * filename, SystemContext context)
 {
 	auto rm = context.ResourceManager;
 	auto am = context.AnimationManager;
-	std::vector<EntityInterface> outEntities;
+	std::vector<EntitySerialInterface> outEntities;
 	std::ifstream is(filename);
 	cereal::JSONInputArchive archive(is);
 	archive(cereal::make_nvp("Scene", outEntities));
@@ -276,13 +342,7 @@ void Elixir::EntityManager::LoadFromFile(const char * filename, SystemContext co
 			e.Position.Value,
 			e.Rotation.Value,
 			e.Scale.Value
-		});
-
-		for (auto comp : e.Components)
-		{
-			auto typeId = ComponentFactory::GetTypeID(StringID(comp.ComponentName));
-			AddComponent(id, comp.ComponentName.c_str(), (IComponentData*)comp.Data.get());
-		}
+			});
 
 		if (rm->GetMesh(meshId)->IsAnimated())
 		{

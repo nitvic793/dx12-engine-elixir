@@ -23,7 +23,9 @@ namespace Elixir
 		virtual IComponentData* GetComponentData(EntityID entity) = 0;
 		virtual void GetEntities(std::vector<EntityID>& outEntities) = 0;
 		virtual void Serialize(cereal::JSONOutputArchive& archive) {};
+		virtual void Serialize(cereal::JSONOutputArchive& archive, EntityID entity) {};
 		virtual void Deserialize(cereal::JSONInputArchive& archive) {};
+		virtual void Deserialize(cereal::JSONInputArchive& archive, EntityID entity) {};
 		virtual size_t GetHash() = 0;
 		virtual void AddEntity(EntityID entity, IComponentData* data = nullptr) = 0;
 		virtual void RemoveEntity(EntityID entity) = 0;
@@ -54,6 +56,20 @@ namespace Elixir
 		{
 			archive(cereal::make_nvp(GetComponentName(), *this));
 		};
+
+		virtual void Serialize(cereal::JSONOutputArchive& archive, EntityID entity) override
+		{
+			auto compId = EntityComponentMap[entity];
+			auto comp = Components[compId];
+			archive(cereal::make_nvp(GetComponentName(), comp));
+		}
+
+		virtual void Deserialize(cereal::JSONInputArchive& archive, EntityID entity) override
+		{
+			T comp;
+			archive(cereal::make_nvp(GetComponentName(), comp));
+			this->AddEntity(entity, comp);
+		}
 
 		virtual void Deserialize(cereal::JSONInputArchive& archive)
 		{
