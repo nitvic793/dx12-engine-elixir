@@ -6,6 +6,7 @@
 * Physically based shading
 * Image Based Lighting
 * GPU Skinned Animation
+* Scene Graph
 * Entity-Component System
 * Hot-Loading Systems
 * Shadows
