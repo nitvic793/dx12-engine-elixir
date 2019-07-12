@@ -100,6 +100,8 @@ Mesh* ModelLoader::ProcessMesh(UINT index, aiMesh* mesh, const aiScene * scene, 
 	// Data to fill
 	std::vector<Vertex> vertices;
 	std::vector<UINT> indices;
+	vertices.reserve((size_t)mesh->mNumVertices);
+	indices.reserve((size_t)mesh->mNumVertices);
 	// Walk through each of the mesh's vertices
 	for (UINT i = 0; i < mesh->mNumVertices; i++)
 	{
